@@ -10,12 +10,14 @@ namespace win2d_text_game_world_generator
     public class ProtoRoom
     {
         public PointInt Coordinates { get; set; }
-        public ProtoRegion Region { get; set; }
+        public ProtoRegion ProtoRegion { get; set; }
+        public ProtoSubregion ProtoSubregion { get; set; }
         public bool Available { get; set; }
 
         public ProtoRoom(PointInt coordinates)
         {
-            Region = null;
+            ProtoRegion = null;
+            ProtoSubregion = null;
             Coordinates = coordinates;
             Available = true;
         }

@@ -60,5 +60,34 @@ namespace win2d_text_game_world_generator
         {
 
         }
+
+        public Region GetRegion(int x, int y)
+        {
+            foreach(Region r in Regions)
+            {
+                foreach(Subregion s in r.Subregions)
+                {
+                    foreach(Room rm in s.Rooms)
+                    {
+                        if(rm.Coordinates.X == x && rm.Coordinates.Y == y) { return r; }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public Subregion GetSubregion(Region region, int x, int y)
+        {
+            foreach(Subregion s in region.Subregions)
+            {
+                foreach(Room rm in s.Rooms)
+                {
+                    if (rm.Coordinates.X == x && rm.Coordinates.Y == y) { return s; }
+                }
+            }
+
+            return null;
+        }
     }
 }

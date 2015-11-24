@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Input;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -37,15 +38,29 @@ namespace win2d_text_game_world_generator
         }
 
         #region Mouse
+        private void gridMain_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
+            if (p.IsLeftButtonPressed)
+            {
+                Statics.DrawSubregions = !Statics.DrawSubregions;
+            }
+            else if (p.IsRightButtonPressed)
+            {
+                Reset();
+            }
+        }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            Reset();
         }
         private void gridMain_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            //Point p = e.GetCurrentPoint(gridMain).Position;
-            //ProtoRegion region = map.GetRegion((int)p.X / Statics.PixelScale, (int)p.Y / Statics.PixelScale);
-            //if (region != null) { Statics.CurrentMouseRegionID = region.ID; }
+            Point p = e.GetCurrentPoint(gridMain).Position;
+            Statics.CurrentMouseRegion = map.GetRegion((int)p.X / Statics.PixelScale, (int)p.Y / Statics.PixelScale);
+            if (Statics.CurrentMouseRegion != null)
+            {
+                Statics.CurrentMouseSubregion = map.GetSubregion(Statics.CurrentMouseRegion, (int)p.X / Statics.PixelScale, (int)p.Y / Statics.PixelScale);
+            }
         }
         #endregion
 
@@ -59,10 +74,22 @@ namespace win2d_text_game_world_generator
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
-            args.DrawingSession.DrawText("Region: " + Statics.CurrentMouseRegionID.ToString(), new Vector2(1210, 20), Colors.White);
-            args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1210, 40), Colors.White);
-            args.DrawingSession.DrawText(Statics.DebugMapTotalRegionCountString, new Vector2(1210, 60), Colors.White);
-            args.DrawingSession.DrawText(Statics.DebugMapTotalTileCountString, new Vector2(1210, 80), Colors.White);
+            args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1210, 20), Colors.White);
+            args.DrawingSession.DrawText(Statics.DebugMapTotalRegionCountString, new Vector2(1210, 40), Colors.White);
+            args.DrawingSession.DrawText(Statics.DebugMapTotalTileCountString, new Vector2(1210, 60), Colors.White);
+            if (Statics.CurrentMouseRegion != null)
+            {
+                args.DrawingSession.DrawText("Region ID: " + Statics.CurrentMouseRegion.ID.ToString(), new Vector2(1210, 80), Colors.White);
+                args.DrawingSession.DrawText("Region name: " + Statics.CurrentMouseRegion.Name, new Vector2(1210, 100), Colors.White);
+                args.DrawingSession.DrawText("Region room count: " + Statics.CurrentMouseRegion.RoomCount.ToString(), new Vector2(1210, 120), Colors.White);
+                args.DrawingSession.DrawText("Region subregion count: " + Statics.CurrentMouseRegion.Subregions.Count.ToString(), new Vector2(1210, 140), Colors.White);
+            }
+
+            if (Statics.CurrentMouseSubregion != null)
+            {
+                args.DrawingSession.DrawText("Subregion: " + Statics.CurrentMouseSubregion.ID.ToString(), new Vector2(1210, 160), Colors.White);
+                args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1210, 180), Colors.White);
+            }
         }
         #endregion
 

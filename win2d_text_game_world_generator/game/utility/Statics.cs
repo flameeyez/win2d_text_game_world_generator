@@ -11,7 +11,10 @@ namespace win2d_text_game_world_generator
 {
     public static class Statics
     {
-        public static int CurrentMouseRegionID = 0;
+        public static Region CurrentMouseRegion = null;
+        public static Subregion CurrentMouseSubregion = null;
+
+        public static bool DrawSubregions = true;
 
         public static int MouseX = 0;
         public static int MouseY = 0;
@@ -140,10 +143,15 @@ namespace win2d_text_game_world_generator
             "Thamasa"
         };
 
+        public static string RandomRegionName()
+        {
+            return RegionNames.RandomArrayItem();
+        }
+
         public static string RandomRegionType()
         {
-            string strRegionType = RegionTypes.RandomString();
-            string strRegionName = RegionNames.RandomString();
+            string strRegionType = RegionTypes.RandomArrayItem();
+            string strRegionName = RegionNames.RandomArrayItem();
 
             switch (Statics.Random.Next(2))
             {
@@ -269,12 +277,12 @@ namespace win2d_text_game_world_generator
             return Color.FromArgb(255, (byte)red, (byte)green, (byte)blue);
         }
 
-        public static T RandomItem<T>(this List<T> list)
+        public static T RandomListItem<T>(this List<T> list)
         {
             return list[Statics.Random.Next(list.Count)];
         }
 
-        public static string RandomString(this string[] array)
+        public static T RandomArrayItem<T>(this T[] array)
         {
             return array[Statics.Random.Next(array.Length)];
         }

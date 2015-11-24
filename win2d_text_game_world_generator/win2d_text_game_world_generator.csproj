@@ -100,7 +100,9 @@
     <Compile Include="game\world\proto\ProtoMap.cs" />
     <Compile Include="game\utility\PointInt.cs" />
     <Compile Include="game\world\proto\ProtoRegion.cs" />
+    <Compile Include="game\world\proto\ProtoSubregion.cs" />
     <Compile Include="game\world\Region.cs" />
+    <Compile Include="game\world\Subregion.cs" />
     <Compile Include="game\utility\Statics.cs" />
     <Compile Include="game\world\proto\ProtoRoom.cs" />
     <Compile Include="game\world\Room.cs" />

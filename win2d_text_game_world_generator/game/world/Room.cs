@@ -10,13 +10,15 @@ namespace win2d_text_game_world_generator
     {
         public PointInt Coordinates { get; set; }
         public Region Region { get; set; }
+        public Subregion Subregion { get; set; }
 
         private Room() { }
-        public static Room FromProtoRoom(Region region, ProtoRoom pr)
+        public static Room FromProtoRoom(Region region, Subregion subregion, ProtoRoom pr)
         {
             Room tile = new Room();
             tile.Coordinates = pr.Coordinates;
             tile.Region = region;
+            tile.Subregion = subregion;
             return tile;
         }
     }
