@@ -31,11 +31,19 @@ namespace win2d_text_game_world_generator
             return region;
         }
 
-        public void Draw(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        public void DrawTiles(Vector2 position, CanvasAnimatedDrawEventArgs args)
         {
             foreach(Subregion subregion in Subregions)
             {
-                subregion.Draw(position, args);
+                subregion.DrawTiles(position, args);
+            }
+        }
+
+        public void DrawRoomConnections(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach(Subregion subregion in Subregions)
+            {
+                subregion.DrawRoomConnections(position, args);
             }
         }
     }

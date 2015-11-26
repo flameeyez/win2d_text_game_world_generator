@@ -52,7 +52,12 @@ namespace win2d_text_game_world_generator
         {
             foreach (Region region in Regions)
             {
-                region.Draw(Position, args);
+                region.DrawTiles(Position, args);
+            }
+
+            foreach (Region region in Regions)
+            {
+                region.DrawRoomConnections(Position, args);
             }
         }
 

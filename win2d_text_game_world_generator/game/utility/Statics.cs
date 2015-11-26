@@ -14,10 +14,14 @@ namespace win2d_text_game_world_generator
         public static Region CurrentMouseRegion = null;
         public static Subregion CurrentMouseSubregion = null;
 
+        public static int MaxConnections = 3;
+        public static int TilesInMainPath1;
+        public static int TilesInMainPath2;
+
         public static bool DrawSubregions = true;
 
-        public static int MouseX = 0;
-        public static int MouseY = 0;
+        public static double MouseX = 0;
+        public static double MouseY = 0;
         public static int FrameCount = 0;
 
         public static int CanvasWidth;
@@ -25,7 +29,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 3;
+        public static int PixelScale = 30;
 
         public static int Padding = 10;
 

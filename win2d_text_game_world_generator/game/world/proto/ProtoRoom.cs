@@ -12,6 +12,7 @@ namespace win2d_text_game_world_generator
         public PointInt Coordinates { get; set; }
         public ProtoRegion ProtoRegion { get; set; }
         public ProtoSubregion ProtoSubregion { get; set; }
+        public List<string> DirectionalRoomConnections;
         public bool Available { get; set; }
 
         public ProtoRoom(PointInt coordinates)
@@ -19,6 +20,7 @@ namespace win2d_text_game_world_generator
             ProtoRegion = null;
             ProtoSubregion = null;
             Coordinates = coordinates;
+            DirectionalRoomConnections = new List<string>();
             Available = true;
         }
     }
