@@ -19,6 +19,7 @@ namespace win2d_text_game_world_generator
         // list of x,y coordinates for the region
         public List<Room> Rooms = new List<Room>();
 
+        #region Initialization
         private Subregion() { }
         public static Subregion FromProtoSubregion(Region region, ProtoSubregion ps)
         {
@@ -33,15 +34,32 @@ namespace win2d_text_game_world_generator
             }
             return subregion;
         }
+        #endregion
 
-        public void DrawTiles(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        #region Draw
+        public void DrawRoomsWithRegionColor(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
             foreach (Room room in Rooms)
             {
-                room.DrawTiles(MapPosition, args, Statics.DrawSubregions);
+                room.DrawTile(MapPosition, args, false);
             }
         }
+        public void DrawRoomsWithSubregionColor(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach (Room room in Rooms)
+            {
+                room.DrawTile(MapPosition, args, true);
+            }
+        }
+        public void DrawRoomsWithPaths(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach (Room room in Rooms)
+            {
+                room.DrawTile(MapPosition, args, true);
+            }
 
+            DrawRoomConnections(MapPosition, args);
+        }
         public void DrawRoomConnections(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
             foreach (Room room in Rooms)
@@ -49,5 +67,6 @@ namespace win2d_text_game_world_generator
                 room.DrawRoomConnections(MapPosition, args);
             }
         }
+        #endregion
     }
 }

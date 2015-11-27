@@ -6,13 +6,42 @@ using Windows.Foundation;
 using Microsoft.Graphics.Canvas.Text;
 using System.Numerics;
 using Microsoft.Graphics.Canvas;
+using System.Linq;
 
 namespace win2d_text_game_world_generator
 {
+    public enum MapDrawType
+    {
+        HEIGHTMAP,
+        PATHS,
+        REGIONS,
+        SUBREGIONS,
+        OVERLAY
+    }
+
     public static class Statics
     {
         public static Region CurrentMouseRegion = null;
         public static Subregion CurrentMouseSubregion = null;
+
+        public static List<long> MapCreationTimes = new List<long>();
+        public static List<int> FixLoopCounts = new List<int>();
+        public static bool RollingReset = false;
+        public static int MapCount = 0;
+
+        public static bool DrawDebug = true;
+
+        public static MapDrawType MapDrawType = MapDrawType.REGIONS;
+
+        public static int DebugNWConnectionCount;
+        public static int DebugNConnectionCount;
+        public static int DebugNEConnectionCount;
+        public static int DebugWConnectionCount;
+        public static int DebugEConnectionCount;
+        public static int DebugSWConnectionCount;
+        public static int DebugSConnectionCount;
+        public static int DebugSEConnectionCount;
+
 
         public static int MaxConnections = 3;
         public static int TilesInMainPath1;
@@ -29,7 +58,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 30;
+        public static int PixelScale = 3;
 
         public static int Padding = 10;
 

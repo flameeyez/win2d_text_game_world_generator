@@ -17,6 +17,7 @@ namespace win2d_text_game_world_generator
         public List<Subregion> Subregions = new List<Subregion>();
         public int RoomCount { get { return Subregions.Select(x => x.Rooms.Count).Sum(); } }
 
+        #region Initialization
         private Region() { }
         public static Region FromProtoRegion(ProtoRegion pr)
         {
@@ -24,27 +25,43 @@ namespace win2d_text_game_world_generator
             region.ID = pr.ID;
             region.Name = pr.Name;
             region.Color = pr.Color;
-            foreach(ProtoSubregion ps in pr.ProtoSubregions)
+            foreach (ProtoSubregion ps in pr.ProtoSubregions)
             {
                 region.Subregions.Add(Subregion.FromProtoSubregion(region, ps));
             }
             return region;
         }
+        #endregion
 
-        public void DrawTiles(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        #region Draw
+        public void DrawSubregionsWithRegionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
         {
-            foreach(Subregion subregion in Subregions)
+            foreach (Subregion subregion in Subregions)
             {
-                subregion.DrawTiles(position, args);
+                subregion.DrawRoomsWithRegionColor(position, args);
             }
         }
-
+        public void DrawSubregionsWithSubregionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach (Subregion subregion in Subregions)
+            {
+                subregion.DrawRoomsWithSubregionColor(position, args);
+            }
+        }
+        public void DrawSubregionsWithPaths(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach (Subregion subregion in Subregions)
+            {
+                subregion.DrawRoomsWithPaths(position, args);
+            }
+        }
         public void DrawRoomConnections(Vector2 position, CanvasAnimatedDrawEventArgs args)
         {
-            foreach(Subregion subregion in Subregions)
+            foreach (Subregion subregion in Subregions)
             {
                 subregion.DrawRoomConnections(position, args);
             }
         }
+        #endregion
     }
 }

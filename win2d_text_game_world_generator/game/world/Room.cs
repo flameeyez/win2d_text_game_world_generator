@@ -25,31 +25,15 @@ namespace win2d_text_game_world_generator
             room.Region = region;
             room.Subregion = subregion;
             room.DirectionalRoomConnections = (pr.DirectionalRoomConnections != null) ? pr.DirectionalRoomConnections : new List<string>();
-            // room.DirectionalRoomConnections = DebugAddRandomDirectionalRoomConnections();
             return room;
         }
 
-        private static List<string> DebugAddRandomDirectionalRoomConnections()
-        {
-            List<string> DebugDirectionalRoomConnections = new List<string>();
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("nw"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("n"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("ne"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("w"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("o"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("e"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("sw"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("s"); }
-            if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("se"); }
-            return DebugDirectionalRoomConnections;
-        }
-
+        #region Draw
         //public void Draw(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         //{
         //    DrawTile(MapPosition, args);
         //}
-
-        public void DrawTiles(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args, bool bDrawSubregions)
+        public void DrawTile(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args, bool bDrawSubregions)
         {
             args.DrawingSession.FillRectangle(
                 new Rect(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale,
@@ -57,7 +41,9 @@ namespace win2d_text_game_world_generator
                     Statics.PixelScale,
                     Statics.PixelScale),
                     bDrawSubregions ? Subregion.Color : Region.Color);
-
+        }
+        public void DrawBorder(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        {
             args.DrawingSession.DrawRectangle(
                 new Rect(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale,
                     MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
@@ -65,7 +51,6 @@ namespace win2d_text_game_world_generator
                     Statics.PixelScale),
                     Colors.Black);
         }
-
         public void DrawRoomConnections(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
             foreach(string DirectionalRoomConnection in DirectionalRoomConnections)
@@ -81,10 +66,10 @@ namespace win2d_text_game_world_generator
                         break;
                     case "n":
                         args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                                                     MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                                                     MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                                                     MapPosition.Y + Statics.Padding + (Coordinates.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                                                     Colors.White);
+                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (Coordinates.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             Colors.White);
                         break;
                     case "ne":
                         args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
@@ -135,5 +120,23 @@ namespace win2d_text_game_world_generator
                 }
             }
         }
+        #endregion
+
+        #region Cut Code
+        //private static List<string> DebugAddRandomDirectionalRoomConnections()
+        //{
+        //    List<string> DebugDirectionalRoomConnections = new List<string>();
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("nw"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("n"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("ne"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("w"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("o"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("e"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("sw"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("s"); }
+        //    if (Statics.Random.Next(5) == 0) { DebugDirectionalRoomConnections.Add("se"); }
+        //    return DebugDirectionalRoomConnections;
+        //}
+        #endregion
     }
 }

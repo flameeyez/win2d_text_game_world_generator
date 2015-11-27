@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace win2d_text_game_world_generator
 {
+    // immutable
     public class RoomConnection
     {
         private Region _region;
