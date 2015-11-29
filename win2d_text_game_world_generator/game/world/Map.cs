@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -22,16 +23,24 @@ namespace win2d_text_game_world_generator
         public List<Region> Regions = new List<Region>();
 
         #region Debug
-        public int DebugFixLoopCount = 0;
+        public TimeSpan DebugCreationTime { get; set; }
+        public int DebugAbortedCount { get; set; }
         #endregion
 
         #region Initialization
         private Map() { }
         public static Map Create(int width, int height)
         {
-            ProtoMap pm = new ProtoMap(width, height);
+            // START DEBUG
+            Stopwatch s = Stopwatch.StartNew();
+            // END DEBUG
 
+            // declared here for abort tracking
             Map map = new Map();
+
+            ProtoMap pm = new ProtoMap(width, height);
+            while (pm.Aborted) { ++map.DebugAbortedCount; pm = new ProtoMap(width, height); }
+            
             map.Position = pm.Position;
             map.WidthInPixels = pm.WidthInPixels;
             map.HeightInPixels = pm.HeightInPixels;
@@ -40,7 +49,10 @@ namespace win2d_text_game_world_generator
                 map.Regions.Add(Region.FromProtoRegion(pr));
             }
 
-            map.DebugFixLoopCount = pm.DebugFixLoopCount;
+            // START DEBUG
+            s.Stop();
+            map.DebugCreationTime = s.Elapsed;
+            // END DEBUG
 
             return map;
         }
@@ -56,22 +68,7 @@ namespace win2d_text_game_world_generator
             DrawBorder(args);
             foreach (Region region in Regions)
             {
-                region.DrawSubregionsWithRegionColors(Position, args);
-            }
-        }
-        public void DrawRegionsWithSubregions(CanvasAnimatedDrawEventArgs args)
-        {
-            DrawBorder(args);
-            foreach (Region region in Regions)
-            {
-                region.DrawSubregionsWithSubregionColors(Position, args);
-            }
-        }
-        public void DrawRegionsWithPaths(CanvasAnimatedDrawEventArgs args)
-        {
-            foreach (Region region in Regions)
-            {
-                region.DrawSubregionsWithPaths(Position, args);
+                region.DrawRegion(Position, args);
             }
         }
         public void DrawConnections(CanvasAnimatedDrawEventArgs args)
@@ -82,6 +79,14 @@ namespace win2d_text_game_world_generator
             foreach (Region region in Regions)
             {
                 region.DrawRoomConnections(Position, args);
+            }
+        }
+        public void DrawHeightMap(CanvasAnimatedDrawEventArgs args)
+        {
+            DrawBorder(args);
+            foreach (Region region in Regions)
+            {
+                region.DrawHeightMap(Position, args);
             }
         }
         //public void Draw(CanvasAnimatedDrawEventArgs args)
@@ -125,6 +130,20 @@ namespace win2d_text_game_world_generator
 
             return null;
         }
+
+        public Room GetRoom(Subregion currentMouseSubregion, int x, int y)
+        {
+            foreach(Room room in currentMouseSubregion.Rooms)
+            {
+                if(room.Coordinates.X == x && room.Coordinates.Y == y)
+                {
+                    return room;
+                }
+            }
+
+            return null;
+        }
+
         public Subregion GetSubregion(Region region, int x, int y)
         {
             foreach (Subregion s in region.Subregions)

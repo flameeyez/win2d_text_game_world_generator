@@ -34,32 +34,46 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Draw
-        public void DrawSubregionsWithRegionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        public void DrawRegion(Vector2 position, CanvasAnimatedDrawEventArgs args)
         {
-            foreach (Subregion subregion in Subregions)
+            foreach(Subregion subregion in Subregions)
             {
-                subregion.DrawRoomsWithRegionColor(position, args);
+                subregion.DrawSubregion(position, args);
             }
         }
-        public void DrawSubregionsWithSubregionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
-        {
-            foreach (Subregion subregion in Subregions)
-            {
-                subregion.DrawRoomsWithSubregionColor(position, args);
-            }
-        }
-        public void DrawSubregionsWithPaths(Vector2 position, CanvasAnimatedDrawEventArgs args)
-        {
-            foreach (Subregion subregion in Subregions)
-            {
-                subregion.DrawRoomsWithPaths(position, args);
-            }
-        }
+        //public void DrawSubregionsWithRegionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        //{
+        //    foreach (Subregion subregion in Subregions)
+        //    {
+        //        subregion.DrawRoomsWithRegionColor(position, args);
+        //    }
+        //}
+        //public void DrawSubregionsWithSubregionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        //{
+        //    foreach (Subregion subregion in Subregions)
+        //    {
+        //        subregion.DrawRoomsWithSubregionColor(position, args);
+        //    }
+        //}
+        //public void DrawSubregionsWithPaths(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        //{
+        //    foreach (Subregion subregion in Subregions)
+        //    {
+        //        subregion.DrawRoomsWithPaths(position, args);
+        //    }
+        //}
         public void DrawRoomConnections(Vector2 position, CanvasAnimatedDrawEventArgs args)
         {
             foreach (Subregion subregion in Subregions)
             {
                 subregion.DrawRoomConnections(position, args);
+            }
+        }
+        public void DrawHeightMap(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach (Subregion subregion in Subregions)
+            {
+                subregion.DrawHeightMap(position, args);
             }
         }
         #endregion

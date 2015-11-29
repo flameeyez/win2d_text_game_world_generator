@@ -37,34 +37,41 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Draw
-        public void DrawRoomsWithRegionColor(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        public void DrawSubregion(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
-            foreach (Room room in Rooms)
+            foreach(Room room in Rooms)
             {
-                room.DrawTile(MapPosition, args, false);
-            }
-        }
-        public void DrawRoomsWithSubregionColor(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
-        {
-            foreach (Room room in Rooms)
-            {
-                room.DrawTile(MapPosition, args, true);
-            }
-        }
-        public void DrawRoomsWithPaths(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
-        {
-            foreach (Room room in Rooms)
-            {
-                room.DrawTile(MapPosition, args, true);
+                room.DrawTile(MapPosition, args, Statics.DrawSubregions);
             }
 
-            DrawRoomConnections(MapPosition, args);
+            if(Statics.DrawPaths)
+            {
+                foreach(Room room in Rooms)
+                {
+                    room.DrawRoomConnections(MapPosition, args);
+                }
+            }
         }
         public void DrawRoomConnections(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
             foreach (Room room in Rooms)
             {
                 room.DrawRoomConnections(MapPosition, args);
+            }
+        }
+        public void DrawHeightMap(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        {
+            foreach (Room room in Rooms)
+            {
+                room.DrawHeight(MapPosition, args);
+            }
+
+            if(Statics.DrawPaths)
+            {
+                foreach(Room room in Rooms)
+                {
+                    room.DrawRoomConnections(MapPosition, args);
+                }
             }
         }
         #endregion

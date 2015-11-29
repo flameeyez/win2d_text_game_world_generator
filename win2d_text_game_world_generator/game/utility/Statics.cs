@@ -13,10 +13,7 @@ namespace win2d_text_game_world_generator
     public enum MapDrawType
     {
         HEIGHTMAP,
-        PATHS,
-        REGIONS,
-        SUBREGIONS,
-        OVERLAY
+        REGIONS
     }
 
     public static class Statics
@@ -24,12 +21,18 @@ namespace win2d_text_game_world_generator
         public static Region CurrentMouseRegion = null;
         public static Subregion CurrentMouseSubregion = null;
 
-        public static List<long> MapCreationTimes = new List<long>();
-        public static List<int> FixLoopCounts = new List<int>();
+        public static object lockDebugLists = new object();
+
+        public static List<double> MapCreationTimes = new List<double>();
+        public static List<int> MapAbortCounts = new List<int>();
         public static bool RollingReset = false;
         public static int MapCount = 0;
+        public static int HeightMapElevationFactor = 10;
 
         public static bool DrawDebug = true;
+        public static bool DrawPaths = false;
+        public static bool DrawSubregions = false;
+        public static bool DrawGrid = false;
 
         public static MapDrawType MapDrawType = MapDrawType.REGIONS;
 
@@ -42,12 +45,9 @@ namespace win2d_text_game_world_generator
         public static int DebugSConnectionCount;
         public static int DebugSEConnectionCount;
 
-
         public static int MaxConnections = 3;
         public static int TilesInMainPath1;
         public static int TilesInMainPath2;
-
-        public static bool DrawSubregions = true;
 
         public static double MouseX = 0;
         public static double MouseY = 0;
@@ -58,7 +58,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 3;
+        public static int PixelScale = 10;
 
         public static int Padding = 10;
 
@@ -67,6 +67,7 @@ namespace win2d_text_game_world_generator
         public static string DebugMapCreationTimeString = string.Empty;
         public static string DebugMapTotalRegionCountString = string.Empty;
         public static string DebugMapTotalTileCountString = string.Empty;
+        public static string DebugHeightString = string.Empty;
 
         // probability that region will continue to try to expand past minimum size
         // calculated once for each tile added

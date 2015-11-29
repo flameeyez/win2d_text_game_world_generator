@@ -20,11 +20,17 @@ namespace win2d_text_game_world_generator
         public int HeightInTiles { get { return HeightInPixels / Statics.PixelScale; } }
         public int TotalTiles { get { return WidthInTiles * HeightInTiles; } }
 
+        private int WaterTiles = 0;
+        private int LandTiles = 0;
+        private float WaterCoverage { get { return (float)WaterTiles / TotalTiles; } }
+        private float LandCoverage { get { return (float)LandTiles / TotalTiles; } }
+
         private HashSet<PointInt> TilesNotInMainPath;
         private HashSet<PointInt> OpenSet;
         private HashSet<PointInt> MainPath;
 
-        public int DebugFixLoopCount = 0;
+        private bool _aborted = false;
+        public bool Aborted { get { return _aborted; } }
 
         #region Initialization
         public ProtoMap(int width, int height)
@@ -35,12 +41,13 @@ namespace win2d_text_game_world_generator
             FoldUndersizedRegions();
             MergeProtoRegions();
             ReindexSubregions();
-            DebugValidation();
             AssignSubregionColors();
-            CreateRoomConnections();
-            FixDisconnectedRooms();
-
-            DebugReporting();
+            GenerateHeightMap();
+            CalculateWaterCoverage();
+            //CreateRoomConnections();
+            //if (!_aborted) { FixDisconnectedRooms(); }
+            //if (!_aborted) { FixCrossedPaths(); }
+            //if (!_aborted) { DebugValidation(); }
         }
         private void CalculateLayout(int width, int height)
         {
@@ -99,12 +106,6 @@ namespace win2d_text_game_world_generator
         {
             ReindexRegions(0, true);
         }
-        private void DebugValidation()
-        {
-            // checks to ensure that rooms within a region/subregion actually point back to the containing region/subregion
-            // would theoretically catch reassignment misses during merge
-            if (!DebugValidateMapIntegrity()) { throw new Exception("Wut?!?"); }
-        }
         private void AssignSubregionColors()
         {
             foreach (ProtoRegion pr in ProtoRegions)
@@ -130,11 +131,95 @@ namespace win2d_text_game_world_generator
                 }
             }
         }
+        private void GenerateHeightMap()
+        {
+            for(int x = 0; x < WidthInTiles; x++)
+            {
+                for(int y = 0; y < HeightInTiles; y++)
+                {
+                    MasterTileList[x, y].Elevation = Statics.Random.Next(15);
+                }
+            }
+
+            BlurHeightMap(1);
+
+            //for (int i = 0; i < nNumberOfDrops; i++)
+            //{
+            //    int dropX = Statics.Random.Next(WidthInTiles);
+            //    int dropY = Statics.Random.Next(HeightInTiles);
+            //    ProtoRoom dropRoom = MasterTileList[dropX, dropY];
+
+            //    for (int j = 0; j < nNumberOfParticlesPerDrop; j++)
+            //    {
+            //        // dropRoom.Elevation++;
+            //        dropRoom.Elevation += Statics.HeightMapElevationFactor;
+            //        Agitate(dropRoom);
+            //    }
+            //}
+        }
+        private void BlurHeightMap(int iterations)
+        {
+            // blurring
+            Dictionary<int, float> FilterKernel = new Dictionary<int, float>();
+            FilterKernel.Add(-3, 0.006f);
+            FilterKernel.Add(-2, 0.061f);
+            FilterKernel.Add(-1, 0.242f);
+            FilterKernel.Add(0, 0.383f);
+            FilterKernel.Add(1, 0.242f);
+            FilterKernel.Add(2, 0.061f);
+            FilterKernel.Add(3, 0.006f);
+
+            for (int i = 0; i < iterations; i++)
+            {
+                float[,] fIntermediateBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+                float[,] fFinalBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+
+                for (int x = 0; x < WidthInTiles; x++)
+                {
+                    for (int y = 0; y < HeightInTiles; y++)
+                    {
+                        fIntermediateBlurredHeightValues[x, y] = ComputeXValue(FilterKernel, x, y);
+                    }
+                }
+
+                for (int x = 0; x < WidthInTiles; x++)
+                {
+                    for (int y = 0; y < HeightInTiles; y++)
+                    {
+                        fFinalBlurredHeightValues[x, y] = ComputeYValue(fIntermediateBlurredHeightValues, FilterKernel, x, y);
+                    }
+                }
+
+                for (int x = 0; x < WidthInTiles; x++)
+                {
+                    for (int y = 0; y < HeightInTiles; y++)
+                    {
+                        MasterTileList[x, y].Elevation = (int)fFinalBlurredHeightValues[x, y];
+                    }
+                }
+            }
+        }
+        private void CalculateWaterCoverage()
+        {
+            // could save time here by merging into last iteration of blur
+            for(int x = 0; x < WidthInTiles; x++)
+            {
+                for(int y = 0; y < HeightInTiles; y++)
+                {
+                    if(MasterTileList[x,y].Elevation == 0) { WaterTiles++; }
+                    else { LandTiles++; }
+                }
+            }
+        }
         private void CreateRoomConnections()
         {
+            int nNumberOfConnectionAttempts = 0;
             MainPath = new HashSet<PointInt>();
-            while (MainPath.Count < ((int)TotalTiles * 0.8))
+            // if fewer than 80% of land tiles are connected to main path, connect more tiles
+            while (MainPath.Count < (TotalTiles * LandCoverage * 0.1f))
             {
+                if(++nNumberOfConnectionAttempts == 5) { AbortConstruction(); return; }
+
                 MainPath = new HashSet<PointInt>();
 
                 for (int x = 0; x < WidthInTiles; x++)
@@ -142,6 +227,7 @@ namespace win2d_text_game_world_generator
                     for (int y = 0; y < HeightInTiles; y++)
                     {
                         ProtoRoom currentRoom = MasterTileList[x, y];
+                        if(currentRoom.Elevation == 0) { continue; }
 
                         for (int i = 0; i < 10; i++)
                         {
@@ -174,7 +260,10 @@ namespace win2d_text_game_world_generator
             {
                 for (int y = 0; y < HeightInTiles; y++)
                 {
-                    TilesNotInMainPath.Add(new PointInt(x, y));
+                    if (MasterTileList[x, y].Elevation > 0)
+                    {
+                        TilesNotInMainPath.Add(new PointInt(x, y));
+                    }
                 }
             }
 
@@ -182,6 +271,15 @@ namespace win2d_text_game_world_generator
             OpenSet = new HashSet<PointInt>();
             int initialX = Statics.Random.Next(WidthInTiles);
             int initialY = Statics.Random.Next(HeightInTiles);
+            ProtoRoom protoRoom = MasterTileList[initialX, initialY];
+
+            while(protoRoom.Elevation == 0)
+            {
+                initialX = Statics.Random.Next(WidthInTiles);
+                initialY = Statics.Random.Next(HeightInTiles);
+                protoRoom = MasterTileList[initialX, initialY];
+            }
+
             OpenSet.Add(new PointInt(initialX, initialY));
 
             while (OpenSet.Count > 0)
@@ -258,9 +356,10 @@ namespace win2d_text_game_world_generator
         }
         private void FixDisconnectedRooms()
         {
-            while (MainPath.Count != TotalTiles)
+            int nFixAttempts = 0;
+            while (MainPath.Count != LandTiles)
             {
-                DebugFixLoopCount++;
+                if(++nFixAttempts >= 5) { AbortConstruction(); return; }
 
                 for (int i = TilesNotInMainPath.Count - 1; i >= 0; i--)
                 {
@@ -374,90 +473,122 @@ namespace win2d_text_game_world_generator
                 }
             }
         }
-
-        private void DebugReporting()
+        private void FixCrossedPaths()
         {
-            for(int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < WidthInTiles - 1; x++)
             {
-                for(int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < HeightInTiles - 1; y++)
                 {
-                    ProtoRoom protoRoom = MasterTileList[x, y];
-                    foreach(string strConnection in protoRoom.DirectionalRoomConnections)
+                    ProtoRoom topLeft = MasterTileList[x, y];
+                    ProtoRoom topRight = MasterTileList[x + 1, y];
+                    ProtoRoom bottomLeft = MasterTileList[x, y + 1];
+                    ProtoRoom bottomRight = MasterTileList[x + 1, y + 1];
+
+                    if (topLeft.DirectionalRoomConnections.Contains("se") && topRight.DirectionalRoomConnections.Contains("sw"))
                     {
-                        switch(strConnection)
+                        switch (Statics.Random.Next(2))
                         {
-                            case "nw": Statics.DebugNWConnectionCount++; break;
-                            case "n": Statics.DebugNConnectionCount++; break;
-                            case "ne": Statics.DebugNEConnectionCount++; break;
-                            case "w": Statics.DebugWConnectionCount++; break;
-                            case "e": Statics.DebugEConnectionCount++; break;
-                            case "sw": Statics.DebugSWConnectionCount++; break;
-                            case "s": Statics.DebugSConnectionCount++; break;
-                            case "se": Statics.DebugSEConnectionCount++; break;
+                            case 0:
+                                // remove se connection
+                                topLeft.DirectionalRoomConnections.Remove("se");
+                                bottomRight.DirectionalRoomConnections.Remove("nw");
+                                switch (Statics.Random.Next(2))
+                                {
+                                    case 0:
+                                        if (!topLeft.DirectionalRoomConnections.Contains("s"))
+                                        {
+                                            topLeft.DirectionalRoomConnections.Add("s");
+
+                                            if (bottomLeft.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
+                                            bottomLeft.DirectionalRoomConnections.Add("n");
+                                        }
+                                        if (!bottomLeft.DirectionalRoomConnections.Contains("e"))
+                                        {
+                                            bottomLeft.DirectionalRoomConnections.Add("e");
+
+                                            if (bottomRight.DirectionalRoomConnections.Contains("w")) { throw new Exception(); }
+                                            bottomRight.DirectionalRoomConnections.Add("w");
+                                        }
+                                        break;
+                                    case 1:
+                                        if (!topLeft.DirectionalRoomConnections.Contains("e"))
+                                        {
+                                            topLeft.DirectionalRoomConnections.Add("e");
+
+                                            if (topRight.DirectionalRoomConnections.Contains("w")) { throw new Exception(); }
+                                            topRight.DirectionalRoomConnections.Add("w");
+                                        }
+                                        if (!topRight.DirectionalRoomConnections.Contains("s"))
+                                        {
+                                            topRight.DirectionalRoomConnections.Add("s");
+
+                                            if (bottomRight.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
+                                            bottomRight.DirectionalRoomConnections.Add("n");
+                                        }
+                                        break;
+                                }
+                                break;
+                            case 1:
+                                // remove sw connection
+                                topRight.DirectionalRoomConnections.Remove("sw");
+                                bottomLeft.DirectionalRoomConnections.Remove("ne");
+                                switch (Statics.Random.Next(1))
+                                {
+                                    case 0:
+                                        if (!topRight.DirectionalRoomConnections.Contains("s"))
+                                        {
+                                            topRight.DirectionalRoomConnections.Add("s");
+
+                                            if (bottomRight.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
+                                            bottomRight.DirectionalRoomConnections.Add("n");
+                                        }
+                                        if (!bottomRight.DirectionalRoomConnections.Contains("w"))
+                                        {
+                                            bottomRight.DirectionalRoomConnections.Add("w");
+
+                                            if (bottomLeft.DirectionalRoomConnections.Contains("e")) { throw new Exception(); }
+                                            bottomLeft.DirectionalRoomConnections.Add("e");
+                                        }
+                                        break;
+                                    case 1:
+                                        if (!topRight.DirectionalRoomConnections.Contains("w"))
+                                        {
+                                            topRight.DirectionalRoomConnections.Add("w");
+
+                                            if (topLeft.DirectionalRoomConnections.Contains("e")) { throw new Exception(); }
+                                            topLeft.DirectionalRoomConnections.Add("e");
+                                        }
+                                        if (!topLeft.DirectionalRoomConnections.Contains("s"))
+                                        {
+                                            topLeft.DirectionalRoomConnections.Add("s");
+
+                                            if (bottomLeft.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
+                                            bottomLeft.DirectionalRoomConnections.Add("n");
+                                        }
+                                        break;
+                                }
+                                break;
                         }
                     }
                 }
             }
         }
 
-        private ProtoRoom AddRoomConnection(ProtoRoom currentRoom, string strDirection, bool bForce = false)
+        private void DebugValidation()
         {
-            if (currentRoom.DirectionalRoomConnections.Contains(strDirection)) { return currentRoom; }
-
-            string strOppositeDirection = string.Empty;
-            PointInt connectingRoomCoordinates = null;
-            switch (strDirection)
-            {
-                case "nw":
-                    strOppositeDirection = "se";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y - 1);
-                    break;
-                case "n":
-                    strOppositeDirection = "s";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X, currentRoom.Coordinates.Y - 1);
-                    break;
-                case "ne":
-                    strOppositeDirection = "sw";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y - 1);
-                    break;
-                case "w":
-                    strOppositeDirection = "e";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y);
-                    break;
-                case "e":
-                    strOppositeDirection = "w";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y);
-                    break;
-                case "sw":
-                    strOppositeDirection = "ne";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y + 1);
-                    break;
-                case "s":
-                    strOppositeDirection = "n";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X, currentRoom.Coordinates.Y + 1);
-                    break;
-                case "se":
-                    strOppositeDirection = "nw";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y + 1);
-                    break;
-                default:
-                    throw new Exception();
-            }
-
-            if (connectingRoomCoordinates.X < 0) { return currentRoom; }
-            if (connectingRoomCoordinates.X > WidthInTiles - 1) { return currentRoom; }
-            if (connectingRoomCoordinates.Y < 0) { return currentRoom; }
-            if (connectingRoomCoordinates.Y > HeightInTiles - 1) { return currentRoom; }
-
-            ProtoRoom connectingRoom = MasterTileList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
-            if (connectingRoom.DirectionalRoomConnections.Count >= Statics.MaxConnections && !bForce) { return currentRoom; }
-            currentRoom.DirectionalRoomConnections.Add(strDirection);
-            connectingRoom.DirectionalRoomConnections.Add(strOppositeDirection);
-            return connectingRoom;
+            // checks to ensure that rooms within a region/subregion actually point back to the containing region/subregion
+            // would theoretically catch reassignment misses during merge
+            if (!DebugValidateRoomOwnership()) { throw new Exception("Wut?!?"); }
+            if (!DebugValidateConnectionMirroring()) { throw new Exception("For realz?!?"); }
+            DebugCountConnections();
+        }
+        private void AbortConstruction()
+        {
+            _aborted = true;
         }
         #endregion
 
-        #region Region Operations
+        #region Region/Room Operations
         private void MergeRegions(ProtoRoom[,] MasterTileList, int nMinimumSize, bool bAddAsSubregions)
         {
             for (int i = ProtoRegions.Count - 1; i >= 0; i--)
@@ -476,7 +607,6 @@ namespace win2d_text_game_world_generator
                 }
             }
         }
-
         private void MergeRegions(int nRegion1, int nRegion2, bool bAddAsSubregions)
         {
             if (bAddAsSubregions)
@@ -508,13 +638,12 @@ namespace win2d_text_game_world_generator
 
             ProtoRegions.RemoveAt(nRegion2);
         }
-
         private void ReindexRegions(int nStartingIndex, bool bReindexSubregions = false)
         {
             for (int i = nStartingIndex; i < ProtoRegions.Count; i++)
             {
                 ProtoRegions[i].ID = i;
-                if(bReindexSubregions)
+                if (bReindexSubregions)
                 {
                     for (int j = 0; j < ProtoRegions[i].ProtoSubregions.Count; j++)
                     {
@@ -570,10 +699,163 @@ namespace win2d_text_game_world_generator
 
             return region;
         }
+        private ProtoRoom AddRoomConnection(ProtoRoom currentRoom, string strDirection, bool bForce = false)
+        {
+            if (currentRoom.DirectionalRoomConnections.Contains(strDirection)) { return currentRoom; }
+
+            string strOppositeDirection = string.Empty;
+            PointInt connectingRoomCoordinates = null;
+            switch (strDirection)
+            {
+                case "nw":
+                    strOppositeDirection = "se";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y - 1);
+                    break;
+                case "n":
+                    strOppositeDirection = "s";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X, currentRoom.Coordinates.Y - 1);
+                    break;
+                case "ne":
+                    strOppositeDirection = "sw";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y - 1);
+                    break;
+                case "w":
+                    strOppositeDirection = "e";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y);
+                    break;
+                case "e":
+                    strOppositeDirection = "w";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y);
+                    break;
+                case "sw":
+                    strOppositeDirection = "ne";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y + 1);
+                    break;
+                case "s":
+                    strOppositeDirection = "n";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X, currentRoom.Coordinates.Y + 1);
+                    break;
+                case "se":
+                    strOppositeDirection = "nw";
+                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y + 1);
+                    break;
+                default:
+                    throw new Exception();
+            }
+
+            if (connectingRoomCoordinates.X < 0) { return currentRoom; }
+            if (connectingRoomCoordinates.X > WidthInTiles - 1) { return currentRoom; }
+            if (connectingRoomCoordinates.Y < 0) { return currentRoom; }
+            if (connectingRoomCoordinates.Y > HeightInTiles - 1) { return currentRoom; }
+
+            ProtoRoom connectingRoom = MasterTileList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
+            if (connectingRoom.Elevation == 0) { return currentRoom; }
+            if (connectingRoom.DirectionalRoomConnections.Count >= Statics.MaxConnections && !bForce) { return currentRoom; }
+            currentRoom.DirectionalRoomConnections.Add(strDirection);
+            connectingRoom.DirectionalRoomConnections.Add(strOppositeDirection);
+            return connectingRoom;
+        }
+        #endregion
+
+        #region HeightMap
+        private float ComputeXValue(Dictionary<int, float> FilterKernel, int x, int y)
+        {
+            float fValue = 0.0f;
+
+            foreach (KeyValuePair<int, float> kvp in FilterKernel)
+            {
+                int offset = kvp.Key;
+                if (x + kvp.Key < 0) { offset = 0; }
+                if (x + kvp.Key > WidthInTiles - 1) { offset = 0; }
+
+                fValue += kvp.Value * MasterTileList[x + offset, y].Elevation;
+            }
+
+            return fValue;
+        }
+
+        private float ComputeYValue(float[,] fIntermediateBlurredHeightValues, Dictionary<int, float> FilterKernel, int x, int y)
+        {
+            float fValue = 0.0f;
+
+            foreach (KeyValuePair<int, float> kvp in FilterKernel)
+            {
+                int offset = kvp.Key;
+                if (y + kvp.Key < 0) { offset = 0; }
+                if (y + kvp.Key > HeightInTiles - 1) { offset = 0; }
+
+                fValue += kvp.Value * fIntermediateBlurredHeightValues[x, y + offset];
+            }
+
+            return fValue;
+        }
+
+        private void Agitate(ProtoRoom sourceRoom)
+        {
+            int x = sourceRoom.Coordinates.X;
+            int y = sourceRoom.Coordinates.Y;
+
+            int nNumAttempts = 0;
+            int nDirection = Statics.Random.Next(8);
+
+            while (nNumAttempts < 8)
+            {
+                nNumAttempts++;
+                switch (nDirection)
+                {
+                    case 0:
+                        if (Agitate(sourceRoom, x - 1, y - 1)) { return; } // nw
+                        break;
+                    case 1:
+                        if (Agitate(sourceRoom, x, y - 1)) { return; }     // n
+                        break;
+                    case 2:
+                        if (Agitate(sourceRoom, x + 1, y - 1)) { return; } // ne
+                        break;
+                    case 3:
+                        if (Agitate(sourceRoom, x - 1, y)) { return; }     // w
+                        break;
+                    case 4:
+                        if (Agitate(sourceRoom, x + 1, y)) { return; }     // e
+                        break;
+                    case 5:
+                        if (Agitate(sourceRoom, x - 1, y + 1)) { return; } // sw
+                        break;
+                    case 6:
+                        if (Agitate(sourceRoom, x, y + 1)) { return; }     // s
+                        break;
+                    case 7:
+                        if (Agitate(sourceRoom, x + 1, y + 1)) { return; } // se
+                        break;
+                }
+
+                nDirection = (nDirection + 1) % 8;
+            }
+        }
+        private bool Agitate(ProtoRoom sourceRoom, int x, int y)
+        {
+            if (x < 0) { return false; }
+            if (y < 0) { return false; }
+            if (x > WidthInTiles - 1) { return false; }
+            if (y > HeightInTiles - 1) { return false; }
+
+            ProtoRoom targetRoom = MasterTileList[x, y];
+            if (targetRoom.Elevation < sourceRoom.Elevation - Statics.HeightMapElevationFactor)
+            {
+                sourceRoom.Elevation -= Statics.HeightMapElevationFactor;
+                targetRoom.Elevation += Statics.HeightMapElevationFactor;
+
+                // roll the current elevation change downhill
+                Agitate(targetRoom);
+                return true;
+            }
+
+            return false;
+        }
         #endregion
 
         #region Debug
-        private bool DebugValidateMapIntegrity()
+        private bool DebugValidateRoomOwnership()
         {
             foreach (ProtoRegion pr in ProtoRegions)
             {
@@ -589,6 +871,83 @@ namespace win2d_text_game_world_generator
             }
 
             return true;
+        }
+        private bool DebugValidateConnectionMirroring()
+        {
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    ProtoRoom currentRoom = MasterTileList[x, y];
+                    ProtoRoom connectionRoom = null;
+
+                    foreach (string strConnection in currentRoom.DirectionalRoomConnections)
+                    {
+                        switch (strConnection)
+                        {
+                            case "nw":
+                                connectionRoom = MasterTileList[x - 1, y - 1];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("se")) { return false; }
+                                break;
+                            case "n":
+                                connectionRoom = MasterTileList[x, y - 1];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("s")) { return false; }
+                                break;
+                            case "ne":
+                                connectionRoom = MasterTileList[x + 1, y - 1];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("sw")) { return false; }
+                                break;
+                            case "w":
+                                connectionRoom = MasterTileList[x - 1, y];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("e")) { return false; }
+                                break;
+                            case "e":
+                                connectionRoom = MasterTileList[x + 1, y];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("w")) { return false; }
+                                break;
+                            case "sw":
+                                connectionRoom = MasterTileList[x - 1, y + 1];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("ne")) { return false; }
+                                break;
+                            case "s":
+                                connectionRoom = MasterTileList[x, y + 1];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("n")) { return false; }
+                                break;
+                            case "se":
+                                connectionRoom = MasterTileList[x + 1, y + 1];
+                                if (!connectionRoom.DirectionalRoomConnections.Contains("nw")) { return false; }
+                                break;
+                            default:
+                                throw new Exception();
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        private void DebugCountConnections()
+        {
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    ProtoRoom protoRoom = MasterTileList[x, y];
+                    foreach (string strConnection in protoRoom.DirectionalRoomConnections)
+                    {
+                        switch (strConnection)
+                        {
+                            case "nw": Statics.DebugNWConnectionCount++; break;
+                            case "n": Statics.DebugNConnectionCount++; break;
+                            case "ne": Statics.DebugNEConnectionCount++; break;
+                            case "w": Statics.DebugWConnectionCount++; break;
+                            case "e": Statics.DebugEConnectionCount++; break;
+                            case "sw": Statics.DebugSWConnectionCount++; break;
+                            case "s": Statics.DebugSConnectionCount++; break;
+                            case "se": Statics.DebugSEConnectionCount++; break;
+                        }
+                    }
+                }
+            }
         }
         #endregion
 
