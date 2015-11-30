@@ -26,9 +26,10 @@ namespace win2d_text_game_world_generator
             {
                 _elevation = value;
                 if (_elevation < 1) { _elevationcolor = Colors.Blue; }
-                else if (_elevation < 2) { _elevationcolor = Colors.Gold; }
-                else if (_elevation < 7) { _elevationcolor = Colors.Green; }
-                else if (_elevation < 10) { _elevationcolor = Colors.Brown; }
+                else if (_elevation < 3) { _elevationcolor = Colors.Gold; }
+                else if (_elevation < 15) { _elevationcolor = Colors.Green; }
+                else if (_elevation < 20) { _elevationcolor = Colors.DarkGreen; }
+                else if (_elevation < 26) { _elevationcolor = Colors.Brown; }
                 else { _elevationcolor = Colors.White; }
             }
         }

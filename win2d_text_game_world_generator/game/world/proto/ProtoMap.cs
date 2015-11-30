@@ -44,10 +44,10 @@ namespace win2d_text_game_world_generator
             AssignSubregionColors();
             GenerateHeightMap();
             CalculateWaterCoverage();
-            //CreateRoomConnections();
-            //if (!_aborted) { FixDisconnectedRooms(); }
-            //if (!_aborted) { FixCrossedPaths(); }
-            //if (!_aborted) { DebugValidation(); }
+            CreateRoomConnections();
+            if (!_aborted) { FixDisconnectedRooms(); }
+            if (!_aborted) { FixCrossedPaths(); }
+            if (!_aborted) { DebugValidation(); }
         }
         private void CalculateLayout(int width, int height)
         {
@@ -133,15 +133,17 @@ namespace win2d_text_game_world_generator
         }
         private void GenerateHeightMap()
         {
+            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
             for(int x = 0; x < WidthInTiles; x++)
             {
                 for(int y = 0; y < HeightInTiles; y++)
                 {
-                    MasterTileList[x, y].Elevation = Statics.Random.Next(15);
+                    MasterTileList[x, y].Elevation = 15 + (int)pn.GetRandomHeight(x, y, 15, 0.1f, 1.2f, 0.5f, 5); // Statics.Random.Next(15);
+                    //MasterTileList[x, y].Elevation = 15 + (int)pn.GetRandomHeight(x, y, 15, 1.5f, 1.2f, 0.5f, 5);
                 }
             }
 
-            BlurHeightMap(1);
+            BlurHeightMap(5);
 
             //for (int i = 0; i < nNumberOfDrops; i++)
             //{
@@ -216,7 +218,7 @@ namespace win2d_text_game_world_generator
             int nNumberOfConnectionAttempts = 0;
             MainPath = new HashSet<PointInt>();
             // if fewer than 80% of land tiles are connected to main path, connect more tiles
-            while (MainPath.Count < (TotalTiles * LandCoverage * 0.1f))
+            while (MainPath.Count < (TotalTiles * LandCoverage * 0.8f))
             {
                 if(++nNumberOfConnectionAttempts == 5) { AbortConstruction(); return; }
 

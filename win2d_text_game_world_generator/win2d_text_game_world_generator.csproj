@@ -96,6 +96,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="game\utility\PerlinNoise.cs" />
     <Compile Include="game\world\Map.cs" />
     <Compile Include="game\world\proto\ProtoMap.cs" />
     <Compile Include="game\utility\PointInt.cs" />

@@ -98,14 +98,16 @@ namespace win2d_text_game_world_generator
             Point p = e.GetCurrentPoint(gridMain).Position;
             Statics.MouseX = p.X;
             Statics.MouseY = p.Y;
-            Statics.CurrentMouseRegion = map.GetRegion((int)(p.X - Statics.Padding) / Statics.PixelScale, (int)(p.Y - Statics.Padding) / Statics.PixelScale);
+            int x = (int)(p.X - Statics.Padding) / Statics.PixelScale;
+            int y = (int)(p.Y - Statics.Padding) / Statics.PixelScale;
+            Statics.CurrentMouseRegion = map.GetRegion(x, y);
             if (Statics.CurrentMouseRegion != null)
             {
-                Statics.CurrentMouseSubregion = map.GetSubregion(Statics.CurrentMouseRegion, (int)p.X / Statics.PixelScale, (int)p.Y / Statics.PixelScale);
+                Statics.CurrentMouseSubregion = map.GetSubregion(Statics.CurrentMouseRegion, x, y);
 
                 if (Statics.CurrentMouseSubregion != null)
                 {
-                    Room room = map.GetRoom(Statics.CurrentMouseSubregion, (int)p.X / Statics.PixelScale, (int)p.Y / Statics.PixelScale);
+                    Room room = map.GetRoom(Statics.CurrentMouseSubregion, x, y);
                     if (room != null)
                     {
                         Statics.DebugHeightString = "Elevation: " + room.Elevation.ToString();
@@ -142,18 +144,18 @@ namespace win2d_text_game_world_generator
         {
             lock(Statics.lockDebugLists)
             {
-                //CanvasTextLayout LayoutHundred = new CanvasTextLayout(args.DrawingSession, (100 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-                //args.DrawingSession.DrawTextLayout(LayoutHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 70), Colors.White);
+                CanvasTextLayout LayoutHundred = new CanvasTextLayout(args.DrawingSession, (100 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+                args.DrawingSession.DrawTextLayout(LayoutHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 70), Colors.White);
 
-                //CanvasTextLayout LayoutTwoHundred = new CanvasTextLayout(args.DrawingSession, (200 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-                //args.DrawingSession.DrawTextLayout(LayoutTwoHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 120), Colors.White);
+                CanvasTextLayout LayoutTwoHundred = new CanvasTextLayout(args.DrawingSession, (200 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+                args.DrawingSession.DrawTextLayout(LayoutTwoHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 120), Colors.White);
 
-                //CanvasTextLayout LayoutThreeHundred = new CanvasTextLayout(args.DrawingSession, (300 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-                //args.DrawingSession.DrawTextLayout(LayoutThreeHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 170), Colors.White);
+                CanvasTextLayout LayoutThreeHundred = new CanvasTextLayout(args.DrawingSession, (300 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+                args.DrawingSession.DrawTextLayout(LayoutThreeHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 170), Colors.White);
 
-                //args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 50, Statics.MouseY - 50, 100, 100), Colors.White);
-                //args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 100, Statics.MouseY - 100, 200, 200), Colors.White);
-                //args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 150, Statics.MouseY - 150, 300, 300), Colors.White);
+                args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 50, Statics.MouseY - 50, 100, 100), Colors.White);
+                args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 100, Statics.MouseY - 100, 200, 200), Colors.White);
+                args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 150, Statics.MouseY - 150, 300, 300), Colors.White);
 
                 args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
                 // args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1510, 20), Colors.White);

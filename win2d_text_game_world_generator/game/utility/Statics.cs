@@ -58,7 +58,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 10;
+        public static int PixelScale = 6;
 
         public static int Padding = 10;
 
