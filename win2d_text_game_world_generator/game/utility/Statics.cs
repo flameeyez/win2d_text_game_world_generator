@@ -23,6 +23,8 @@ namespace win2d_text_game_world_generator
         public static float fPersistence;
         public static int nOctaves;
 
+        public static byte HeightMapOpacity = 75;
+
         public static Region CurrentMouseRegion = null;
         public static Subregion CurrentMouseSubregion = null;
 
@@ -34,12 +36,11 @@ namespace win2d_text_game_world_generator
         public static int MapCount = 0;
         public static int HeightMapElevationFactor = 10;
 
-        public static bool DrawDebug = true;
-        public static bool DrawPaths = false;
-        public static bool DrawSubregions = false;
-        public static bool DrawGrid = false;
-
-        public static MapDrawType MapDrawType = MapDrawType.REGIONS;
+        public static bool DebugDrawDebug = true;
+        public static bool DebugDrawPaths = false;
+        public static bool DebugDrawSubregions = false;
+        public static bool DebugDrawGrid = false;
+        public static MapDrawType DebugMapDrawType = MapDrawType.REGIONS;
 
         public static int DebugNWConnectionCount;
         public static int DebugNConnectionCount;
@@ -50,9 +51,12 @@ namespace win2d_text_game_world_generator
         public static int DebugSConnectionCount;
         public static int DebugSEConnectionCount;
 
-        public static int MaxConnections = 3;
-        public static int TilesInMainPath1;
-        public static int TilesInMainPath2;
+        public static string DebugMapCreationTimeString = string.Empty;
+        public static string DebugMapTotalRegionCountString = string.Empty;
+        public static string DebugMapTotalTileCountString = string.Empty;
+        public static string DebugHeightString = string.Empty;
+
+        public static int RoomMaxConnections = 3;
 
         public static double MouseX = 0;
         public static double MouseY = 0;
@@ -63,16 +67,11 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 10;
+        public static int PixelScale = 6;
 
         public static int Padding = 10;
 
         public static Vector2 MapPosition = Vector2.Zero;
-
-        public static string DebugMapCreationTimeString = string.Empty;
-        public static string DebugMapTotalRegionCountString = string.Empty;
-        public static string DebugMapTotalTileCountString = string.Empty;
-        public static string DebugHeightString = string.Empty;
 
         // probability that region will continue to try to expand past minimum size
         // calculated once for each tile added
@@ -81,10 +80,6 @@ namespace win2d_text_game_world_generator
         public static int ProbabilityOfExpansion = 0;
         public static int MinimumRegionSize = 100;
         public static int MergeThreshold = 500;
-
-        // timing
-        public static int MapUpdateThreshold = 0; //500;
-        public static int PauseBetweenBattlesMilliseconds = 500;
 
         public static Random Random = new Random(DateTime.Now.Millisecond);
         public static CanvasTextFormat FontSmall = new CanvasTextFormat();
@@ -307,6 +302,7 @@ namespace win2d_text_game_world_generator
             FontExtraLarge.WordWrapping = CanvasWordWrapping.NoWrap;
         }
 
+        #region Random
         public static Color RandomColor()
         {
             int red = 20 + Statics.Random.Next(235);
@@ -315,35 +311,14 @@ namespace win2d_text_game_world_generator
 
             return Color.FromArgb(255, (byte)red, (byte)green, (byte)blue);
         }
-
         public static T RandomListItem<T>(this List<T> list)
         {
             return list[Statics.Random.Next(list.Count)];
         }
-
         public static T RandomArrayItem<T>(this T[] array)
         {
             return array[Statics.Random.Next(array.Length)];
         }
-
-        //public static string RandomRegionName(Leader leader)
-        //{
-        //    string strRegionType = RegionTypes.RandomString();// + " of " + (Statics.Random.Next(2) == 0 ? "" : "the ") + RegionSuffixes.RandomString();
-        //    string strReturn = string.Empty;
-
-        //    switch (Statics.Random.Next(2))
-        //    {
-        //        case 0:
-        //            // prefix
-        //            strReturn = strRegionType + " of " + (Statics.Random.Next(2) == 0 ? "" : "the ") + leader.LastName;
-        //            break;
-        //        case 1:
-        //            // suffix
-        //            strReturn = leader.LastName + " " + strRegionType;
-        //            break;
-        //    }
-
-        //    return strReturn;
-        //}
+        #endregion
     }
 }

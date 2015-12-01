@@ -43,30 +43,32 @@ namespace win2d_text_game_world_generator
 
         private void CoreWindow_KeyUp(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
-            
+
         }
 
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
-            switch(args.VirtualKey)
+            switch (args.VirtualKey)
             {
                 case Windows.System.VirtualKey.H:
-                    Statics.MapDrawType = MapDrawType.HEIGHTMAP;
+                    Statics.DebugMapDrawType = MapDrawType.HEIGHTMAP;
+                    Statics.HeightMapOpacity = 255;
                     break;
                 case Windows.System.VirtualKey.R:
-                    Statics.MapDrawType = MapDrawType.REGIONS;
+                    Statics.DebugMapDrawType = MapDrawType.REGIONS;
+                    Statics.HeightMapOpacity = 75;
                     break;
                 case Windows.System.VirtualKey.P:
-                    Statics.DrawPaths = !Statics.DrawPaths;
+                    Statics.DebugDrawPaths = !Statics.DebugDrawPaths;
                     break;
                 case Windows.System.VirtualKey.S:
-                    Statics.DrawSubregions = !Statics.DrawSubregions;
+                    Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
                     break;
                 case Windows.System.VirtualKey.D:
-                    Statics.DrawDebug = !Statics.DrawDebug;
+                    Statics.DebugDrawDebug = !Statics.DebugDrawDebug;
                     break;
                 case Windows.System.VirtualKey.G:
-                    Statics.DrawGrid = !Statics.DrawGrid;
+                    Statics.DebugDrawGrid = !Statics.DebugDrawGrid;
                     break;
             }
         }
@@ -77,17 +79,17 @@ namespace win2d_text_game_world_generator
             PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
             if (p.IsLeftButtonPressed)
             {
-                Statics.DrawSubregions = !Statics.DrawSubregions;
+                Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
             }
             else if (p.IsRightButtonPressed)
             {
-                Reset();
+                // Reset();
 
-                //Statics.RollingReset = !Statics.RollingReset;
-                //if (Statics.RollingReset)
-                //{
-                //    RollingReset();
-                //}
+                Statics.RollingReset = !Statics.RollingReset;
+                if (Statics.RollingReset)
+                {
+                    RollingReset();
+                }
             }
         }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -124,7 +126,7 @@ namespace win2d_text_game_world_generator
         #region Draw
         private void canvasMain_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
-            switch (Statics.MapDrawType)
+            switch (Statics.DebugMapDrawType)
             {
                 case MapDrawType.REGIONS:
                     map.DrawRegions(args);
@@ -134,31 +136,57 @@ namespace win2d_text_game_world_generator
                     break;
             }
 
-            if (Statics.DrawDebug)
+            if (Statics.DebugDrawDebug)
             {
                 DrawDebug(args);
             }
         }
-        Rect DebugRect = new Rect(1500, 10, 400, 560);
+
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
-            lock(Statics.lockDebugLists)
+            lock (Statics.lockDebugLists)
             {
                 DrawDebugRadar(args);
 
-                args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
-                // args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1510, 20), Colors.White);
+                List<string> DebugStrings = new List<string>();
+
+                // populate list
                 if (Statics.MapCreationTimes != null && Statics.MapCreationTimes.Count > 0)
                 {
-                    args.DrawingSession.DrawText("Average creation time: " + Statics.MapCreationTimes.Average().ToString() + "ms", new Vector2(1510, 20), Colors.White);
-                    args.DrawingSession.DrawText("Min creation time: " + Statics.MapCreationTimes.Min().ToString() + "ms", new Vector2(1510, 40), Colors.White);
-                    args.DrawingSession.DrawText("Max creation time: " + Statics.MapCreationTimes.Max().ToString() + "ms", new Vector2(1510, 60), Colors.White);
+                    DebugStrings.Add("Average map creation time: " + Statics.MapCreationTimes.Average().ToString() + "ms");
+                    DebugStrings.Add("Min map creation time: " + Statics.MapCreationTimes.Min().ToString() + "ms");
+                    DebugStrings.Add("Max map creation time: " + Statics.MapCreationTimes.Max().ToString() + "ms");
+                }
+                if(map != null)
+                {
+                    DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
                 }
                 if (Statics.MapAbortCounts != null && Statics.MapAbortCounts.Count > 0)
                 {
-                    args.DrawingSession.DrawText("Average abort count: " + Statics.MapAbortCounts.Average().ToString(), new Vector2(1510, 80), Colors.White);
-                    args.DrawingSession.DrawText("Min abort count: " + Statics.MapAbortCounts.Min().ToString(), new Vector2(1510, 100), Colors.White);
-                    args.DrawingSession.DrawText("Max abort count: " + Statics.MapAbortCounts.Max().ToString(), new Vector2(1510, 120), Colors.White);
+                    DebugStrings.Add("Average map abort count: " + Statics.MapAbortCounts.Average().ToString());
+                    DebugStrings.Add("Min map abort count: " + Statics.MapAbortCounts.Min().ToString());
+                    DebugStrings.Add("Max map abort count: " + Statics.MapAbortCounts.Max().ToString());
+                }
+                if(map!= null)
+                {
+                    DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
+                }
+
+                DebugStrings.Add(Statics.DebugMapTotalTileCountString);
+                DebugStrings.Add("Map width (tiles): " + map.WidthInTiles.ToString());
+                DebugStrings.Add("Map height (tiles): " + map.HeightInTiles.ToString());
+                DebugStrings.Add("Map count: " + Statics.MapCount.ToString());
+                DebugStrings.Add(Statics.DebugHeightString);
+
+                // draw
+                Rect DebugRect = new Rect(1500, 10, 400, 560);
+                args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
+
+                float fCurrentY = 20;
+                foreach (string strDebugString in DebugStrings)
+                {
+                    args.DrawingSession.DrawText(strDebugString, new Vector2(1510, fCurrentY), Colors.White);
+                    fCurrentY += 20;
                 }
 
                 //if (Statics.FixLoopCounts != null && Statics.FixLoopCounts.Count > 0)
@@ -168,9 +196,6 @@ namespace win2d_text_game_world_generator
                 //    args.DrawingSession.DrawText("Max fix loop count: " + Statics.FixLoopCounts.Max().ToString(), new Vector2(1510, 120), Colors.White);
                 //}
                 //args.DrawingSession.DrawText(Statics.DebugMapTotalRegionCountString, new Vector2(1510, 140), Colors.White);
-                args.DrawingSession.DrawText(Statics.DebugMapTotalTileCountString, new Vector2(1510, 160), Colors.White);
-                args.DrawingSession.DrawText("Width: " + map.WidthInTiles.ToString(), new Vector2(1510, 180), Colors.White);
-                args.DrawingSession.DrawText("Height: " + map.HeightInTiles.ToString(), new Vector2(1510, 200), Colors.White);
 
                 //args.DrawingSession.DrawText("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString(), new Vector2(1510, 180), Colors.White);
                 //if (Statics.CurrentMouseRegion != null)
@@ -187,12 +212,10 @@ namespace win2d_text_game_world_generator
                 //    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
                 //}
 
-                args.DrawingSession.DrawText("Map count: " + Statics.MapCount.ToString(), new Vector2(1510, 320), Colors.White);
-
-                args.DrawingSession.DrawText("Frequency: " + Statics.fFrequency.ToString(), new Vector2(1510, 340), Colors.White);
-                args.DrawingSession.DrawText("Amplitude: " + Statics.fAmplitude.ToString(), new Vector2(1510, 360), Colors.White);
-                args.DrawingSession.DrawText("Persistence: " + Statics.fPersistence.ToString(), new Vector2(1510, 380), Colors.White);
-                args.DrawingSession.DrawText("Octaves: " + Statics.nOctaves.ToString(), new Vector2(1510, 400), Colors.White);
+                //args.DrawingSession.DrawText("Frequency: " + Statics.fFrequency.ToString(), new Vector2(1510, 340), Colors.White);
+                //args.DrawingSession.DrawText("Amplitude: " + Statics.fAmplitude.ToString(), new Vector2(1510, 360), Colors.White);
+                //args.DrawingSession.DrawText("Persistence: " + Statics.fPersistence.ToString(), new Vector2(1510, 380), Colors.White);
+                //args.DrawingSession.DrawText("Octaves: " + Statics.nOctaves.ToString(), new Vector2(1510, 400), Colors.White);
 
                 //args.DrawingSession.DrawText("NW: " + Statics.DebugNWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
                 //args.DrawingSession.DrawText("N: " + Statics.DebugNConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
@@ -203,8 +226,7 @@ namespace win2d_text_game_world_generator
                 //args.DrawingSession.DrawText("S: " + Statics.DebugSConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
                 //args.DrawingSession.DrawText("SE: " + Statics.DebugSEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
 
-                args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1510, 500), Colors.White);
-                args.DrawingSession.DrawText(Statics.DebugHeightString, new Vector2(1510, 520), Colors.White);
+
             }
         }
         private void DrawDebugRadar(CanvasAnimatedDrawEventArgs args)
@@ -264,7 +286,7 @@ namespace win2d_text_game_world_generator
 
             map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
 
-            lock(Statics.lockDebugLists)
+            lock (Statics.lockDebugLists)
             {
                 Statics.MapCreationTimes.Add(map.DebugCreationTime.TotalMilliseconds);
                 Statics.MapAbortCounts.Add(map.DebugAbortedCount);

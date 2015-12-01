@@ -46,9 +46,9 @@ namespace win2d_text_game_world_generator
                     MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
                     Statics.PixelScale,
                     Statics.PixelScale),
-                    bDrawSubregions ? Color.FromArgb(255, Subregion.Color.R, Subregion.Color.G, Subregion.Color.B) : Region.Color);
+                    bDrawSubregions ? Subregion.Color : Region.Color);
 
-            if (Statics.DrawGrid)
+            if (Statics.DebugDrawGrid)
             {
                 DrawBorder(MapPosition, args);
             }
@@ -60,7 +60,7 @@ namespace win2d_text_game_world_generator
                     MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
                     Statics.PixelScale,
                     Statics.PixelScale),
-                    Color.FromArgb(50, ElevationColor.R, ElevationColor.G, ElevationColor.B));
+                    Color.FromArgb(Statics.HeightMapOpacity, ElevationColor.R, ElevationColor.G, ElevationColor.B));
         }
         public void DrawBorder(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {

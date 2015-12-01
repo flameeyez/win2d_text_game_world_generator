@@ -41,10 +41,10 @@ namespace win2d_text_game_world_generator
         {
             foreach(Room room in Rooms)
             {
-                room.DrawTile(MapPosition, args, Statics.DrawSubregions);
+                room.DrawTile(MapPosition, args, Statics.DebugDrawSubregions);
             }
 
-            if(Statics.DrawPaths)
+            if(Statics.DebugDrawPaths)
             {
                 foreach(Room room in Rooms)
                 {
@@ -66,7 +66,7 @@ namespace win2d_text_game_world_generator
                 room.DrawHeight(MapPosition, args);
             }
 
-            if(Statics.DrawPaths)
+            if(Statics.DebugDrawPaths)
             {
                 foreach(Room room in Rooms)
                 {

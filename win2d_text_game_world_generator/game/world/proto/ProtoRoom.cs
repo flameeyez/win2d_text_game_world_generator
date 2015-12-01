@@ -55,5 +55,16 @@ namespace win2d_text_game_world_generator
             Available = true;
             Elevation = 3;
         }
+
+        public override bool Equals(object obj)
+        {
+            ProtoRoom compare = obj as ProtoRoom;
+            return this.Coordinates.Equals(compare.Coordinates);
+        }
+
+        public override int GetHashCode()
+        {
+            return Coordinates.GetHashCode();
+        }
     }
 }
