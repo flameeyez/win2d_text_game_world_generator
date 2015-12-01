@@ -18,6 +18,11 @@ namespace win2d_text_game_world_generator
 
     public static class Statics
     {
+        public static float fFrequency;
+        public static float fAmplitude;
+        public static float fPersistence;
+        public static int nOctaves;
+
         public static Region CurrentMouseRegion = null;
         public static Subregion CurrentMouseSubregion = null;
 
@@ -58,7 +63,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 6;
+        public static int PixelScale = 10;
 
         public static int Padding = 10;
 

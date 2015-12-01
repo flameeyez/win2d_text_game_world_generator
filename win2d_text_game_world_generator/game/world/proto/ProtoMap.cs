@@ -20,10 +20,10 @@ namespace win2d_text_game_world_generator
         public int HeightInTiles { get { return HeightInPixels / Statics.PixelScale; } }
         public int TotalTiles { get { return WidthInTiles * HeightInTiles; } }
 
-        private int WaterTiles = 0;
-        private int LandTiles = 0;
-        private float WaterCoverage { get { return (float)WaterTiles / TotalTiles; } }
-        private float LandCoverage { get { return (float)LandTiles / TotalTiles; } }
+        private int TraversableTiles = 0;
+        private int UntraversableTiles = 0;
+        private float TraversableTilePercentage { get { return (float)TraversableTiles / TotalTiles; } }
+        private float UntraversableTilePercentage { get { return (float)UntraversableTiles / TotalTiles; } }
 
         private HashSet<PointInt> TilesNotInMainPath;
         private HashSet<PointInt> OpenSet;
@@ -43,7 +43,7 @@ namespace win2d_text_game_world_generator
             ReindexSubregions();
             AssignSubregionColors();
             GenerateHeightMap();
-            CalculateWaterCoverage();
+            CalculateTraversability();
             CreateRoomConnections();
             if (!_aborted) { FixDisconnectedRooms(); }
             if (!_aborted) { FixCrossedPaths(); }
@@ -133,83 +133,32 @@ namespace win2d_text_game_world_generator
         }
         private void GenerateHeightMap()
         {
-            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
-            for(int x = 0; x < WidthInTiles; x++)
+            int[,] mountainMap = GenerateHeightMapMountains();
+            int[,] waterMap = GenerateHeightMapWater();
+            int[,] forestMap = GenerateHeightMapForest();
+            // int[,] desertMap = GenerateHeightMapDesert();
+
+            for (int x = 0; x < WidthInTiles; x++)
             {
-                for(int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < HeightInTiles; y++)
                 {
-                    MasterTileList[x, y].Elevation = 15 + (int)pn.GetRandomHeight(x, y, 15, 0.1f, 1.2f, 0.5f, 5); // Statics.Random.Next(15);
-                    //MasterTileList[x, y].Elevation = 15 + (int)pn.GetRandomHeight(x, y, 15, 1.5f, 1.2f, 0.5f, 5);
-                }
-            }
-
-            BlurHeightMap(5);
-
-            //for (int i = 0; i < nNumberOfDrops; i++)
-            //{
-            //    int dropX = Statics.Random.Next(WidthInTiles);
-            //    int dropY = Statics.Random.Next(HeightInTiles);
-            //    ProtoRoom dropRoom = MasterTileList[dropX, dropY];
-
-            //    for (int j = 0; j < nNumberOfParticlesPerDrop; j++)
-            //    {
-            //        // dropRoom.Elevation++;
-            //        dropRoom.Elevation += Statics.HeightMapElevationFactor;
-            //        Agitate(dropRoom);
-            //    }
-            //}
-        }
-        private void BlurHeightMap(int iterations)
-        {
-            // blurring
-            Dictionary<int, float> FilterKernel = new Dictionary<int, float>();
-            FilterKernel.Add(-3, 0.006f);
-            FilterKernel.Add(-2, 0.061f);
-            FilterKernel.Add(-1, 0.242f);
-            FilterKernel.Add(0, 0.383f);
-            FilterKernel.Add(1, 0.242f);
-            FilterKernel.Add(2, 0.061f);
-            FilterKernel.Add(3, 0.006f);
-
-            for (int i = 0; i < iterations; i++)
-            {
-                float[,] fIntermediateBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
-                float[,] fFinalBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
-
-                for (int x = 0; x < WidthInTiles; x++)
-                {
-                    for (int y = 0; y < HeightInTiles; y++)
-                    {
-                        fIntermediateBlurredHeightValues[x, y] = ComputeXValue(FilterKernel, x, y);
-                    }
-                }
-
-                for (int x = 0; x < WidthInTiles; x++)
-                {
-                    for (int y = 0; y < HeightInTiles; y++)
-                    {
-                        fFinalBlurredHeightValues[x, y] = ComputeYValue(fIntermediateBlurredHeightValues, FilterKernel, x, y);
-                    }
-                }
-
-                for (int x = 0; x < WidthInTiles; x++)
-                {
-                    for (int y = 0; y < HeightInTiles; y++)
-                    {
-                        MasterTileList[x, y].Elevation = (int)fFinalBlurredHeightValues[x, y];
-                    }
+                    if (mountainMap[x, y] >= 27) { MasterTileList[x, y].Elevation = mountainMap[x, y]; }
+                    else if (waterMap[x, y] == 25 || waterMap[x, y] == 26) { MasterTileList[x, y].Elevation = 1; }
+                    else if (waterMap[x, y] > 26) { MasterTileList[x, y].Elevation = 0; }
+                    else if (forestMap[x, y] == 30) { MasterTileList[x, y].Elevation = 13; }
+                    // else if (desertMap[x, y] == 30) { MasterTileList[x, y].Elevation = 1; }
                 }
             }
         }
-        private void CalculateWaterCoverage()
+        private void CalculateTraversability()
         {
             // could save time here by merging into last iteration of blur
-            for(int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < WidthInTiles; x++)
             {
-                for(int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < HeightInTiles; y++)
                 {
-                    if(MasterTileList[x,y].Elevation == 0) { WaterTiles++; }
-                    else { LandTiles++; }
+                    if (MasterTileList[x, y].Elevation == 0 || MasterTileList[x, y].Elevation == 30) { UntraversableTiles++; }
+                    else { TraversableTiles++; }
                 }
             }
         }
@@ -218,9 +167,9 @@ namespace win2d_text_game_world_generator
             int nNumberOfConnectionAttempts = 0;
             MainPath = new HashSet<PointInt>();
             // if fewer than 80% of land tiles are connected to main path, connect more tiles
-            while (MainPath.Count < (TotalTiles * LandCoverage * 0.8f))
+            while (MainPath.Count < (TotalTiles * TraversableTilePercentage * 0.8f))
             {
-                if(++nNumberOfConnectionAttempts == 5) { AbortConstruction(); return; }
+                if (++nNumberOfConnectionAttempts == 5) { AbortConstruction(); return; }
 
                 MainPath = new HashSet<PointInt>();
 
@@ -229,7 +178,7 @@ namespace win2d_text_game_world_generator
                     for (int y = 0; y < HeightInTiles; y++)
                     {
                         ProtoRoom currentRoom = MasterTileList[x, y];
-                        if(currentRoom.Elevation == 0) { continue; }
+                        if (currentRoom.Elevation == 0 || currentRoom.Elevation == 30) { continue; }
 
                         for (int i = 0; i < 10; i++)
                         {
@@ -275,7 +224,7 @@ namespace win2d_text_game_world_generator
             int initialY = Statics.Random.Next(HeightInTiles);
             ProtoRoom protoRoom = MasterTileList[initialX, initialY];
 
-            while(protoRoom.Elevation == 0)
+            while (protoRoom.Elevation == 0)
             {
                 initialX = Statics.Random.Next(WidthInTiles);
                 initialY = Statics.Random.Next(HeightInTiles);
@@ -359,9 +308,9 @@ namespace win2d_text_game_world_generator
         private void FixDisconnectedRooms()
         {
             int nFixAttempts = 0;
-            while (MainPath.Count != LandTiles)
+            while (MainPath.Count != TraversableTiles)
             {
-                if(++nFixAttempts >= 5) { AbortConstruction(); return; }
+                if (++nFixAttempts >= 5) { AbortConstruction(); return; }
 
                 for (int i = TilesNotInMainPath.Count - 1; i >= 0; i--)
                 {
@@ -751,7 +700,7 @@ namespace win2d_text_game_world_generator
             if (connectingRoomCoordinates.Y > HeightInTiles - 1) { return currentRoom; }
 
             ProtoRoom connectingRoom = MasterTileList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
-            if (connectingRoom.Elevation == 0) { return currentRoom; }
+            if (connectingRoom.Elevation == 0 || connectingRoom.Elevation == 30) { return currentRoom; }
             if (connectingRoom.DirectionalRoomConnections.Count >= Statics.MaxConnections && !bForce) { return currentRoom; }
             currentRoom.DirectionalRoomConnections.Add(strDirection);
             connectingRoom.DirectionalRoomConnections.Add(strOppositeDirection);
@@ -760,7 +709,134 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region HeightMap
-        private float ComputeXValue(Dictionary<int, float> FilterKernel, int x, int y)
+        private int[,] GenerateHeightMapMountains()
+        {
+            // mountain pass
+            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            Statics.fFrequency = 0.01f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            int[,] mountainMap = new int[WidthInTiles, HeightInTiles];
+
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    if (nElevation >= 27) { mountainMap[x, y] = nElevation; }
+                }
+            }
+
+            Blur(mountainMap, 3);
+            return mountainMap;
+        }
+        private int[,] GenerateHeightMapWater()
+        {
+            // water pass
+            int[,] waterMap = new int[WidthInTiles, HeightInTiles];
+            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            Statics.fFrequency = 0.05f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    if (nElevation >= 25) { waterMap[x, y] = nElevation; }
+                }
+            }
+            Blur(waterMap, 3);
+            return waterMap;
+        }
+        private int[,] GenerateHeightMapForest()
+        {
+            // forest pass
+            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            Statics.fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            int[,] forestMap = new int[WidthInTiles, HeightInTiles];
+
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    if (nElevation >= 20) { forestMap[x, y] = 30; }
+                }
+            }
+
+            Blur(forestMap, 3);
+            return forestMap;
+        }
+        private int[,] GenerateHeightMapDesert()
+        {
+            // desert pass
+            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            Statics.fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            int[,] desertMap = new int[WidthInTiles, HeightInTiles];
+
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    if (nElevation >= 20) { desertMap[x, y] = 30; }
+                }
+            }
+
+            Blur(desertMap, 3);
+            return desertMap;
+        }
+        private void Blur(int[,] heightMap, int iterations)
+        {
+            Dictionary<int, float> FilterKernel = new Dictionary<int, float>();
+            FilterKernel.Add(-3, 0.006f);
+            FilterKernel.Add(-2, 0.061f);
+            FilterKernel.Add(-1, 0.242f);
+            FilterKernel.Add(0, 0.383f);
+            FilterKernel.Add(1, 0.242f);
+            FilterKernel.Add(2, 0.061f);
+            FilterKernel.Add(3, 0.006f);
+
+            for (int i = 0; i < iterations; i++)
+            {
+                float[,] fIntermediateBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+                float[,] fFinalBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+
+                for (int x = 0; x < WidthInTiles; x++)
+                {
+                    for (int y = 0; y < HeightInTiles; y++)
+                    {
+                        fIntermediateBlurredHeightValues[x, y] = ComputeXValue(heightMap, FilterKernel, x, y);
+                    }
+                }
+
+                for (int x = 0; x < WidthInTiles; x++)
+                {
+                    for (int y = 0; y < HeightInTiles; y++)
+                    {
+                        fFinalBlurredHeightValues[x, y] = ComputeYValue(fIntermediateBlurredHeightValues, FilterKernel, x, y);
+                    }
+                }
+
+                for (int x = 0; x < WidthInTiles; x++)
+                {
+                    for (int y = 0; y < HeightInTiles; y++)
+                    {
+                        heightMap[x, y] = (int)fFinalBlurredHeightValues[x, y];
+                    }
+                }
+            }
+        }
+        private float ComputeXValue(int[,] heightMap, Dictionary<int, float> FilterKernel, int x, int y)
         {
             float fValue = 0.0f;
 
@@ -770,12 +846,11 @@ namespace win2d_text_game_world_generator
                 if (x + kvp.Key < 0) { offset = 0; }
                 if (x + kvp.Key > WidthInTiles - 1) { offset = 0; }
 
-                fValue += kvp.Value * MasterTileList[x + offset, y].Elevation;
+                fValue += kvp.Value * heightMap[x + offset, y]; // MasterTileList[x + offset, y].Elevation;
             }
 
             return fValue;
         }
-
         private float ComputeYValue(float[,] fIntermediateBlurredHeightValues, Dictionary<int, float> FilterKernel, int x, int y)
         {
             float fValue = 0.0f;
@@ -790,69 +865,6 @@ namespace win2d_text_game_world_generator
             }
 
             return fValue;
-        }
-
-        private void Agitate(ProtoRoom sourceRoom)
-        {
-            int x = sourceRoom.Coordinates.X;
-            int y = sourceRoom.Coordinates.Y;
-
-            int nNumAttempts = 0;
-            int nDirection = Statics.Random.Next(8);
-
-            while (nNumAttempts < 8)
-            {
-                nNumAttempts++;
-                switch (nDirection)
-                {
-                    case 0:
-                        if (Agitate(sourceRoom, x - 1, y - 1)) { return; } // nw
-                        break;
-                    case 1:
-                        if (Agitate(sourceRoom, x, y - 1)) { return; }     // n
-                        break;
-                    case 2:
-                        if (Agitate(sourceRoom, x + 1, y - 1)) { return; } // ne
-                        break;
-                    case 3:
-                        if (Agitate(sourceRoom, x - 1, y)) { return; }     // w
-                        break;
-                    case 4:
-                        if (Agitate(sourceRoom, x + 1, y)) { return; }     // e
-                        break;
-                    case 5:
-                        if (Agitate(sourceRoom, x - 1, y + 1)) { return; } // sw
-                        break;
-                    case 6:
-                        if (Agitate(sourceRoom, x, y + 1)) { return; }     // s
-                        break;
-                    case 7:
-                        if (Agitate(sourceRoom, x + 1, y + 1)) { return; } // se
-                        break;
-                }
-
-                nDirection = (nDirection + 1) % 8;
-            }
-        }
-        private bool Agitate(ProtoRoom sourceRoom, int x, int y)
-        {
-            if (x < 0) { return false; }
-            if (y < 0) { return false; }
-            if (x > WidthInTiles - 1) { return false; }
-            if (y > HeightInTiles - 1) { return false; }
-
-            ProtoRoom targetRoom = MasterTileList[x, y];
-            if (targetRoom.Elevation < sourceRoom.Elevation - Statics.HeightMapElevationFactor)
-            {
-                sourceRoom.Elevation -= Statics.HeightMapElevationFactor;
-                targetRoom.Elevation += Statics.HeightMapElevationFactor;
-
-                // roll the current elevation change downhill
-                Agitate(targetRoom);
-                return true;
-            }
-
-            return false;
         }
         #endregion
 
@@ -954,6 +966,143 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Cut Code
+        //private void Agitate(ProtoRoom sourceRoom)
+        //{
+        //    int x = sourceRoom.Coordinates.X;
+        //    int y = sourceRoom.Coordinates.Y;
+
+        //    int nNumAttempts = 0;
+        //    int nDirection = Statics.Random.Next(8);
+
+        //    while (nNumAttempts < 8)
+        //    {
+        //        nNumAttempts++;
+        //        switch (nDirection)
+        //        {
+        //            case 0:
+        //                if (Agitate(sourceRoom, x - 1, y - 1)) { return; } // nw
+        //                break;
+        //            case 1:
+        //                if (Agitate(sourceRoom, x, y - 1)) { return; }     // n
+        //                break;
+        //            case 2:
+        //                if (Agitate(sourceRoom, x + 1, y - 1)) { return; } // ne
+        //                break;
+        //            case 3:
+        //                if (Agitate(sourceRoom, x - 1, y)) { return; }     // w
+        //                break;
+        //            case 4:
+        //                if (Agitate(sourceRoom, x + 1, y)) { return; }     // e
+        //                break;
+        //            case 5:
+        //                if (Agitate(sourceRoom, x - 1, y + 1)) { return; } // sw
+        //                break;
+        //            case 6:
+        //                if (Agitate(sourceRoom, x, y + 1)) { return; }     // s
+        //                break;
+        //            case 7:
+        //                if (Agitate(sourceRoom, x + 1, y + 1)) { return; } // se
+        //                break;
+        //        }
+
+        //        nDirection = (nDirection + 1) % 8;
+        //    }
+        //}
+        //private bool Agitate(ProtoRoom sourceRoom, int x, int y)
+        //{
+        //    if (x < 0) { return false; }
+        //    if (y < 0) { return false; }
+        //    if (x > WidthInTiles - 1) { return false; }
+        //    if (y > HeightInTiles - 1) { return false; }
+
+        //    ProtoRoom targetRoom = MasterTileList[x, y];
+        //    if (targetRoom.Elevation < sourceRoom.Elevation - Statics.HeightMapElevationFactor)
+        //    {
+        //        sourceRoom.Elevation -= Statics.HeightMapElevationFactor;
+        //        targetRoom.Elevation += Statics.HeightMapElevationFactor;
+
+        //        // roll the current elevation change downhill
+        //        Agitate(targetRoom);
+        //        return true;
+        //    }
+
+        //    return false;
+        //}
+
+        //private void BlurHeightMap(int iterations)
+        //{
+        //    // blurring
+        //    Dictionary<int, float> FilterKernel = new Dictionary<int, float>();
+        //    FilterKernel.Add(-3, 0.006f);
+        //    FilterKernel.Add(-2, 0.061f);
+        //    FilterKernel.Add(-1, 0.242f);
+        //    FilterKernel.Add(0, 0.383f);
+        //    FilterKernel.Add(1, 0.242f);
+        //    FilterKernel.Add(2, 0.061f);
+        //    FilterKernel.Add(3, 0.006f);
+
+        //    for (int i = 0; i < iterations; i++)
+        //    {
+        //        float[,] fIntermediateBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+        //        float[,] fFinalBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+
+        //        for (int x = 0; x < WidthInTiles; x++)
+        //        {
+        //            for (int y = 0; y < HeightInTiles; y++)
+        //            {
+        //                fIntermediateBlurredHeightValues[x, y] = ComputeXValue(FilterKernel, x, y);
+        //            }
+        //        }
+
+        //        for (int x = 0; x < WidthInTiles; x++)
+        //        {
+        //            for (int y = 0; y < HeightInTiles; y++)
+        //            {
+        //                fFinalBlurredHeightValues[x, y] = ComputeYValue(fIntermediateBlurredHeightValues, FilterKernel, x, y);
+        //            }
+        //        }
+
+        //        for (int x = 0; x < WidthInTiles; x++)
+        //        {
+        //            for (int y = 0; y < HeightInTiles; y++)
+        //            {
+        //                MasterTileList[x, y].Elevation = (int)fFinalBlurredHeightValues[x, y];
+        //            }
+        //        }
+        //    }
+        //}
+        //for (int x = 0; x < WidthInTiles; x++)
+        //{
+        //    for (int y = 0; y < HeightInTiles; y++)
+        //    {
+        //        int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+        //        if (nElevation >= 27) { MasterTileList[x, y].Elevation = nElevation; }
+        //        // 0.1f, 1.2f, 0.5f, 5); // Statics.Random.Next(15);
+        //        //MasterTileList[x, y].Elevation = 15 + (int)pn.GetRandomHeight(x, y, 15, 1.5f, 1.2f, 0.5f, 5);
+        //    }
+        //}
+
+        //BlurHeightMap(1);
+
+
+
+        //// forest pass
+        //pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+        //Statics.fFrequency = 0.02f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+        //Statics.fAmplitude = 3.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+        //Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+        //Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+        //for (int x = 0; x < WidthInTiles; x++)
+        //{
+        //    for (int y = 0; y < HeightInTiles; y++)
+        //    {
+        //        int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+        //        if (nElevation >= 27 && MasterTileList[x, y].Elevation == 3) { MasterTileList[x, y].Elevation = 50; }
+        //    }
+        //}
+
+        //// final blur
+        //BlurHeightMap(2);
         //private ProtoRoom AddRoomConnection(ProtoRoom sourceProtoRoom, Dictionary<PointInt, ProtoRoom> protoRoomsNeedingConnections, Dictionary<PointInt, ProtoRoom> protoRoomsWithConnections, string strDirection)
         //{
         //    if (strDirection == "o") { return sourceProtoRoom; }

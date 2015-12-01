@@ -144,18 +144,7 @@ namespace win2d_text_game_world_generator
         {
             lock(Statics.lockDebugLists)
             {
-                CanvasTextLayout LayoutHundred = new CanvasTextLayout(args.DrawingSession, (100 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-                args.DrawingSession.DrawTextLayout(LayoutHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 70), Colors.White);
-
-                CanvasTextLayout LayoutTwoHundred = new CanvasTextLayout(args.DrawingSession, (200 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-                args.DrawingSession.DrawTextLayout(LayoutTwoHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 120), Colors.White);
-
-                CanvasTextLayout LayoutThreeHundred = new CanvasTextLayout(args.DrawingSession, (300 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-                args.DrawingSession.DrawTextLayout(LayoutThreeHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 170), Colors.White);
-
-                args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 50, Statics.MouseY - 50, 100, 100), Colors.White);
-                args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 100, Statics.MouseY - 100, 200, 200), Colors.White);
-                args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 150, Statics.MouseY - 150, 300, 300), Colors.White);
+                DrawDebugRadar(args);
 
                 args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
                 // args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1510, 20), Colors.White);
@@ -178,37 +167,60 @@ namespace win2d_text_game_world_generator
                 //    args.DrawingSession.DrawText("Min fix loop count: " + Statics.FixLoopCounts.Min().ToString(), new Vector2(1510, 100), Colors.White);
                 //    args.DrawingSession.DrawText("Max fix loop count: " + Statics.FixLoopCounts.Max().ToString(), new Vector2(1510, 120), Colors.White);
                 //}
-                args.DrawingSession.DrawText(Statics.DebugMapTotalRegionCountString, new Vector2(1510, 140), Colors.White);
+                //args.DrawingSession.DrawText(Statics.DebugMapTotalRegionCountString, new Vector2(1510, 140), Colors.White);
                 args.DrawingSession.DrawText(Statics.DebugMapTotalTileCountString, new Vector2(1510, 160), Colors.White);
-                args.DrawingSession.DrawText("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString(), new Vector2(1510, 180), Colors.White);
-                if (Statics.CurrentMouseRegion != null)
-                {
-                    args.DrawingSession.DrawText("Region ID: " + Statics.CurrentMouseRegion.ID.ToString(), new Vector2(1510, 200), Colors.White);
-                    args.DrawingSession.DrawText("Region name: " + Statics.CurrentMouseRegion.Name, new Vector2(1510, 220), Colors.White);
-                    args.DrawingSession.DrawText("Region room count: " + Statics.CurrentMouseRegion.RoomCount.ToString(), new Vector2(1510, 240), Colors.White);
-                    args.DrawingSession.DrawText("Region subregion count: " + Statics.CurrentMouseRegion.Subregions.Count.ToString(), new Vector2(1510, 260), Colors.White);
-                }
+                args.DrawingSession.DrawText("Width: " + map.WidthInTiles.ToString(), new Vector2(1510, 180), Colors.White);
+                args.DrawingSession.DrawText("Height: " + map.HeightInTiles.ToString(), new Vector2(1510, 200), Colors.White);
 
-                if (Statics.CurrentMouseSubregion != null)
-                {
-                    args.DrawingSession.DrawText("Subregion: " + Statics.CurrentMouseSubregion.ID.ToString(), new Vector2(1510, 280), Colors.White);
-                    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
-                }
+                //args.DrawingSession.DrawText("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString(), new Vector2(1510, 180), Colors.White);
+                //if (Statics.CurrentMouseRegion != null)
+                //{
+                //    args.DrawingSession.DrawText("Region ID: " + Statics.CurrentMouseRegion.ID.ToString(), new Vector2(1510, 200), Colors.White);
+                //    args.DrawingSession.DrawText("Region name: " + Statics.CurrentMouseRegion.Name, new Vector2(1510, 220), Colors.White);
+                //    args.DrawingSession.DrawText("Region room count: " + Statics.CurrentMouseRegion.RoomCount.ToString(), new Vector2(1510, 240), Colors.White);
+                //    args.DrawingSession.DrawText("Region subregion count: " + Statics.CurrentMouseRegion.Subregions.Count.ToString(), new Vector2(1510, 260), Colors.White);
+                //}
+
+                //if (Statics.CurrentMouseSubregion != null)
+                //{
+                //    args.DrawingSession.DrawText("Subregion: " + Statics.CurrentMouseSubregion.ID.ToString(), new Vector2(1510, 280), Colors.White);
+                //    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
+                //}
 
                 args.DrawingSession.DrawText("Map count: " + Statics.MapCount.ToString(), new Vector2(1510, 320), Colors.White);
 
-                args.DrawingSession.DrawText("NW: " + Statics.DebugNWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
-                args.DrawingSession.DrawText("N: " + Statics.DebugNConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
-                args.DrawingSession.DrawText("NE: " + Statics.DebugNEConnectionCount.ToString(), new Vector2(1510, 380), Colors.White);
-                args.DrawingSession.DrawText("W: " + Statics.DebugWConnectionCount.ToString(), new Vector2(1510, 400), Colors.White);
-                args.DrawingSession.DrawText("E: " + Statics.DebugEConnectionCount.ToString(), new Vector2(1510, 420), Colors.White);
-                args.DrawingSession.DrawText("SW: " + Statics.DebugSWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
-                args.DrawingSession.DrawText("S: " + Statics.DebugSConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
-                args.DrawingSession.DrawText("SE: " + Statics.DebugSEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
+                args.DrawingSession.DrawText("Frequency: " + Statics.fFrequency.ToString(), new Vector2(1510, 340), Colors.White);
+                args.DrawingSession.DrawText("Amplitude: " + Statics.fAmplitude.ToString(), new Vector2(1510, 360), Colors.White);
+                args.DrawingSession.DrawText("Persistence: " + Statics.fPersistence.ToString(), new Vector2(1510, 380), Colors.White);
+                args.DrawingSession.DrawText("Octaves: " + Statics.nOctaves.ToString(), new Vector2(1510, 400), Colors.White);
+
+                //args.DrawingSession.DrawText("NW: " + Statics.DebugNWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
+                //args.DrawingSession.DrawText("N: " + Statics.DebugNConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
+                //args.DrawingSession.DrawText("NE: " + Statics.DebugNEConnectionCount.ToString(), new Vector2(1510, 380), Colors.White);
+                //args.DrawingSession.DrawText("W: " + Statics.DebugWConnectionCount.ToString(), new Vector2(1510, 400), Colors.White);
+                //args.DrawingSession.DrawText("E: " + Statics.DebugEConnectionCount.ToString(), new Vector2(1510, 420), Colors.White);
+                //args.DrawingSession.DrawText("SW: " + Statics.DebugSWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
+                //args.DrawingSession.DrawText("S: " + Statics.DebugSConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
+                //args.DrawingSession.DrawText("SE: " + Statics.DebugSEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
 
                 args.DrawingSession.DrawText(Statics.DebugMapCreationTimeString, new Vector2(1510, 500), Colors.White);
                 args.DrawingSession.DrawText(Statics.DebugHeightString, new Vector2(1510, 520), Colors.White);
             }
+        }
+        private void DrawDebugRadar(CanvasAnimatedDrawEventArgs args)
+        {
+            CanvasTextLayout LayoutHundred = new CanvasTextLayout(args.DrawingSession, (100 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+            args.DrawingSession.DrawTextLayout(LayoutHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 70), Colors.White);
+
+            CanvasTextLayout LayoutTwoHundred = new CanvasTextLayout(args.DrawingSession, (200 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+            args.DrawingSession.DrawTextLayout(LayoutTwoHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 120), Colors.White);
+
+            CanvasTextLayout LayoutThreeHundred = new CanvasTextLayout(args.DrawingSession, (300 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+            args.DrawingSession.DrawTextLayout(LayoutThreeHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 170), Colors.White);
+
+            args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 50, Statics.MouseY - 50, 100, 100), Colors.White);
+            args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 100, Statics.MouseY - 100, 200, 200), Colors.White);
+            args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 150, Statics.MouseY - 150, 300, 300), Colors.White);
         }
         #endregion
 

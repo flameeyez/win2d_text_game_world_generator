@@ -22,7 +22,7 @@ namespace win2d_text_game_world_generator
         /// Gets the value for a specific X and Y coordinate
         /// results in range [-1, 1] * maxHeight
         public float GetRandomHeight(float X, float Y, float MaxHeight,
-            float Frequency, float Amplitude, float Persistance,
+            float Frequency, float Amplitude, float Persistence,
             int Octaves)
         {
             GenerateNoise();
@@ -31,7 +31,7 @@ namespace win2d_text_game_world_generator
             {
                 FinalValue += GetSmoothNoise(X * Frequency, Y * Frequency) * Amplitude;
                 Frequency *= 2.0f;
-                Amplitude *= Persistance;
+                Amplitude *= Persistence;
             }
             if (FinalValue < -1.0f)
             {

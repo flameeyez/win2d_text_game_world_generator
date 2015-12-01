@@ -69,6 +69,7 @@ namespace win2d_text_game_world_generator
             foreach (Region region in Regions)
             {
                 region.DrawRegion(Position, args);
+                region.DrawHeightMap(Position, args);
             }
         }
         public void DrawConnections(CanvasAnimatedDrawEventArgs args)
