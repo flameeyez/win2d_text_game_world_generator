@@ -32,6 +32,8 @@ namespace win2d_text_game_world_generator
 
         public static List<double> MapCreationTimes = new List<double>();
         public static List<int> MapAbortCounts = new List<int>();
+        public static List<int> CreateRoomConnectionsCounts = new List<int>();
+        public static List<int> FixRoomConnectionsCounts = new List<int>();
         public static bool RollingReset = false;
         public static int MapCount = 0;
         public static int HeightMapElevationFactor = 10;
@@ -67,7 +69,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 6;
+        public static int PixelScale = 10;
 
         public static int Padding = 10;
 

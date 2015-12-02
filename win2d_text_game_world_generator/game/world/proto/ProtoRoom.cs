@@ -66,5 +66,10 @@ namespace win2d_text_game_world_generator
         {
             return Coordinates.GetHashCode();
         }
+
+        public bool IsTraversable()
+        {
+            return !(Elevation == 0 || Elevation == 30);
+        }
     }
 }

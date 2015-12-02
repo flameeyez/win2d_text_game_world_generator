@@ -25,6 +25,12 @@ namespace win2d_text_game_world_generator
         #region Debug
         public TimeSpan DebugCreationTime { get; set; }
         public int DebugAbortedCount { get; set; }
+        public HashSet<PointInt> TilesNotInMainPath { get; set; }
+        public HashSet<PointInt> MainPath { get; set; }
+        public int DebugFixConnectionsTime { get; set; }
+        public int DebugFixConnectionsCount { get; set; }
+        public int DebugCreateRoomConnectionsTime { get; set; }
+        public int DebugCreateRoomConnectionsCount { get; set; }
         #endregion
 
         #region Initialization
@@ -52,6 +58,12 @@ namespace win2d_text_game_world_generator
             // START DEBUG
             s.Stop();
             map.DebugCreationTime = s.Elapsed;
+            map.TilesNotInMainPath = pm.TilesNotInMainPath;
+            map.MainPath = pm.MainPath;
+            map.DebugFixConnectionsTime = pm.DebugFixConnectionsTime;
+            map.DebugFixConnectionsCount = pm.DebugFixConnectionsCount;
+            map.DebugCreateRoomConnectionsTime = pm.DebugCreateRoomConnectionsTime;
+            map.DebugCreateRoomConnectionsCount = pm.DebugCreateRoomConnectionsCount;
             // END DEBUG
 
             return map;

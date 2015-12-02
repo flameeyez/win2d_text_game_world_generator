@@ -36,6 +36,7 @@ namespace win2d_text_game_world_generator
         {
             this.InitializeComponent();
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
+            Application.Current.DebugSettings.EnableFrameRateCounter = false;
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
@@ -83,13 +84,13 @@ namespace win2d_text_game_world_generator
             }
             else if (p.IsRightButtonPressed)
             {
-                // Reset();
+                Reset();
 
-                Statics.RollingReset = !Statics.RollingReset;
-                if (Statics.RollingReset)
-                {
-                    RollingReset();
-                }
+                //Statics.RollingReset = !Statics.RollingReset;
+                //if (Statics.RollingReset)
+                //{
+                //    RollingReset();
+                //}
             }
         }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -133,6 +134,25 @@ namespace win2d_text_game_world_generator
                     break;
                 case MapDrawType.HEIGHTMAP:
                     map.DrawHeightMap(args);
+                    if (map.TilesNotInMainPath.Count > 0)
+                    {
+                        foreach (PointInt pi in map.TilesNotInMainPath)
+                        {
+                            args.DrawingSession.FillRectangle(
+                                new Rect(map.Position.X + Statics.Padding + pi.X * Statics.PixelScale,
+                                         map.Position.Y + Statics.Padding + pi.Y * Statics.PixelScale,
+                                         Statics.PixelScale,
+                                         Statics.PixelScale),
+                                         Colors.Red);
+
+                            //args.DrawingSession.FillRectangle(
+                            //    new Rect(map.Position.X + Statics.Padding + (pi.X + 5) * Statics.PixelScale,
+                            //             map.Position.Y + Statics.Padding + pi.Y * Statics.PixelScale,
+                            //             Statics.PixelScale * 10,
+                            //             Statics.PixelScale * 2),
+                            //             Colors.Red);
+                        }
+                    }
                     break;
             }
 
@@ -157,7 +177,7 @@ namespace win2d_text_game_world_generator
                     DebugStrings.Add("Min map creation time: " + Statics.MapCreationTimes.Min().ToString() + "ms");
                     DebugStrings.Add("Max map creation time: " + Statics.MapCreationTimes.Max().ToString() + "ms");
                 }
-                if(map != null)
+                if (map != null)
                 {
                     DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
                 }
@@ -167,7 +187,7 @@ namespace win2d_text_game_world_generator
                     DebugStrings.Add("Min map abort count: " + Statics.MapAbortCounts.Min().ToString());
                     DebugStrings.Add("Max map abort count: " + Statics.MapAbortCounts.Max().ToString());
                 }
-                if(map!= null)
+                if (map != null)
                 {
                     DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
                 }
@@ -177,6 +197,24 @@ namespace win2d_text_game_world_generator
                 DebugStrings.Add("Map height (tiles): " + map.HeightInTiles.ToString());
                 DebugStrings.Add("Map count: " + Statics.MapCount.ToString());
                 DebugStrings.Add(Statics.DebugHeightString);
+
+                if (Statics.FixRoomConnectionsCounts != null && Statics.FixRoomConnectionsCounts.Count > 0)
+                {
+                    DebugStrings.Add("Average fix connections attempts: " + Statics.FixRoomConnectionsCounts.Average().ToString());
+                    DebugStrings.Add("Min fix connections attempts: " + Statics.FixRoomConnectionsCounts.Min().ToString());
+                    DebugStrings.Add("Max fix connections attempts: " + Statics.FixRoomConnectionsCounts.Max().ToString());
+                }
+                DebugStrings.Add("Last fix connections attempts: " + map.DebugFixConnectionsCount.ToString());
+                DebugStrings.Add("Last fix connections time: " + map.DebugFixConnectionsTime.ToString() + "ms");
+
+                if (Statics.CreateRoomConnectionsCounts != null && Statics.CreateRoomConnectionsCounts.Count > 0)
+                {
+                    DebugStrings.Add("Average room connections attempts: " + Statics.CreateRoomConnectionsCounts.Average().ToString());
+                    DebugStrings.Add("Min room connections attempts: " + Statics.CreateRoomConnectionsCounts.Min().ToString());
+                    DebugStrings.Add("Max room connections attempts: " + Statics.CreateRoomConnectionsCounts.Max().ToString());
+                }
+                DebugStrings.Add("Last room connections attempts: " + map.DebugCreateRoomConnectionsCount.ToString());
+                DebugStrings.Add("Last room connections time: " + map.DebugCreateRoomConnectionsTime.ToString() + "ms");
 
                 // draw
                 Rect DebugRect = new Rect(1500, 10, 400, 560);
@@ -290,6 +328,8 @@ namespace win2d_text_game_world_generator
             {
                 Statics.MapCreationTimes.Add(map.DebugCreationTime.TotalMilliseconds);
                 Statics.MapAbortCounts.Add(map.DebugAbortedCount);
+                Statics.CreateRoomConnectionsCounts.Add(map.DebugCreateRoomConnectionsCount);
+                Statics.FixRoomConnectionsCounts.Add(map.DebugFixConnectionsCount);
             }
 
             Statics.DebugMapCreationTimeString = "Map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms";
