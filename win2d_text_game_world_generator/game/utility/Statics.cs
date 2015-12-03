@@ -69,7 +69,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 10;
+        public static int PixelScale = 3;
 
         public static int Padding = 10;
 
@@ -322,5 +322,30 @@ namespace win2d_text_game_world_generator
             return array[Statics.Random.Next(array.Length)];
         }
         #endregion
+
+        public static string GetOppositeDirection(string strDirection)
+        {
+            switch(strDirection)
+            {
+                case "nw":
+                    return "se";
+                case "n":
+                    return "s";
+                case "ne":
+                    return "sw";
+                case "w":
+                    return "e";
+                case "e":
+                    return "w";
+                case "sw":
+                    return "ne";
+                case "s":
+                    return "n";
+                case "se":
+                    return "nw";
+            }
+
+            return string.Empty;
+        }
     }
 }

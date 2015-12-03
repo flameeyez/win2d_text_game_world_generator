@@ -25,20 +25,13 @@ namespace win2d_text_game_world_generator
             set
             {
                 _elevation = value;
-                //if (_elevation < 1) { _elevationcolor = Colors.White; }
-                //else if (_elevation < 3) { _elevationcolor = Colors.Brown; }
-                ////else if (_elevation < 15) { _elevationcolor = Colors.Green; }
-                ////else if (_elevation < 20) { _elevationcolor = Colors.DarkGreen; }
-                //else if (_elevation < 27) { _elevationcolor = Colors.Green; }// Brown; }
-                //else if (_elevation < 30) { _elevationcolor = Colors.Brown; }// Brown; }
-                //else { _elevationcolor = Colors.White; }
 
                 if (_elevation < 1) { _elevationcolor = Colors.Blue; }
                 else if (_elevation < 2) { _elevationcolor = Colors.Gold; }
                 else if (_elevation < 10) { _elevationcolor = Colors.Green; }
                 else if (_elevation < 15) { _elevationcolor = Colors.DarkGreen; }
-                else if (_elevation < 27) { _elevationcolor = Colors.Green; }// Brown; }
-                else if (_elevation < 30) { _elevationcolor = Colors.Brown; }// Brown; }
+                else if (_elevation < 27) { _elevationcolor = Colors.Green; }
+                else if (_elevation < 30) { _elevationcolor = Colors.Brown; }
                 else { _elevationcolor = Colors.White; }
 
             }
@@ -53,7 +46,7 @@ namespace win2d_text_game_world_generator
             Coordinates = coordinates;
             DirectionalRoomConnections = new List<string>();
             Available = true;
-            Elevation = 3;
+            Elevation = 3; // initialize to grass/green
         }
 
         public override bool Equals(object obj)

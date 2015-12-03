@@ -49,7 +49,7 @@ namespace win2d_text_game_world_generator
             GenerateHeightMap();
             CalculateTraversability();
             CreateRoomConnections();
-            if (!_aborted) { FixDisconnectedRooms(); }
+            if (!_aborted) { RemoveDisconnectedRoomConnections(); }
             if (!_aborted) { FixCrossedPaths(); }
 
             if (!_aborted) { CreateProtoRegions(); }
@@ -115,6 +115,7 @@ namespace win2d_text_game_world_generator
                 }
             }
         }
+
         private void CreateRoomConnections()
         {
             Stopwatch s = Stopwatch.StartNew();
@@ -124,13 +125,13 @@ namespace win2d_text_game_world_generator
             {
                 if (++DebugCreateRoomConnectionsCount == 5)
                 {
-                    //PointInt pi = TilesNotInMainPath.ElementAt(0);
-                    //ProtoRoom pr = MasterTileList[pi.X, pi.Y];
-                    //int n = Walk(pr).Count;
-
                     AbortConstruction();
+
+                    // BEGIN DEBUG
+                    //Statics.RollingReset = false;
                     s.Stop();
                     DebugCreateRoomConnectionsTime = (int)s.ElapsedMilliseconds;
+                    // END DEBUG
                     return;
                 }
 
@@ -164,70 +165,30 @@ namespace win2d_text_game_world_generator
                 AssessRoomConnectivity();
             }
 
+            // BEGIN DEBUG
             s.Stop();
             DebugCreateRoomConnectionsTime = (int)s.ElapsedMilliseconds;
+            // END DEBUG
         }
-        private void FixDisconnectedRooms()
+        private void RemoveDisconnectedRoomConnections()
         {
-            Stopwatch s = Stopwatch.StartNew();
-            if (MainPath.Count + TilesNotInMainPath.Count != TraversableTiles)
+            foreach (PointInt pi in TilesNotInMainPath)
             {
-                int i = 0;
-                i++;
-            }
-
-            while (MainPath.Count != TraversableTiles)
-            {
-                if (MainPath.Count + TilesNotInMainPath.Count != TraversableTiles)
+                ProtoRoom pr = MasterTileList[pi.X, pi.Y];
+                for (int i = pr.DirectionalRoomConnections.Count - 1; i >= 0; i--)
                 {
-                    int i = 0;
-                    i++;
-                }
+                    PointInt neighborCoordinates = GetNeighborCoordinates(pi, pr.DirectionalRoomConnections[i]);
+                    ProtoRoom neighborRoom = MasterTileList[neighborCoordinates.X, neighborCoordinates.Y];
+                    bool bRemoved = neighborRoom.DirectionalRoomConnections.Remove(Statics.GetOppositeDirection(pr.DirectionalRoomConnections[i]));
 
-                if (++DebugFixConnectionsCount >= 5)
-                {
-                    //foreach (PointInt pi in TilesNotInMainPath)
-                    //{
-                    //    ProtoRoom pr = MasterTileList[pi.X, pi.Y];
-                    //    pr.DirectionalRoomConnections.Clear();
-                    //}
-                    PointInt pi = TilesNotInMainPath.ElementAt(0);
-                    ProtoRoom pr = MasterTileList[pi.X, pi.Y];
+                    // BEGIN DEBUG
+                    if (!bRemoved) { int j = 0; j++; }
+                    // END DEBUG
 
-                    int n = Walk(pr).Count;
-
-                    //AbortConstruction();
-                    Statics.RollingReset = false;
-                    s.Stop();
-                    DebugFixConnectionsTime = (int)s.ElapsedMilliseconds;
-
-                    return;
-                }
-
-                for (int i = TilesNotInMainPath.Count - 1; i >= 0; i--)
-                {
-                    PointInt currentCoordinates = TilesNotInMainPath.ElementAt(i);
-                    if (currentCoordinates.Y == HeightInTiles - 1)
-                    {
-                        int q = 0;
-                        q++;
-                    }
-                    ProtoRoom protoRoom = MasterTileList[currentCoordinates.X, currentCoordinates.Y];
-
-                    // attempt to connect current room to a neighbor that's already on the main path
-                    if (FixDisconnectedRoom(protoRoom, "nw")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "n")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "ne")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "w")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "e")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "sw")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "s")) { continue; }
-                    if (FixDisconnectedRoom(protoRoom, "se")) { continue; }
+                    pr.DirectionalRoomConnections.RemoveAt(i);
                 }
             }
-
-            s.Stop();
-            DebugFixConnectionsTime = (int)s.ElapsedMilliseconds;
+            return;
         }
         private bool FixDisconnectedRoom(ProtoRoom protoRoom, string strDirection)
         {
@@ -250,32 +211,6 @@ namespace win2d_text_game_world_generator
 
             return false;
         }
-
-        private PointInt GetNeighborCoordinates(PointInt sourceCoordinates, string strDirection)
-        {
-            switch (strDirection)
-            {
-                case "nw":
-                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y - 1);
-                case "n":
-                    return new PointInt(sourceCoordinates.X, sourceCoordinates.Y - 1);
-                case "ne":
-                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y - 1);
-                case "w":
-                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y);
-                case "e":
-                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y);
-                case "sw":
-                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y + 1);
-                case "s":
-                    return new PointInt(sourceCoordinates.X, sourceCoordinates.Y + 1);
-                case "se":
-                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y + 1);
-                default:
-                    return null;
-            }
-        }
-
         private void FixCrossedPaths()
         {
             for (int x = 0; x < WidthInTiles - 1; x++)
@@ -616,6 +551,30 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Pathing
+        private PointInt GetNeighborCoordinates(PointInt sourceCoordinates, string strDirection)
+        {
+            switch (strDirection)
+            {
+                case "nw":
+                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y - 1);
+                case "n":
+                    return new PointInt(sourceCoordinates.X, sourceCoordinates.Y - 1);
+                case "ne":
+                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y - 1);
+                case "w":
+                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y);
+                case "e":
+                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y);
+                case "sw":
+                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y + 1);
+                case "s":
+                    return new PointInt(sourceCoordinates.X, sourceCoordinates.Y + 1);
+                case "se":
+                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y + 1);
+                default:
+                    return null;
+            }
+        }
         private void AssessRoomConnectivity()
         {
             MainPath = new HashSet<PointInt>();
@@ -1059,6 +1018,65 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Cut Code
+        // attempt to connect straggler rooms to main path
+        //            if (MainPath.Count + TilesNotInMainPath.Count != TraversableTiles)
+        //            {
+        //                int i = 0;
+        //        i++;
+        //            }
+
+        //            while (MainPath.Count != TraversableTiles)
+        //            {
+        //                if (MainPath.Count + TilesNotInMainPath.Count != TraversableTiles)
+        //                {
+        //                    int i = 0;
+        //    i++;
+        //                }
+
+        //                if (++DebugFixConnectionsCount >= 5)
+        //                {
+        //                    //foreach (PointInt pi in TilesNotInMainPath)
+        //                    //{
+        //                    //    ProtoRoom pr = MasterTileList[pi.X, pi.Y];
+        //                    //    pr.DirectionalRoomConnections.Clear();
+        //                    //}
+        //                    PointInt pi = TilesNotInMainPath.ElementAt(0);
+        //ProtoRoom pr = MasterTileList[pi.X, pi.Y];
+
+        //int n = Walk(pr).Count;
+
+        ////AbortConstruction();
+        //Statics.RollingReset = false;
+        //                    s.Stop();
+        //                    DebugFixConnectionsTime = (int)s.ElapsedMilliseconds;
+
+        //                    return;
+        //                }
+
+        //                for (int i = TilesNotInMainPath.Count - 1; i >= 0; i--)
+        //                {
+        //                    PointInt currentCoordinates = TilesNotInMainPath.ElementAt(i);
+        //                    if (currentCoordinates.Y == HeightInTiles - 1)
+        //                    {
+        //                        int q = 0;
+        //q++;
+        //                    }
+        //                    ProtoRoom protoRoom = MasterTileList[currentCoordinates.X, currentCoordinates.Y];
+
+        //                    // attempt to connect current room to a neighbor that's already on the main path
+        //                    if (FixDisconnectedRoom(protoRoom, "nw")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "n")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "ne")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "w")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "e")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "sw")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "s")) { continue; }
+        //                    if (FixDisconnectedRoom(protoRoom, "se")) { continue; }
+        //                }
+        //            }
+
+        //            s.Stop();
+        //            DebugFixConnectionsTime = (int)s.ElapsedMilliseconds;
         //private void Agitate(ProtoRoom sourceRoom)
         //{
         //    int x = sourceRoom.Coordinates.X;

@@ -84,13 +84,13 @@ namespace win2d_text_game_world_generator
             }
             else if (p.IsRightButtonPressed)
             {
-                Reset();
+                // Reset();
 
-                //Statics.RollingReset = !Statics.RollingReset;
-                //if (Statics.RollingReset)
-                //{
-                //    RollingReset();
-                //}
+                Statics.RollingReset = !Statics.RollingReset;
+                if (Statics.RollingReset)
+                {
+                    RollingReset();
+                }
             }
         }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
