@@ -23,6 +23,12 @@ namespace win2d_text_game_world_generator
         public static float fPersistence;
         public static int nOctaves;
 
+        public static CanvasTextLayout ProgressPhase;
+        public static Vector2 ProgressPhasePosition;
+        public static float ProgressPercentage = 0.0f;
+        public static Rect ProgressPercentageRect;
+        public static Rect ProgressPercentageBorderRect;
+
         public static byte HeightMapOpacity = 75;
 
         public static Region CurrentMouseRegion = null;

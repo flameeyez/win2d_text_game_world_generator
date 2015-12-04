@@ -35,7 +35,7 @@ namespace win2d_text_game_world_generator
 
         #region Initialization
         private Map() { }
-        public static Map Create(int width, int height)
+        public static Map Create(int width, int height, IProgress<Tuple<string, float>> progress)
         {
             // START DEBUG
             Stopwatch s = Stopwatch.StartNew();
@@ -44,8 +44,8 @@ namespace win2d_text_game_world_generator
             // declared here for abort tracking
             Map map = new Map();
 
-            ProtoMap pm = new ProtoMap(width, height);
-            while (pm.Aborted) { ++map.DebugAbortedCount; pm = new ProtoMap(width, height); }
+            ProtoMap pm = new ProtoMap(width, height, progress);
+            while (pm.Aborted) { ++map.DebugAbortedCount; pm = new ProtoMap(width, height, progress); }
             
             map.Position = pm.Position;
             map.WidthInPixels = pm.WidthInPixels;

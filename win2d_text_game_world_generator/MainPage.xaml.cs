@@ -49,6 +49,8 @@ namespace win2d_text_game_world_generator
 
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
+            if (map == null) { return; }
+
             switch (args.VirtualKey)
             {
                 case Windows.System.VirtualKey.H:
@@ -77,6 +79,8 @@ namespace win2d_text_game_world_generator
         #region Mouse
         private void gridMain_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            if (map == null) { return; }
+
             PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
             if (p.IsLeftButtonPressed)
             {
@@ -84,13 +88,13 @@ namespace win2d_text_game_world_generator
             }
             else if (p.IsRightButtonPressed)
             {
-                // Reset();
+                Reset();
 
-                Statics.RollingReset = !Statics.RollingReset;
-                if (Statics.RollingReset)
-                {
-                    RollingReset();
-                }
+                //Statics.RollingReset = !Statics.RollingReset;
+                //if (Statics.RollingReset)
+                //{
+                //    RollingReset();
+                //}
             }
         }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -98,6 +102,8 @@ namespace win2d_text_game_world_generator
         }
         private void gridMain_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
+            if (map == null) { return; }
+
             Point p = e.GetCurrentPoint(gridMain).Position;
             Statics.MouseX = p.X;
             Statics.MouseY = p.Y;
@@ -127,6 +133,12 @@ namespace win2d_text_game_world_generator
         #region Draw
         private void canvasMain_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
+            if (map == null)
+            {
+                DrawProgress(args);
+                return;
+            }
+
             switch (Statics.DebugMapDrawType)
             {
                 case MapDrawType.REGIONS:
@@ -162,8 +174,25 @@ namespace win2d_text_game_world_generator
             }
         }
 
+        private void DrawProgress(CanvasAnimatedDrawEventArgs args)
+        {
+            args.DrawingSession.FillRectangle(new Rect(0, 0, Statics.CanvasWidth, Statics.CanvasHeight), Colors.CornflowerBlue);
+
+            if (Statics.ProgressPhase != null)
+            {
+                // progress text
+                args.DrawingSession.DrawTextLayout(Statics.ProgressPhase, Statics.ProgressPhasePosition, Colors.White);
+                // progress bar
+                args.DrawingSession.FillRectangle(Statics.ProgressPercentageRect, Colors.White);
+                // progress bar border
+                args.DrawingSession.DrawRectangle(Statics.ProgressPercentageBorderRect, Colors.White);
+            }
+        }
+
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
+            if (map == null) { return; }
+
             lock (Statics.lockDebugLists)
             {
                 DrawDebugRadar(args);
@@ -177,20 +206,17 @@ namespace win2d_text_game_world_generator
                     DebugStrings.Add("Min map creation time: " + Statics.MapCreationTimes.Min().ToString() + "ms");
                     DebugStrings.Add("Max map creation time: " + Statics.MapCreationTimes.Max().ToString() + "ms");
                 }
-                if (map != null)
-                {
-                    DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
-                }
+
+                DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
+
                 if (Statics.MapAbortCounts != null && Statics.MapAbortCounts.Count > 0)
                 {
                     DebugStrings.Add("Average map abort count: " + Statics.MapAbortCounts.Average().ToString());
                     DebugStrings.Add("Min map abort count: " + Statics.MapAbortCounts.Min().ToString());
                     DebugStrings.Add("Max map abort count: " + Statics.MapAbortCounts.Max().ToString());
                 }
-                if (map != null)
-                {
-                    DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
-                }
+
+                DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
 
                 DebugStrings.Add(Statics.DebugMapTotalTileCountString);
                 DebugStrings.Add("Map width (tiles): " + map.WidthInTiles.ToString());
@@ -216,8 +242,17 @@ namespace win2d_text_game_world_generator
                 DebugStrings.Add("Last room connections attempts: " + map.DebugCreateRoomConnectionsCount.ToString());
                 DebugStrings.Add("Last room connections time: " + map.DebugCreateRoomConnectionsTime.ToString() + "ms");
 
+                DebugStrings.Add("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString());
+                if (Statics.CurrentMouseRegion != null)
+                {
+                    DebugStrings.Add("Region ID: " + Statics.CurrentMouseRegion.ID.ToString());
+                    DebugStrings.Add("Region name: " + Statics.CurrentMouseRegion.Name);
+                    DebugStrings.Add("Region room count: " + Statics.CurrentMouseRegion.RoomCount.ToString());
+                    DebugStrings.Add("Region subregion count: " + Statics.CurrentMouseRegion.Subregions.Count.ToString());
+                }
+
                 // draw
-                Rect DebugRect = new Rect(1500, 10, 400, 560);
+                Rect DebugRect = new Rect(1500, 10, 400, 20 * (DebugStrings.Count + 1));
                 args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
 
                 float fCurrentY = 20;
@@ -227,33 +262,11 @@ namespace win2d_text_game_world_generator
                     fCurrentY += 20;
                 }
 
-                //if (Statics.FixLoopCounts != null && Statics.FixLoopCounts.Count > 0)
-                //{
-                //    args.DrawingSession.DrawText("Average fix loop count: " + Statics.FixLoopCounts.Average().ToString(), new Vector2(1510, 80), Colors.White);
-                //    args.DrawingSession.DrawText("Min fix loop count: " + Statics.FixLoopCounts.Min().ToString(), new Vector2(1510, 100), Colors.White);
-                //    args.DrawingSession.DrawText("Max fix loop count: " + Statics.FixLoopCounts.Max().ToString(), new Vector2(1510, 120), Colors.White);
-                //}
-                //args.DrawingSession.DrawText(Statics.DebugMapTotalRegionCountString, new Vector2(1510, 140), Colors.White);
-
-                //args.DrawingSession.DrawText("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString(), new Vector2(1510, 180), Colors.White);
-                //if (Statics.CurrentMouseRegion != null)
-                //{
-                //    args.DrawingSession.DrawText("Region ID: " + Statics.CurrentMouseRegion.ID.ToString(), new Vector2(1510, 200), Colors.White);
-                //    args.DrawingSession.DrawText("Region name: " + Statics.CurrentMouseRegion.Name, new Vector2(1510, 220), Colors.White);
-                //    args.DrawingSession.DrawText("Region room count: " + Statics.CurrentMouseRegion.RoomCount.ToString(), new Vector2(1510, 240), Colors.White);
-                //    args.DrawingSession.DrawText("Region subregion count: " + Statics.CurrentMouseRegion.Subregions.Count.ToString(), new Vector2(1510, 260), Colors.White);
-                //}
-
                 //if (Statics.CurrentMouseSubregion != null)
                 //{
                 //    args.DrawingSession.DrawText("Subregion: " + Statics.CurrentMouseSubregion.ID.ToString(), new Vector2(1510, 280), Colors.White);
                 //    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
                 //}
-
-                //args.DrawingSession.DrawText("Frequency: " + Statics.fFrequency.ToString(), new Vector2(1510, 340), Colors.White);
-                //args.DrawingSession.DrawText("Amplitude: " + Statics.fAmplitude.ToString(), new Vector2(1510, 360), Colors.White);
-                //args.DrawingSession.DrawText("Persistence: " + Statics.fPersistence.ToString(), new Vector2(1510, 380), Colors.White);
-                //args.DrawingSession.DrawText("Octaves: " + Statics.nOctaves.ToString(), new Vector2(1510, 400), Colors.White);
 
                 //args.DrawingSession.DrawText("NW: " + Statics.DebugNWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
                 //args.DrawingSession.DrawText("N: " + Statics.DebugNConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
@@ -263,8 +276,6 @@ namespace win2d_text_game_world_generator
                 //args.DrawingSession.DrawText("SW: " + Statics.DebugSWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
                 //args.DrawingSession.DrawText("S: " + Statics.DebugSConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
                 //args.DrawingSession.DrawText("SE: " + Statics.DebugSEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
-
-
             }
         }
         private void DrawDebugRadar(CanvasAnimatedDrawEventArgs args)
@@ -308,8 +319,10 @@ namespace win2d_text_game_world_generator
             Reset();
         }
 
-        private void Reset()
+        private async void Reset()
         {
+            map = null;
+
             Statics.DebugNWConnectionCount = 0;
             Statics.DebugNConnectionCount = 0;
             Statics.DebugNEConnectionCount = 0;
@@ -322,8 +335,35 @@ namespace win2d_text_game_world_generator
             Statics.FrameCount = 0;
             Statics.MapCount++;
 
-            map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
+            // map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
+            await Task.Run(() => map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels, new Progress<Tuple<string, float>>(progress => HandleProgress(progress))));
 
+            DebugSetMapCreationMetadata();
+
+            // if (map.DebugCreationTime.TotalMilliseconds > 20000) { Statics.RollingReset = false; }
+        }
+
+        private void HandleProgress(Tuple<string, float> progress)
+        {
+            int nProgressBarWidth = 400;
+
+            Statics.ProgressPhase = new CanvasTextLayout(canvasMain.Device, progress.Item1, Statics.FontMedium, 0, 0);
+            float x = (float)(Statics.CanvasWidth - Statics.ProgressPhase.LayoutBounds.Width) / 2;
+            float y = (float)(Statics.CanvasHeight - Statics.ProgressPhase.LayoutBounds.Height) / 2;
+            Statics.ProgressPhasePosition = new Vector2(x, y);
+            Statics.ProgressPercentage = progress.Item2;
+            Statics.ProgressPercentageRect = new Rect((Statics.CanvasWidth - nProgressBarWidth) / 2, 
+                                                      Statics.ProgressPhasePosition.Y + Statics.ProgressPhase.LayoutBounds.Height + 10,
+                                                      nProgressBarWidth * Statics.ProgressPercentage,
+                                                      20);
+            Statics.ProgressPercentageBorderRect = new Rect((Statics.CanvasWidth - nProgressBarWidth) / 2,
+                                                            Statics.ProgressPhasePosition.Y + Statics.ProgressPhase.LayoutBounds.Height + 10,
+                                                            nProgressBarWidth, 
+                                                            20);
+        }
+
+        private void DebugSetMapCreationMetadata()
+        {
             lock (Statics.lockDebugLists)
             {
                 Statics.MapCreationTimes.Add(map.DebugCreationTime.TotalMilliseconds);
@@ -335,8 +375,6 @@ namespace win2d_text_game_world_generator
             Statics.DebugMapCreationTimeString = "Map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms";
             Statics.DebugMapTotalRegionCountString = "Total regions: " + map.Regions.Count.ToString();
             Statics.DebugMapTotalTileCountString = "Total tiles: " + (map.WidthInTiles * map.HeightInTiles).ToString();
-
-            if (map.DebugCreationTime.TotalMilliseconds > 20000) { Statics.RollingReset = false; }
         }
 
         private void RollingReset()

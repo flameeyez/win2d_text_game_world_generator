@@ -41,24 +41,70 @@ namespace win2d_text_game_world_generator
         private void AbortConstruction() { _aborted = true; }
 
         #region Initialization
-        public ProtoMap(int width, int height)
+        public ProtoMap(int width, int height, IProgress<Tuple<string, float>> progress)
         {
+            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 13));
             CalculateLayout(width, height);
             InitializeMasterTileList();
 
+            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)2 / 13));
             GenerateHeightMap();
+
+            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)3 / 13));
             CalculateTraversability();
+
+            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)4 / 13));
             CreateRoomConnections();
-            if (!_aborted) { RemoveDisconnectedRoomConnections(); }
-            if (!_aborted) { FixCrossedPaths(); }
 
-            if (!_aborted) { CreateProtoRegions(); }
-            if (!_aborted) { FoldUndersizedRegions(); }
-            if (!_aborted) { MergeProtoRegions(); }
-            if (!_aborted) { ReindexSubregions(); }
-            if (!_aborted) { AssignSubregionColors(); }
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)5 / 13));
+                RemoveDisconnectedRoomConnections();
+            }
 
-            if (!_aborted) { DebugValidation(); }
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)6 / 13));
+                FixCrossedPaths();
+            }
+
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Creating map regions...", (float)7 / 13));
+                CreateProtoRegions();
+            }
+
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Folding-in undersized regions...", (float)8 / 13));
+                FoldUndersizedRegions();
+            }
+
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Creating region/subregion hierarchy...", (float)9 / 13));
+                MergeProtoRegions();
+            }
+
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Reindexing regions...", (float)10 / 13));
+                ReindexSubregions();
+            }
+
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)11 / 13));
+                AssignSubregionColors();
+            }
+
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Validating map...", (float)12 / 13));
+                DebugValidation();
+            }
+
+            progress.Report(new Tuple<string, float>("Done!", (float)13 / 13));
         }
         private void CalculateLayout(int width, int height)
         {
@@ -105,7 +151,6 @@ namespace win2d_text_game_world_generator
         }
         private void CalculateTraversability()
         {
-            // could save time here by merging into last iteration of blur
             for (int x = 0; x < WidthInTiles; x++)
             {
                 for (int y = 0; y < HeightInTiles; y++)
@@ -115,7 +160,6 @@ namespace win2d_text_game_world_generator
                 }
             }
         }
-
         private void CreateRoomConnections()
         {
             Stopwatch s = Stopwatch.StartNew();
