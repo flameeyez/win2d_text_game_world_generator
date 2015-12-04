@@ -42,7 +42,6 @@ namespace win2d_text_game_world_generator
         public static List<int> FixRoomConnectionsCounts = new List<int>();
         public static bool RollingReset = false;
         public static int MapCount = 0;
-        public static int HeightMapElevationFactor = 10;
 
         public static bool DebugDrawDebug = true;
         public static bool DebugDrawPaths = false;
@@ -75,7 +74,7 @@ namespace win2d_text_game_world_generator
 
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
-        public static int PixelScale = 3;
+        public static int PixelScale = 10;
 
         public static int Padding = 10;
 

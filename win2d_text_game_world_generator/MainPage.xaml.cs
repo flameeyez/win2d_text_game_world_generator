@@ -25,12 +25,19 @@ using Windows.UI.Xaml.Navigation;
 
 namespace win2d_text_game_world_generator
 {
+    enum GAMESTATE
+    {
+        MAP_CREATE,
+        MAP_DISPLAY
+    }
+
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
     public sealed partial class MainPage : Page
     {
         Map map;
+        GAMESTATE State = GAMESTATE.MAP_CREATE;
 
         public MainPage()
         {
@@ -42,11 +49,11 @@ namespace win2d_text_game_world_generator
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
         }
 
+        #region Keyboard
         private void CoreWindow_KeyUp(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
 
         }
-
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
             if (map == null) { return; }
@@ -75,6 +82,7 @@ namespace win2d_text_game_world_generator
                     break;
             }
         }
+        #endregion
 
         #region Mouse
         private void gridMain_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -133,12 +141,24 @@ namespace win2d_text_game_world_generator
         #region Draw
         private void canvasMain_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
-            if (map == null)
+            switch(State)
             {
-                DrawProgress(args);
-                return;
+                case GAMESTATE.MAP_CREATE:
+                    DrawProgress(args);
+                    break;
+                case GAMESTATE.MAP_DISPLAY:
+                    DrawMap(args);
+                    break;
             }
 
+            if (Statics.DebugDrawDebug)
+            {
+                DrawDebug(args);
+            }
+        }
+
+        private void DrawMap(CanvasAnimatedDrawEventArgs args)
+        {
             switch (Statics.DebugMapDrawType)
             {
                 case MapDrawType.REGIONS:
@@ -167,13 +187,7 @@ namespace win2d_text_game_world_generator
                     }
                     break;
             }
-
-            if (Statics.DebugDrawDebug)
-            {
-                DrawDebug(args);
-            }
         }
-
         private void DrawProgress(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.FillRectangle(new Rect(0, 0, Statics.CanvasWidth, Statics.CanvasHeight), Colors.CornflowerBlue);
@@ -188,7 +202,6 @@ namespace win2d_text_game_world_generator
                 args.DrawingSession.DrawRectangle(Statics.ProgressPercentageBorderRect, Colors.White);
             }
         }
-
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
             if (map == null) { return; }
@@ -308,7 +321,6 @@ namespace win2d_text_game_world_generator
         {
             args.TrackAsyncAction(CreateResourcesAsync(sender).AsAsyncAction());
         }
-
         private async Task CreateResourcesAsync(CanvasAnimatedControl sender)
         {
             // c.TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 200);
@@ -318,10 +330,10 @@ namespace win2d_text_game_world_generator
             Statics.CanvasHeight = (int)sender.Size.Height;
             Reset();
         }
-
         private async void Reset()
         {
             map = null;
+            State = GAMESTATE.MAP_CREATE;
 
             Statics.DebugNWConnectionCount = 0;
             Statics.DebugNConnectionCount = 0;
@@ -341,8 +353,9 @@ namespace win2d_text_game_world_generator
             DebugSetMapCreationMetadata();
 
             // if (map.DebugCreationTime.TotalMilliseconds > 20000) { Statics.RollingReset = false; }
-        }
 
+            State = GAMESTATE.MAP_DISPLAY;
+        }
         private void HandleProgress(Tuple<string, float> progress)
         {
             int nProgressBarWidth = 400;
@@ -361,7 +374,6 @@ namespace win2d_text_game_world_generator
                                                             nProgressBarWidth, 
                                                             20);
         }
-
         private void DebugSetMapCreationMetadata()
         {
             lock (Statics.lockDebugLists)
@@ -376,7 +388,6 @@ namespace win2d_text_game_world_generator
             Statics.DebugMapTotalRegionCountString = "Total regions: " + map.Regions.Count.ToString();
             Statics.DebugMapTotalTileCountString = "Total tiles: " + (map.WidthInTiles * map.HeightInTiles).ToString();
         }
-
         private void RollingReset()
         {
             while (Statics.RollingReset)
