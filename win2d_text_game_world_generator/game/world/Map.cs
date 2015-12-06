@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Windows.System;
 using Windows.UI;
 
 namespace win2d_text_game_world_generator
@@ -124,6 +125,35 @@ namespace win2d_text_game_world_generator
         public void Update(CanvasAnimatedUpdateEventArgs args)
         {
 
+        }
+        #endregion
+
+        #region Keyboard
+        public void KeyDown(VirtualKey vk)
+        {
+            switch (vk)
+            {
+                case Windows.System.VirtualKey.H:
+                    Statics.DebugMapDrawType = MapDrawType.HEIGHTMAP;
+                    Statics.HeightMapOpacity = 255;
+                    break;
+                case Windows.System.VirtualKey.R:
+                    Statics.DebugMapDrawType = MapDrawType.REGIONS;
+                    Statics.HeightMapOpacity = 75;
+                    break;
+                case Windows.System.VirtualKey.P:
+                    Statics.DebugDrawPaths = !Statics.DebugDrawPaths;
+                    break;
+                case Windows.System.VirtualKey.S:
+                    Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
+                    break;
+                case Windows.System.VirtualKey.D:
+                    Statics.DebugDrawDebug = !Statics.DebugDrawDebug;
+                    break;
+                case Windows.System.VirtualKey.G:
+                    Statics.DebugDrawGrid = !Statics.DebugDrawGrid;
+                    break;
+            }
         }
         #endregion
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Graphics.Canvas.Text;
+﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace win2d_text_game_world_generator
 {
     enum GAMESTATE
     {
+        MENU_DISPLAY,
         MAP_CREATE,
         MAP_DISPLAY
     }
@@ -37,7 +39,7 @@ namespace win2d_text_game_world_generator
     public sealed partial class MainPage : Page
     {
         Map map;
-        GAMESTATE State = GAMESTATE.MAP_CREATE;
+        GAMESTATE State = GAMESTATE.MENU_DISPLAY;
 
         public MainPage()
         {
@@ -56,29 +58,22 @@ namespace win2d_text_game_world_generator
         }
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
-            if (map == null) { return; }
-
-            switch (args.VirtualKey)
+            switch (State)
             {
-                case Windows.System.VirtualKey.H:
-                    Statics.DebugMapDrawType = MapDrawType.HEIGHTMAP;
-                    Statics.HeightMapOpacity = 255;
+                case GAMESTATE.MENU_DISPLAY:
+                    MainMenu.KeyDown(args.VirtualKey);
                     break;
-                case Windows.System.VirtualKey.R:
-                    Statics.DebugMapDrawType = MapDrawType.REGIONS;
-                    Statics.HeightMapOpacity = 75;
-                    break;
-                case Windows.System.VirtualKey.P:
-                    Statics.DebugDrawPaths = !Statics.DebugDrawPaths;
-                    break;
-                case Windows.System.VirtualKey.S:
-                    Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
-                    break;
-                case Windows.System.VirtualKey.D:
-                    Statics.DebugDrawDebug = !Statics.DebugDrawDebug;
-                    break;
-                case Windows.System.VirtualKey.G:
-                    Statics.DebugDrawGrid = !Statics.DebugDrawGrid;
+                case GAMESTATE.MAP_DISPLAY:
+                    if (args.VirtualKey == Windows.System.VirtualKey.Escape)
+                    {
+                        // map = null;
+                        MainMenu.Reset();
+                        State = GAMESTATE.MENU_DISPLAY;
+                    }
+                    else if (map != null)
+                    {
+                        map.KeyDown(args.VirtualKey);
+                    }
                     break;
             }
         }
@@ -87,22 +82,29 @@ namespace win2d_text_game_world_generator
         #region Mouse
         private void gridMain_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            if (map == null) { return; }
-
-            PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
-            if (p.IsLeftButtonPressed)
+            switch (State)
             {
-                Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
-            }
-            else if (p.IsRightButtonPressed)
-            {
-                Reset();
+                case GAMESTATE.MENU_DISPLAY:
+                    break;
+                case GAMESTATE.MAP_DISPLAY:
+                    if (map == null) { return; }
 
-                //Statics.RollingReset = !Statics.RollingReset;
-                //if (Statics.RollingReset)
-                //{
-                //    RollingReset();
-                //}
+                    PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
+                    if (p.IsLeftButtonPressed)
+                    {
+                        Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
+                    }
+                    else if (p.IsRightButtonPressed)
+                    {
+                        Reset();
+
+                        //Statics.RollingReset = !Statics.RollingReset;
+                        //if (Statics.RollingReset)
+                        //{
+                        //    RollingReset();
+                        //}
+                    }
+                    break;
             }
         }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -110,39 +112,74 @@ namespace win2d_text_game_world_generator
         }
         private void gridMain_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            if (map == null) { return; }
-
-            Point p = e.GetCurrentPoint(gridMain).Position;
-            Statics.MouseX = p.X;
-            Statics.MouseY = p.Y;
-            int x = (int)(p.X - Statics.Padding) / Statics.PixelScale;
-            int y = (int)(p.Y - Statics.Padding) / Statics.PixelScale;
-            Statics.CurrentMouseRegion = map.GetRegion(x, y);
-            if (Statics.CurrentMouseRegion != null)
+            switch (State)
             {
-                Statics.CurrentMouseSubregion = map.GetSubregion(Statics.CurrentMouseRegion, x, y);
+                case GAMESTATE.MENU_DISPLAY:
+                    break;
+                case GAMESTATE.MAP_DISPLAY:
+                    if (map == null) { return; }
 
-                if (Statics.CurrentMouseSubregion != null)
-                {
-                    Room room = map.GetRoom(Statics.CurrentMouseSubregion, x, y);
-                    if (room != null)
+                    Point p = e.GetCurrentPoint(gridMain).Position;
+                    Statics.MouseX = p.X;
+                    Statics.MouseY = p.Y;
+                    int x = (int)(p.X - Statics.Padding) / Statics.PixelScale;
+                    int y = (int)(p.Y - Statics.Padding) / Statics.PixelScale;
+                    Statics.CurrentMouseRegion = map.GetRegion(x, y);
+                    if (Statics.CurrentMouseRegion != null)
                     {
-                        Statics.DebugHeightString = "Elevation: " + room.Elevation.ToString();
+                        Statics.CurrentMouseSubregion = map.GetSubregion(Statics.CurrentMouseRegion, x, y);
+
+                        if (Statics.CurrentMouseSubregion != null)
+                        {
+                            Room room = map.GetRoom(Statics.CurrentMouseSubregion, x, y);
+                            if (room != null)
+                            {
+                                Statics.DebugHeightString = "Elevation: " + room.Elevation.ToString();
+                            }
+                        }
                     }
-                }
+                    else
+                    {
+                        Statics.CurrentMouseSubregion = null;
+                    }
+                    break;
             }
-            else
-            {
-                Statics.CurrentMouseSubregion = null;
-            }
+        }
+        #endregion
+
+        #region Menu Handling
+        private void MainMenuInitialize(CanvasDevice device)
+        {
+            MainMenu.Initialize(device);
+
+            MenuItem menuItem1 = new MenuItem(canvasMain.Device, "Create new map");
+            menuItem1.Select += MenuItem1_Select;
+            MenuItem menuItem2 = new MenuItem(canvasMain.Device, "Anything else");
+            menuItem2.Select += MenuItem2_Select;
+
+            MainMenu.AddMenuItem(menuItem1);
+            MainMenu.AddMenuItem(menuItem2);
+        }
+
+        private void MenuItem1_Select()
+        {
+            Reset();
+        }
+
+        private void MenuItem2_Select()
+        {
+
         }
         #endregion
 
         #region Draw
         private void canvasMain_Draw(ICanvasAnimatedControl sender, CanvasAnimatedDrawEventArgs args)
         {
-            switch(State)
+            switch (State)
             {
+                case GAMESTATE.MENU_DISPLAY:
+                    DrawMenu(args);
+                    break;
                 case GAMESTATE.MAP_CREATE:
                     DrawProgress(args);
                     break;
@@ -157,6 +194,10 @@ namespace win2d_text_game_world_generator
             }
         }
 
+        private void DrawMenu(CanvasAnimatedDrawEventArgs args)
+        {
+            MainMenu.Draw(args);
+        }
         private void DrawMap(CanvasAnimatedDrawEventArgs args)
         {
             switch (Statics.DebugMapDrawType)
@@ -325,10 +366,11 @@ namespace win2d_text_game_world_generator
         {
             // c.TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 200);
             // c.Paused = true;
-
             Statics.CanvasWidth = (int)sender.Size.Width;
             Statics.CanvasHeight = (int)sender.Size.Height;
-            Reset();
+
+            MainMenuInitialize(sender.Device);
+            // Reset();
         }
         private async void Reset()
         {
@@ -365,13 +407,13 @@ namespace win2d_text_game_world_generator
             float y = (float)(Statics.CanvasHeight - Statics.ProgressPhase.LayoutBounds.Height) / 2;
             Statics.ProgressPhasePosition = new Vector2(x, y);
             Statics.ProgressPercentage = progress.Item2;
-            Statics.ProgressPercentageRect = new Rect((Statics.CanvasWidth - nProgressBarWidth) / 2, 
+            Statics.ProgressPercentageRect = new Rect((Statics.CanvasWidth - nProgressBarWidth) / 2,
                                                       Statics.ProgressPhasePosition.Y + Statics.ProgressPhase.LayoutBounds.Height + 10,
                                                       nProgressBarWidth * Statics.ProgressPercentage,
                                                       20);
             Statics.ProgressPercentageBorderRect = new Rect((Statics.CanvasWidth - nProgressBarWidth) / 2,
                                                             Statics.ProgressPhasePosition.Y + Statics.ProgressPhase.LayoutBounds.Height + 10,
-                                                            nProgressBarWidth, 
+                                                            nProgressBarWidth,
                                                             20);
         }
         private void DebugSetMapCreationMetadata()
