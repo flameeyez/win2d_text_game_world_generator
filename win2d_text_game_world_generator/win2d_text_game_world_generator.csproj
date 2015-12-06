@@ -96,8 +96,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="game\MainMenu.cs" />
-    <Compile Include="game\MenuItem.cs" />
+    <Compile Include="game\menu\MainMenu.cs" />
+    <Compile Include="game\menu\MapCreationScreen.cs" />
+    <Compile Include="game\menu\MenuItem.cs" />
     <Compile Include="game\utility\PerlinNoise.cs" />
     <Compile Include="game\world\Map.cs" />
     <Compile Include="game\world\proto\ProtoMap.cs" />
@@ -141,6 +142,7 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

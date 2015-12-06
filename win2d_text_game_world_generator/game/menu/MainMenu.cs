@@ -29,6 +29,9 @@ namespace win2d_text_game_world_generator
         private static CanvasTextLayout TitleLayout;
         private static Vector2 TitlePosition;
 
+        private static float fNextMenuItemPositionY;
+        private static float fMenuItemPadding = 5;
+
         private static Color BackgroundColor = Colors.CornflowerBlue;
 
         #region Initialization
@@ -48,6 +51,8 @@ namespace win2d_text_game_world_generator
             int nY = Statics.CanvasHeight * 3 / 4 - nRectHeight / 2;
             MenuItemsBorderRect = new Rect(nX, nY, nRectWidth, nRectHeight);
             MenuItemsPosition = new Vector2(nX + nPadding, nY + nPadding);
+
+            fNextMenuItemPositionY = MenuItemsPosition.Y;
         }
         public static void Reset()
         {
@@ -86,11 +91,11 @@ namespace win2d_text_game_world_generator
 
                 if (i == _selectedindex)
                 {
-                    MenuItems[i].DrawSelected(args, position);
+                    MenuItems[i].DrawSelected(args);
                 }
                 else
                 {
-                    MenuItems[i].Draw(args, position);
+                    MenuItems[i].Draw(args);
                 }
 
                 fCurrentY += 20;
@@ -145,6 +150,9 @@ namespace win2d_text_game_world_generator
         #region Menu Item Handling
         public static void AddMenuItem(MenuItem m)
         {
+            m.Position = new Vector2(MenuItemsPosition.X, fNextMenuItemPositionY);
+            fNextMenuItemPositionY += (float)m.TextLayout.LayoutBounds.Height + fMenuItemPadding;
+
             MenuItems.Add(m);
             if (MenuItems.Count == 1)
             {

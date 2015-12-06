@@ -21,19 +21,27 @@ namespace win2d_text_game_world_generator
         private CanvasTextLayout _textlayout;
         public CanvasTextLayout TextLayout { get { return _textlayout; } }
 
+        public Vector2 Position { get; set; }
+
         public MenuItem(CanvasDevice device, string text)
         {
             _textlayout = new CanvasTextLayout(device, text, Statics.FontMedium, 0, 0);
         }
 
         #region Draw
-        public void Draw(CanvasAnimatedDrawEventArgs args, Vector2 position)
+        public void Draw(CanvasAnimatedDrawEventArgs args)
         {
-            args.DrawingSession.DrawTextLayout(TextLayout, position, Colors.White);
+            if (Position != null)
+            {
+                args.DrawingSession.DrawTextLayout(TextLayout, Position, Colors.White);
+            }
         }
-        public void DrawSelected(CanvasAnimatedDrawEventArgs args, Vector2 position)
+        public void DrawSelected(CanvasAnimatedDrawEventArgs args)
         {
-            args.DrawingSession.DrawTextLayout(TextLayout, position, Colors.Yellow);
+            if (Position != null)
+            {
+                args.DrawingSession.DrawTextLayout(TextLayout, Position, Colors.Yellow);
+            }
         }
         #endregion
 

@@ -37,14 +37,14 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Draw
-        public void DrawSubregion(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        public void DrawSubregion(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args, bool bDrawSubregions, bool bDrawPaths, bool bDrawGrid)
         {
             foreach(Room room in Rooms)
             {
-                room.DrawTile(MapPosition, args, Statics.DebugDrawSubregions);
+                room.DrawTile(MapPosition, args, bDrawSubregions, bDrawGrid);
             }
 
-            if(Statics.DebugDrawPaths)
+            if(bDrawPaths)
             {
                 foreach(Room room in Rooms)
                 {
@@ -59,14 +59,14 @@ namespace win2d_text_game_world_generator
                 room.DrawRoomConnections(MapPosition, args);
             }
         }
-        public void DrawHeightMap(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
+        public void DrawHeightMap(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args, bool bDrawPaths)
         {
             foreach (Room room in Rooms)
             {
                 room.DrawHeight(MapPosition, args);
             }
 
-            if(Statics.DebugDrawPaths)
+            if(bDrawPaths)
             {
                 foreach(Room room in Rooms)
                 {

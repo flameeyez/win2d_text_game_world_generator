@@ -10,75 +10,18 @@ using System.Linq;
 
 namespace win2d_text_game_world_generator
 {
-    public enum MapDrawType
-    {
-        HEIGHTMAP,
-        REGIONS
-    }
-
     public static class Statics
     {
-        public static float fFrequency;
-        public static float fAmplitude;
-        public static float fPersistence;
-        public static int nOctaves;
-
-        public static CanvasTextLayout ProgressPhase;
-        public static Vector2 ProgressPhasePosition;
-        public static float ProgressPercentage = 0.0f;
-        public static Rect ProgressPercentageRect;
-        public static Rect ProgressPercentageBorderRect;
-
-        public static byte HeightMapOpacity = 75;
-
-        public static Region CurrentMouseRegion = null;
-        public static Subregion CurrentMouseSubregion = null;
-
-        public static object lockDebugLists = new object();
-
-        public static List<double> MapCreationTimes = new List<double>();
-        public static List<int> MapAbortCounts = new List<int>();
-        public static List<int> CreateRoomConnectionsCounts = new List<int>();
-        public static List<int> FixRoomConnectionsCounts = new List<int>();
-        public static bool RollingReset = false;
-        public static int MapCount = 0;
-
-        public static bool DebugDrawDebug = true;
-        public static bool DebugDrawPaths = false;
-        public static bool DebugDrawSubregions = false;
-        public static bool DebugDrawGrid = false;
-        public static MapDrawType DebugMapDrawType = MapDrawType.REGIONS;
-
-        public static int DebugNWConnectionCount;
-        public static int DebugNConnectionCount;
-        public static int DebugNEConnectionCount;
-        public static int DebugWConnectionCount;
-        public static int DebugEConnectionCount;
-        public static int DebugSWConnectionCount;
-        public static int DebugSConnectionCount;
-        public static int DebugSEConnectionCount;
-
-        public static string DebugMapCreationTimeString = string.Empty;
-        public static string DebugMapTotalRegionCountString = string.Empty;
-        public static string DebugMapTotalTileCountString = string.Empty;
-        public static string DebugHeightString = string.Empty;
-
-        public static int RoomMaxConnections = 3;
-
-        public static double MouseX = 0;
-        public static double MouseY = 0;
         public static int FrameCount = 0;
 
-        public static int CanvasWidth;
-        public static int CanvasHeight;
-
+        #region Map Creation Data
+        public static bool DebugRollingReset = false;
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
         public static int PixelScale = 10;
-
         public static int Padding = 10;
-
         public static Vector2 MapPosition = Vector2.Zero;
+        public static int RoomMaxConnections = 3;
 
         // probability that region will continue to try to expand past minimum size
         // calculated once for each tile added
@@ -87,12 +30,48 @@ namespace win2d_text_game_world_generator
         public static int ProbabilityOfExpansion = 0;
         public static int MinimumRegionSize = 100;
         public static int MergeThreshold = 500;
+        #endregion
 
-        public static Random Random = new Random(DateTime.Now.Millisecond);
+        #region Debug Map Display Data
+        public static Region DebugCurrentMouseRegion = null;
+        public static Subregion DebugCurrentMouseSubregion = null;
+        public static int DebugNWConnectionCount;
+        public static int DebugNConnectionCount;
+        public static int DebugNEConnectionCount;
+        public static int DebugWConnectionCount;
+        public static int DebugEConnectionCount;
+        public static int DebugSWConnectionCount;
+        public static int DebugSConnectionCount;
+        public static int DebugSEConnectionCount;
+        public static List<double> DebugMapCreationTimes = new List<double>();
+        public static List<int> DebugMapAbortCounts = new List<int>();
+        public static List<int> DebugCreateRoomConnectionsCounts = new List<int>();
+        public static List<int> DebugFixRoomConnectionsCounts = new List<int>();
+        public static int DebugMapCount = 0;
+        public static string DebugMapCreationTimeString = string.Empty;
+        public static string DebugMapTotalRegionCountString = string.Empty;
+        public static string DebugMapTotalTileCountString = string.Empty;
+        public static string DebugHeightString = string.Empty;
+        public static object lockDebugLists = new object();
+        public static byte DebugHeightMapOpacity = 75;
+        #endregion
+
+        #region Mouse Position
+        public static double MouseX = 0;
+        public static double MouseY = 0;
+        #endregion
+
+        #region Canvas Layout
+        public static int CanvasWidth;
+        public static int CanvasHeight;
+        #endregion
+
+        #region Fonts / Text Formats
         public static CanvasTextFormat FontSmall = new CanvasTextFormat();
         public static CanvasTextFormat FontMedium = new CanvasTextFormat();
         public static CanvasTextFormat FontLarge = new CanvasTextFormat();
         public static CanvasTextFormat FontExtraLarge = new CanvasTextFormat();
+        #endregion
 
         #region Region Naming
         public static string[] RegionTypes = {
@@ -208,86 +187,24 @@ namespace win2d_text_game_world_generator
         }
         #endregion
 
-        #region Faction Naming
-        public static string[] FactionTypes = {
-            "Kingdom",
-            "Empire",
-            "Duchy",
-            "Land",
-            "Regency",
-            "Sultanate",
-            "Emirate",
-            "Nation",
-            "State",
-            "Country",
-            "Republic",
-            "Monarchy",
-            "Tribe"
-        };
-        #endregion
+        #region Random
+        public static Random Random = new Random(DateTime.Now.Millisecond);
+        public static Color RandomColor()
+        {
+            int red = 20 + Statics.Random.Next(235);
+            int green = 20 + Statics.Random.Next(235);
+            int blue = 20 + Statics.Random.Next(235);
 
-        #region Battle Terms
-        public static string[] DefeatWords = {
-            "defeateth",
-            "obliterateth",
-            "destroyeth",
-            "overruneth",
-            "squasheth",
-            "pummeleth",
-            "conquereth",
-            "deraileth",
-            "overthroweth",
-            "ruineth",
-            "thwarteth",
-            "vanquisheth",
-            "dismisseth",
-            "beateth",
-            "routeth",
-            "whipeth",
-            "crusheth",
-            "subdueth",
-            "clobbereth",
-            "demolisheth",
-            "skunketh",
-            "slaughtereth",
-            "thrasheth",
-            "overpowereth"
-        };
-        #endregion
-
-        #region Leader Titles
-        public static string[] MaleTitles = {
-            "King",
-            "Emperor",
-            "Duke",
-            "Prince",
-            "Almighty Ruler",
-            "Baron",
-            "Earl",
-            "Jarl",
-            "Lord",
-            "Count",
-            "Marquis",
-            "Tsar",
-            "Kaiser",
-            "Emir",
-            "Viceroy"
-        };
-
-        public static string[] FemaleTitles = {
-            "Queen",
-            "Empress",
-            "Duchess",
-            "Princess",
-            "Almighty Ruler",
-            "Baroness",
-            "Lady",
-            "Countess",
-            "Marquise",
-            "Tsarina",
-            "Emira",
-            "Vicereine"
-        };
+            return Color.FromArgb(255, (byte)red, (byte)green, (byte)blue);
+        }
+        public static T RandomListItem<T>(this List<T> list)
+        {
+            return list[Statics.Random.Next(list.Count)];
+        }
+        public static T RandomArrayItem<T>(this T[] array)
+        {
+            return array[Statics.Random.Next(array.Length)];
+        }
         #endregion
 
         static Statics()
@@ -308,25 +225,6 @@ namespace win2d_text_game_world_generator
             FontExtraLarge.FontSize = 48;
             FontExtraLarge.WordWrapping = CanvasWordWrapping.NoWrap;
         }
-
-        #region Random
-        public static Color RandomColor()
-        {
-            int red = 20 + Statics.Random.Next(235);
-            int green = 20 + Statics.Random.Next(235);
-            int blue = 20 + Statics.Random.Next(235);
-
-            return Color.FromArgb(255, (byte)red, (byte)green, (byte)blue);
-        }
-        public static T RandomListItem<T>(this List<T> list)
-        {
-            return list[Statics.Random.Next(list.Count)];
-        }
-        public static T RandomArrayItem<T>(this T[] array)
-        {
-            return array[Statics.Random.Next(array.Length)];
-        }
-        #endregion
 
         public static string GetOppositeDirection(string strDirection)
         {

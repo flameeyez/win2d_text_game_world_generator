@@ -34,11 +34,11 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Draw
-        public void DrawRegion(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        public void DrawRegion(Vector2 position, CanvasAnimatedDrawEventArgs args, bool bDrawSubregions, bool bDrawPaths, bool bDrawGrid)
         {
             foreach(Subregion subregion in Subregions)
             {
-                subregion.DrawSubregion(position, args);
+                subregion.DrawSubregion(position, args, bDrawSubregions, bDrawPaths, bDrawGrid);
             }
         }
         //public void DrawSubregionsWithRegionColors(Vector2 position, CanvasAnimatedDrawEventArgs args)
@@ -69,11 +69,11 @@ namespace win2d_text_game_world_generator
                 subregion.DrawRoomConnections(position, args);
             }
         }
-        public void DrawHeightMap(Vector2 position, CanvasAnimatedDrawEventArgs args)
+        public void DrawHeightMap(Vector2 position, CanvasAnimatedDrawEventArgs args, bool bDrawPaths)
         {
             foreach (Subregion subregion in Subregions)
             {
-                subregion.DrawHeightMap(position, args);
+                subregion.DrawHeightMap(position, args, bDrawPaths);
             }
         }
         #endregion

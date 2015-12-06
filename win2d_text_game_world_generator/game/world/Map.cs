@@ -12,6 +12,12 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
+    public enum MapDrawType
+    {
+        HEIGHTMAP,
+        REGIONS
+    }
+
     public class Map
     {
         public Vector2 Position { get; set; }
@@ -32,6 +38,11 @@ namespace win2d_text_game_world_generator
         public int DebugFixConnectionsCount { get; set; }
         public int DebugCreateRoomConnectionsTime { get; set; }
         public int DebugCreateRoomConnectionsCount { get; set; }
+        public static bool DebugDrawDebug = true;
+        public static bool DebugDrawPaths = false;
+        public static bool DebugDrawSubregions = false;
+        public static bool DebugDrawGrid = false;
+        public static MapDrawType DebugMapDrawType = MapDrawType.REGIONS;
         #endregion
 
         #region Initialization
@@ -72,20 +83,33 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Draw
+        public void Draw(CanvasAnimatedDrawEventArgs args)
+        {
+            switch (DebugMapDrawType)
+            {
+                case MapDrawType.REGIONS:
+                    DrawRegions(args, DebugDrawSubregions, DebugDrawPaths, DebugDrawGrid);
+                    break;
+                case MapDrawType.HEIGHTMAP:
+                    DrawHeightMap(args, DebugDrawPaths);
+                    DrawTilesNotInMainPath(args);
+                    break;
+            }
+        }
         private void DrawBorder(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.DrawRectangle(new Rect(Position.X + Statics.Padding, Position.Y + Statics.Padding, WidthInPixels, HeightInPixels), Colors.White);
         }
-        public void DrawRegions(CanvasAnimatedDrawEventArgs args)
+        private void DrawRegions(CanvasAnimatedDrawEventArgs args, bool bDrawSubregions, bool bDrawPaths, bool bDrawGrid)
         {
             DrawBorder(args);
             foreach (Region region in Regions)
             {
-                region.DrawRegion(Position, args);
-                region.DrawHeightMap(Position, args);
+                region.DrawRegion(Position, args, bDrawSubregions, bDrawPaths, bDrawGrid);
+                region.DrawHeightMap(Position, args, bDrawPaths);
             }
         }
-        public void DrawConnections(CanvasAnimatedDrawEventArgs args)
+        private void DrawConnections(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.FillRectangle(new Rect(Position.X, Position.Y, WidthInPixels, HeightInPixels), Colors.Black);
 
@@ -95,12 +119,27 @@ namespace win2d_text_game_world_generator
                 region.DrawRoomConnections(Position, args);
             }
         }
-        public void DrawHeightMap(CanvasAnimatedDrawEventArgs args)
+        private void DrawHeightMap(CanvasAnimatedDrawEventArgs args, bool bDrawPaths)
         {
             DrawBorder(args);
             foreach (Region region in Regions)
             {
-                region.DrawHeightMap(Position, args);
+                region.DrawHeightMap(Position, args, bDrawPaths);
+            }
+        }
+        private void DrawTilesNotInMainPath(CanvasAnimatedDrawEventArgs args)
+        {
+            if (TilesNotInMainPath.Count > 0)
+            {
+                foreach (PointInt pi in TilesNotInMainPath)
+                {
+                    args.DrawingSession.FillRectangle(
+                        new Rect(Position.X + Statics.Padding + pi.X * Statics.PixelScale,
+                                 Position.Y + Statics.Padding + pi.Y * Statics.PixelScale,
+                                 Statics.PixelScale,
+                                 Statics.PixelScale),
+                                 Colors.Red);
+                }
             }
         }
         //public void Draw(CanvasAnimatedDrawEventArgs args)
@@ -134,24 +173,24 @@ namespace win2d_text_game_world_generator
             switch (vk)
             {
                 case Windows.System.VirtualKey.H:
-                    Statics.DebugMapDrawType = MapDrawType.HEIGHTMAP;
-                    Statics.HeightMapOpacity = 255;
+                    DebugMapDrawType = MapDrawType.HEIGHTMAP;
+                    Statics.DebugHeightMapOpacity = 255;
                     break;
                 case Windows.System.VirtualKey.R:
-                    Statics.DebugMapDrawType = MapDrawType.REGIONS;
-                    Statics.HeightMapOpacity = 75;
+                    DebugMapDrawType = MapDrawType.REGIONS;
+                    Statics.DebugHeightMapOpacity = 75;
                     break;
                 case Windows.System.VirtualKey.P:
-                    Statics.DebugDrawPaths = !Statics.DebugDrawPaths;
+                    DebugDrawPaths = !DebugDrawPaths;
                     break;
                 case Windows.System.VirtualKey.S:
-                    Statics.DebugDrawSubregions = !Statics.DebugDrawSubregions;
+                    DebugDrawSubregions = !DebugDrawSubregions;
                     break;
                 case Windows.System.VirtualKey.D:
-                    Statics.DebugDrawDebug = !Statics.DebugDrawDebug;
+                    DebugDrawDebug = !DebugDrawDebug;
                     break;
                 case Windows.System.VirtualKey.G:
-                    Statics.DebugDrawGrid = !Statics.DebugDrawGrid;
+                    DebugDrawGrid = !DebugDrawGrid;
                     break;
             }
         }

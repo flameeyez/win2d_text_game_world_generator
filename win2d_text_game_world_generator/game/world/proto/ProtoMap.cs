@@ -809,17 +809,17 @@ namespace win2d_text_game_world_generator
         {
             // mountain pass
             PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
-            Statics.fFrequency = 0.02f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
-            Statics.fAmplitude = 2.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
-            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
-            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            float fFrequency = 0.02f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            float fAmplitude = 2.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            int nOctaves = 1;// + Statics.Random.Next(5); // 5;
             int[,] mountainMap = new int[WidthInTiles, HeightInTiles];
 
             for (int x = 0; x < WidthInTiles; x++)
             {
                 for (int y = 0; y < HeightInTiles; y++)
                 {
-                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 27) { mountainMap[x, y] = nElevation; }
                 }
             }
@@ -832,15 +832,15 @@ namespace win2d_text_game_world_generator
             // water pass
             int[,] waterMap = new int[WidthInTiles, HeightInTiles];
             PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
-            Statics.fFrequency = 0.05f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
-            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
-            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
-            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            float fFrequency = 0.05f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            float fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            int nOctaves = 1;// + Statics.Random.Next(5); // 5;
             for (int x = 0; x < WidthInTiles; x++)
             {
                 for (int y = 0; y < HeightInTiles; y++)
                 {
-                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 25) { waterMap[x, y] = nElevation; }
                 }
             }
@@ -851,17 +851,17 @@ namespace win2d_text_game_world_generator
         {
             // forest pass
             PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
-            Statics.fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
-            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
-            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
-            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            float fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            float fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            int nOctaves = 1;// + Statics.Random.Next(5); // 5;
             int[,] forestMap = new int[WidthInTiles, HeightInTiles];
 
             for (int x = 0; x < WidthInTiles; x++)
             {
                 for (int y = 0; y < HeightInTiles; y++)
                 {
-                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 20) { forestMap[x, y] = 30; }
                 }
             }
@@ -873,17 +873,17 @@ namespace win2d_text_game_world_generator
         {
             // desert pass
             PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
-            Statics.fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
-            Statics.fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
-            Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
-            Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
+            float fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
+            float fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
+            float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
+            int nOctaves = 1;// + Statics.Random.Next(5); // 5;
             int[,] desertMap = new int[WidthInTiles, HeightInTiles];
 
             for (int x = 0; x < WidthInTiles; x++)
             {
                 for (int y = 0; y < HeightInTiles; y++)
                 {
-                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
+                    int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 20) { desertMap[x, y] = 30; }
                 }
             }
