@@ -98,6 +98,8 @@
     </Compile>
     <Compile Include="controls\win2d_Button.cs" />
     <Compile Include="controls\win2d_Control.cs" />
+    <Compile Include="controls\win2d_Label.cs" />
+    <Compile Include="controls\win2d_Panel.cs" />
     <Compile Include="controls\win2d_ScrollBar.cs" />
     <Compile Include="controls\win2d_Textblock.cs" />
     <Compile Include="controls\win2d_TextblockString.cs" />

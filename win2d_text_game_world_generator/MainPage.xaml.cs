@@ -40,6 +40,7 @@ namespace win2d_text_game_world_generator
     public sealed partial class MainPage : Page
     {
         Map map;
+        win2d_Panel mapCustomizationPanel;
         GAMESTATE State = GAMESTATE.MENU_DISPLAY;
 
         public MainPage()
@@ -65,7 +66,7 @@ namespace win2d_text_game_world_generator
                     MainMenu.KeyDown(args.VirtualKey);
                     break;
                 case GAMESTATE.MAP_DISPLAY:
-                    switch(args.VirtualKey)
+                    switch (args.VirtualKey)
                     {
                         case VirtualKey.Escape:
                             MainMenu.Reset();
@@ -188,30 +189,11 @@ namespace win2d_text_game_world_generator
                     MapCreationScreen.Draw(args);
                     break;
                 case GAMESTATE.MAP_DISPLAY:
-                    DrawMap(args);
-
-                    int nMapCustomizationBackgroundRectX = Statics.CanvasWidth - 400 + Statics.Padding;
-                    int nMapCustomizationBackgroundRectY = Statics.Padding;
-                    int nMapCustomizationBackgroundRectWidth = 400 - Statics.Padding * 2;
-                    int nMapCustomizationBackgroundRectHeight = Statics.CanvasHeight - Statics.Padding * 2;
-                    Rect MapCustomizationBackgroundRect = new Rect(nMapCustomizationBackgroundRectX, nMapCustomizationBackgroundRectY, nMapCustomizationBackgroundRectWidth, nMapCustomizationBackgroundRectHeight);
-                    args.DrawingSession.FillRectangle(MapCustomizationBackgroundRect, Colors.Gold);
-
-                    if (Map.DebugDrawDebug)
-                    {
-                        DrawDebug(args);
-                    }
-
-                    DrawCheckBox(args);
+                    map.Draw(args);
+                    mapCustomizationPanel.Draw(args);
+                    if (Map.DebugDrawDebug) { DrawDebug(args); }
                     break;
             }
-        }
-
-        private void DrawCheckBox(CanvasAnimatedDrawEventArgs args)
-        {
-            // box on left
-            // label on right
-            // args.DrawingSession.DrawText("Hello!", )
         }
 
         private void DrawMap(CanvasAnimatedDrawEventArgs args)
@@ -346,8 +328,18 @@ namespace win2d_text_game_world_generator
 
             MainMenuInitialize(sender.Device);
             MapCreationScreen.Initialize();
+            CreateMapCustomizationPanel();
 
             // Reset();
+        }
+        private void CreateMapCustomizationPanel()
+        {
+            int nPositionX = Statics.CanvasWidth - 400 + Statics.Padding;
+            int nPositionY = Statics.Padding;
+            int nWidth = 400 - Statics.Padding * 2;
+            int nHeight = Statics.CanvasHeight - Statics.Padding * 2;
+
+            mapCustomizationPanel = new win2d_Panel(new Vector2(nPositionX, nPositionY), nWidth, nHeight, Colors.RosyBrown);
         }
         private async void Reset()
         {
