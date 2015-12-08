@@ -96,6 +96,14 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="controls\win2d_Button.cs" />
+    <Compile Include="controls\win2d_Control.cs" />
+    <Compile Include="controls\win2d_ScrollBar.cs" />
+    <Compile Include="controls\win2d_Textblock.cs" />
+    <Compile Include="controls\win2d_TextblockString.cs" />
+    <Compile Include="controls\win2d_TextblockStringCollection.cs" />
+    <Compile Include="controls\win2d_Textbox.cs" />
+    <Compile Include="controls\win2d_TextboxCursor.cs" />
     <Compile Include="game\menu\MainMenu.cs" />
     <Compile Include="game\menu\MapCreationScreen.cs" />
     <Compile Include="game\menu\MenuItem.cs" />

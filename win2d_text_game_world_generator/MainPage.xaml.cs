@@ -189,17 +189,34 @@ namespace win2d_text_game_world_generator
                     break;
                 case GAMESTATE.MAP_DISPLAY:
                     DrawMap(args);
+
+                    int nMapCustomizationBackgroundRectX = Statics.CanvasWidth - 400 + Statics.Padding;
+                    int nMapCustomizationBackgroundRectY = Statics.Padding;
+                    int nMapCustomizationBackgroundRectWidth = 400 - Statics.Padding * 2;
+                    int nMapCustomizationBackgroundRectHeight = Statics.CanvasHeight - Statics.Padding * 2;
+                    Rect MapCustomizationBackgroundRect = new Rect(nMapCustomizationBackgroundRectX, nMapCustomizationBackgroundRectY, nMapCustomizationBackgroundRectWidth, nMapCustomizationBackgroundRectHeight);
+                    args.DrawingSession.FillRectangle(MapCustomizationBackgroundRect, Colors.Gold);
+
+                    if (Map.DebugDrawDebug)
+                    {
+                        DrawDebug(args);
+                    }
+
+                    DrawCheckBox(args);
                     break;
             }
+        }
+
+        private void DrawCheckBox(CanvasAnimatedDrawEventArgs args)
+        {
+            // box on left
+            // label on right
+            // args.DrawingSession.DrawText("Hello!", )
         }
 
         private void DrawMap(CanvasAnimatedDrawEventArgs args)
         {
             map.Draw(args);
-            if(Map.DebugDrawDebug)
-            {
-                DrawDebug(args);
-            }
         }
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
@@ -350,7 +367,7 @@ namespace win2d_text_game_world_generator
             Statics.DebugMapCount++;
 
             // map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
-            await Task.Run(() => map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels, new Progress<Tuple<string, float>>(progress => MapCreationScreen.Set(canvasMain.Device, progress))));
+            await Task.Run(() => map = Map.Create(Statics.MapWidthInPixels - 400, Statics.MapHeightInPixels, new Progress<Tuple<string, float>>(progress => MapCreationScreen.Set(canvasMain.Device, progress))));
 
             DebugSetMapCreationMetadata();
 
