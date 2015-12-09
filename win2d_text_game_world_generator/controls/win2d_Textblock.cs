@@ -16,8 +16,7 @@ namespace win2d_text_game_world_generator
     {
         private static int PaddingX = 10;
         private static int PaddingY = 10;
-
-        private Rect Border { get; set; }
+        private object _stringsObject = new object();
 
         private win2d_TextblockStringCollection Strings;
         public int DebugStringsCount
@@ -30,7 +29,6 @@ namespace win2d_text_game_world_generator
 
         public win2d_Textblock(Vector2 position, int width, int height, bool scrolltobottomonappend = false) : base(position, width, height)
         {
-            Border = new Rect(Position.X, Position.Y, Width, Height);
             Strings = new win2d_TextblockStringCollection(new Vector2(Position.X + PaddingX, Position.Y + PaddingY), 
                                                             Width - PaddingY * 2, 
                                                             Height - PaddingY * 2, 
@@ -46,15 +44,15 @@ namespace win2d_text_game_world_generator
 
         private void DrawBorder(CanvasAnimatedDrawEventArgs args)
         {
-            if (Border != null)
+            if (Rect != null)
             {
-                args.DrawingSession.DrawRectangle(Border, Colors.White);
+                args.DrawingSession.DrawRectangle(Rect, Colors.White);
             }
         }
 
         private void DrawStrings(CanvasAnimatedDrawEventArgs args)
         {
-            lock (Strings)
+            lock (_stringsObject)
             {
                 Strings.Draw(args);
             }
@@ -64,7 +62,7 @@ namespace win2d_text_game_world_generator
         #region Append
         public void Append(CanvasDevice device, string str)
         {
-            lock (Strings)
+            lock (_stringsObject)
             {
                 Strings.Add(device, str);
             }

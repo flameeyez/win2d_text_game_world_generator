@@ -21,15 +21,17 @@ namespace win2d_text_game_world_generator
         public int Height { get; set; }
         public Color Color { get; set; }
 
+        protected Rect Rect;
+
         protected bool HasFocus { get; set; }
 
         public event ClickEventHandler Click;
 
         public win2d_Control(Vector2 position, int width, int height)
         {
-            Position = position;
             Width = width;
             Height = height;
+            Position = position;
 
             HasFocus = false;
         }
@@ -58,5 +60,7 @@ namespace win2d_text_game_world_generator
 
         public virtual void GiveFocus() { HasFocus = true; }
         public virtual void LoseFocus() { HasFocus = false; }
+
+        public virtual void RecalculateLayout() { Rect = new Rect(Position.X, Position.Y, Width, Height); }
     }
 }

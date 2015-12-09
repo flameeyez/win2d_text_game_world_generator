@@ -15,7 +15,6 @@ namespace win2d_text_game_world_generator
 {
     public class win2d_Button : win2d_Control
     {
-        private Rect ButtonRectangle { get; set; }
         private CanvasTextLayout TextLayout { get; set; }
         private Vector2 TextLayoutPosition { get; set; }
 
@@ -24,12 +23,9 @@ namespace win2d_text_game_world_generator
         public win2d_Button(CanvasDevice device, Vector2 position, int width, int height, string text)
             : base(position, width, height)
         {
-            ButtonRectangle = new Rect(Position.X, Position.Y, Width, Height);
-
-            TextLayout = new CanvasTextLayout(device, text, Statics.DefaultFontNoWrap, 0, 0);
-            TextLayoutPosition = new Vector2(Position.X + (Width - (float)TextLayout.LayoutBounds.Width) / 2, Position.Y + (Height - (float)TextLayout.LayoutBounds.Height) / 2);
-
             Color = Colors.Gray;
+            TextLayout = new CanvasTextLayout(device, text, Statics.DefaultFontNoWrap, 0, 0);
+            RecalculateLayout();
         }
 
         public override void Draw(CanvasAnimatedDrawEventArgs args)
@@ -40,8 +36,8 @@ namespace win2d_text_game_world_generator
 
         private void DrawRectangle(CanvasAnimatedDrawEventArgs args)
         {
-            args.DrawingSession.FillRectangle(ButtonRectangle, Color);
-            args.DrawingSession.DrawRectangle(ButtonRectangle, Colors.White);
+            args.DrawingSession.FillRectangle(Rect, Color);
+            args.DrawingSession.DrawRectangle(Rect, Colors.White);
         }
 
         private void DrawText(CanvasAnimatedDrawEventArgs args)
@@ -76,5 +72,11 @@ namespace win2d_text_game_world_generator
             Color = Colors.Gray;
         }
         #endregion
+
+        public override void RecalculateLayout()
+        {
+            base.RecalculateLayout();
+            TextLayoutPosition = new Vector2(Position.X + (Width - (float)TextLayout.LayoutBounds.Width) / 2, Position.Y + (Height - (float)TextLayout.LayoutBounds.Height) / 2);
+        }
     }
 }

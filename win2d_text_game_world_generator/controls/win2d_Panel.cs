@@ -12,21 +12,16 @@ namespace win2d_text_game_world_generator
 {
     public class win2d_Panel : win2d_Control
     {
-        private Rect BackgroundRect;
-        private Color BackgroundColor;
-
-        public List<win2d_Control> Controls = new List<win2d_Control>();
+        private List<win2d_Control> Controls = new List<win2d_Control>();
 
         public win2d_Panel(Vector2 position, int width, int height, Color backgroundColor) : base(position, width, height)
         {
-            BackgroundRect = new Rect(position.X, position.Y, width, height);
-            BackgroundColor = backgroundColor;
+            Color = backgroundColor;
         }
 
         public override void Draw(CanvasAnimatedDrawEventArgs args)
         {
-            // background color
-            args.DrawingSession.FillRectangle(BackgroundRect, BackgroundColor);
+            args.DrawingSession.FillRectangle(Rect, Color);
 
             foreach (win2d_Control control in Controls)
             {
@@ -34,7 +29,15 @@ namespace win2d_text_game_world_generator
             }
 
             // border
-            args.DrawingSession.DrawRectangle(BackgroundRect, Colors.White);
+            args.DrawingSession.DrawRectangle(Rect, Colors.White);
+        }
+
+        public void AddControl(win2d_Control control)
+        {
+            // convert relative position to absolute
+            control.Position = new Vector2(control.Position.X + Position.X, control.Position.Y + Position.Y);
+            control.RecalculateLayout();
+            Controls.Add(control);
         }
     }
 }

@@ -340,7 +340,16 @@ namespace win2d_text_game_world_generator
             int nHeight = Statics.CanvasHeight - Statics.Padding * 2;
 
             mapCustomizationPanel = new win2d_Panel(new Vector2(nPositionX, nPositionY), nWidth, nHeight, Colors.RosyBrown);
+            win2d_Button button = new win2d_Button(canvasMain.Device, new Vector2(10, 10), 200, 40, "Hello!");
+            button.Click += Button_Click;
+            mapCustomizationPanel.AddControl(button);
         }
+
+        private void Button_Click(PointerPoint point)
+        {
+            int i = 0;
+        }
+
         private async void Reset()
         {
             map = null;

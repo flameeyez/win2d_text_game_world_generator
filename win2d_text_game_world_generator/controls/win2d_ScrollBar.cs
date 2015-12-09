@@ -22,7 +22,6 @@ namespace win2d_text_game_world_generator
         private Rect MiddleRect { get; set; }
         private Rect ScrollDownRect { get; set; }
         private Rect ScrollToBottomRect { get; set; }
-        private Rect BorderRect { get; set; }
 
         private Vector2 UpArrowPosition { get; set; }
         private Vector2 DoubleUpArrowPosition { get; set; }
@@ -45,7 +44,6 @@ namespace win2d_text_game_world_generator
             MiddleRect = new Rect(Position.X, Position.Y + Width * 2, Width, Height - Width * 4);
             ScrollDownRect = new Rect(Position.X, Position.Y + Height - Width * 2, Width, Width);
             ScrollToBottomRect = new Rect(Position.X, Position.Y + Height - Width, Width, Width);
-            BorderRect = new Rect(Position.X, Position.Y, Width, Height);
 
             UpArrowPosition = new Vector2((float)(ScrollUpRect.X + (ScrollUpRect.Width - Statics.UpArrow.LayoutBounds.Width) / 2),
                                           (float)(ScrollUpRect.Y + (ScrollUpRect.Height - Statics.UpArrow.LayoutBounds.Height) / 2));
@@ -87,7 +85,7 @@ namespace win2d_text_game_world_generator
             if (MiddleRect != null) { args.DrawingSession.FillRectangle(MiddleRect, Colors.DarkGray); }
             if (ScrollDownRect != null) { args.DrawingSession.FillRectangle(ScrollDownRect, Colors.Gray); }
             if (ScrollToBottomRect != null) { args.DrawingSession.FillRectangle(ScrollToBottomRect, Colors.LightGray); }
-            if (BorderRect != null) { args.DrawingSession.DrawRectangle(BorderRect, Colors.White); }
+            if (Rect != null) { args.DrawingSession.DrawRectangle(Rect, Colors.White); }
 
             args.DrawingSession.DrawTextLayout(Statics.UpArrow, UpArrowPosition, Colors.Black);
             args.DrawingSession.DrawTextLayout(Statics.DoubleUpArrow, DoubleUpArrowPosition, Colors.Black);

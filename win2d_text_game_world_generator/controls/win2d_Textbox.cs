@@ -54,7 +54,6 @@ namespace win2d_text_game_world_generator
             set { _cursorstringindex = Math.Max(value, 0); }
         }
         private bool bRecalculateLayout;
-        private Rect Border;
         private Vector2 TextPosition;
 
         private HashSet<VirtualKey> KeyboardState = new HashSet<VirtualKey>();
@@ -62,14 +61,10 @@ namespace win2d_text_game_world_generator
         public win2d_Textbox(CanvasDevice device, Vector2 position, int width) : base(position, width, -1)
         {
             CanvasTextLayout layout = new CanvasTextLayout(device, "TEST!", Statics.DefaultFontNoWrap, 0, 0);
-
-            Position = position;
-            Width = width;
             Height = (int)layout.LayoutBounds.Height + PaddingY * 2;
             Color = Colors.White;
 
             TextPosition = new Vector2(position.X + PaddingX, position.Y + PaddingY);
-            Border = new Rect(position.X, position.Y, width, Height);
 
             Cursor = new win2d_TextboxCursor(device, Colors.White);
             CursorStringIndex = 0;
@@ -89,7 +84,7 @@ namespace win2d_text_game_world_generator
         }
         private void DrawBorder(CanvasAnimatedDrawEventArgs args)
         {
-            args.DrawingSession.DrawRectangle(Border, Color);
+            args.DrawingSession.DrawRectangle(Rect, Color);
         }
         private void DrawText(CanvasAnimatedDrawEventArgs args)
         {
