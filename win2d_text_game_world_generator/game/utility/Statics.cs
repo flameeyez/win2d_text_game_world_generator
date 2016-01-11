@@ -15,10 +15,7 @@ namespace win2d_text_game_world_generator
 {
     public static class Statics
     {
-        public static int FrameCount = 0;
-
         #region Map Creation Data
-        public static bool DebugRollingReset = false;
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
         public static int PixelScale = 10;
@@ -33,30 +30,6 @@ namespace win2d_text_game_world_generator
         public static int ProbabilityOfExpansion = 0;
         public static int MinimumRegionSize = 100;
         public static int MergeThreshold = 500;
-        #endregion
-
-        #region Debug Map Display Data
-        public static Region DebugCurrentMouseRegion = null;
-        public static Subregion DebugCurrentMouseSubregion = null;
-        public static int DebugNWConnectionCount;
-        public static int DebugNConnectionCount;
-        public static int DebugNEConnectionCount;
-        public static int DebugWConnectionCount;
-        public static int DebugEConnectionCount;
-        public static int DebugSWConnectionCount;
-        public static int DebugSConnectionCount;
-        public static int DebugSEConnectionCount;
-        public static List<double> DebugMapCreationTimes = new List<double>();
-        public static List<int> DebugMapAbortCounts = new List<int>();
-        public static List<int> DebugCreateRoomConnectionsCounts = new List<int>();
-        public static List<int> DebugFixRoomConnectionsCounts = new List<int>();
-        public static int DebugMapCount = 0;
-        public static string DebugMapCreationTimeString = string.Empty;
-        public static string DebugMapTotalRegionCountString = string.Empty;
-        public static string DebugMapTotalTileCountString = string.Empty;
-        public static string DebugHeightString = string.Empty;
-        public static object lockDebugLists = new object();
-        public static byte DebugHeightMapOpacity = 75;
         #endregion
 
         #region Mouse Position

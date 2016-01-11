@@ -1046,14 +1046,14 @@ namespace win2d_text_game_world_generator
                     {
                         switch (strConnection)
                         {
-                            case "nw": Statics.DebugNWConnectionCount++; break;
-                            case "n": Statics.DebugNConnectionCount++; break;
-                            case "ne": Statics.DebugNEConnectionCount++; break;
-                            case "w": Statics.DebugWConnectionCount++; break;
-                            case "e": Statics.DebugEConnectionCount++; break;
-                            case "sw": Statics.DebugSWConnectionCount++; break;
-                            case "s": Statics.DebugSConnectionCount++; break;
-                            case "se": Statics.DebugSEConnectionCount++; break;
+                            case "nw": Debug.NWConnectionCount++; break;
+                            case "n": Debug.NConnectionCount++; break;
+                            case "ne": Debug.NEConnectionCount++; break;
+                            case "w": Debug.WConnectionCount++; break;
+                            case "e": Debug.EConnectionCount++; break;
+                            case "sw": Debug.SWConnectionCount++; break;
+                            case "s": Debug.SConnectionCount++; break;
+                            case "se": Debug.SEConnectionCount++; break;
                         }
                     }
                 }

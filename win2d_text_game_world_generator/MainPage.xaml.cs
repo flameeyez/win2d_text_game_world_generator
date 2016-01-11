@@ -29,9 +29,9 @@ namespace win2d_text_game_world_generator
 {
     enum GAMESTATE
     {
-        MENU_DISPLAY,
-        MAP_CREATE,
-        MAP_DISPLAY
+        MAIN_MENU_DISPLAY,
+        GAME_INITIALIZE,
+        UI_DISPLAY
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ namespace win2d_text_game_world_generator
     {
         Map map;
         win2d_Panel mapCustomizationPanel;
-        GAMESTATE State = GAMESTATE.MENU_DISPLAY;
+        GAMESTATE State = GAMESTATE.MAIN_MENU_DISPLAY;
 
         public MainPage()
         {
@@ -62,15 +62,15 @@ namespace win2d_text_game_world_generator
         {
             switch (State)
             {
-                case GAMESTATE.MENU_DISPLAY:
+                case GAMESTATE.MAIN_MENU_DISPLAY:
                     MainMenu.KeyDown(args.VirtualKey);
                     break;
-                case GAMESTATE.MAP_DISPLAY:
+                case GAMESTATE.UI_DISPLAY:
                     switch (args.VirtualKey)
                     {
                         case VirtualKey.Escape:
                             MainMenu.Reset();
-                            State = GAMESTATE.MENU_DISPLAY;
+                            State = GAMESTATE.MAIN_MENU_DISPLAY;
                             break;
                         case VirtualKey.Enter:
                             Reset();
@@ -89,9 +89,9 @@ namespace win2d_text_game_world_generator
         {
             switch (State)
             {
-                case GAMESTATE.MENU_DISPLAY:
+                case GAMESTATE.MAIN_MENU_DISPLAY:
                     break;
-                case GAMESTATE.MAP_DISPLAY:
+                case GAMESTATE.UI_DISPLAY:
                     if (map == null) { return; }
 
                     PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
@@ -119,9 +119,9 @@ namespace win2d_text_game_world_generator
         {
             switch (State)
             {
-                case GAMESTATE.MENU_DISPLAY:
+                case GAMESTATE.MAIN_MENU_DISPLAY:
                     break;
-                case GAMESTATE.MAP_DISPLAY:
+                case GAMESTATE.UI_DISPLAY:
                     if (map == null) { return; }
 
                     Point p = e.GetCurrentPoint(gridMain).Position;
@@ -129,23 +129,23 @@ namespace win2d_text_game_world_generator
                     Statics.MouseY = p.Y;
                     int x = (int)(p.X - Statics.Padding) / Statics.PixelScale;
                     int y = (int)(p.Y - Statics.Padding) / Statics.PixelScale;
-                    Statics.DebugCurrentMouseRegion = map.GetRegion(x, y);
-                    if (Statics.DebugCurrentMouseRegion != null)
+                    Debug.CurrentMouseRegion = map.GetRegion(x, y);
+                    if (Debug.CurrentMouseRegion != null)
                     {
-                        Statics.DebugCurrentMouseSubregion = map.GetSubregion(Statics.DebugCurrentMouseRegion, x, y);
+                        Debug.CurrentMouseSubregion = map.GetSubregion(Debug.CurrentMouseRegion, x, y);
 
-                        if (Statics.DebugCurrentMouseSubregion != null)
+                        if (Debug.CurrentMouseSubregion != null)
                         {
-                            Room room = map.GetRoom(Statics.DebugCurrentMouseSubregion, x, y);
+                            Room room = map.GetRoom(Debug.CurrentMouseSubregion, x, y);
                             if (room != null)
                             {
-                                Statics.DebugHeightString = "Elevation: " + room.Elevation.ToString();
+                                Debug.HeightString = "Elevation: " + room.Elevation.ToString();
                             }
                         }
                     }
                     else
                     {
-                        Statics.DebugCurrentMouseSubregion = null;
+                        Debug.CurrentMouseSubregion = null;
                     }
                     break;
             }
@@ -182,13 +182,13 @@ namespace win2d_text_game_world_generator
         {
             switch (State)
             {
-                case GAMESTATE.MENU_DISPLAY:
+                case GAMESTATE.MAIN_MENU_DISPLAY:
                     MainMenu.Draw(args);
                     break;
-                case GAMESTATE.MAP_CREATE:
-                    MapCreationScreen.Draw(args);
+                case GAMESTATE.GAME_INITIALIZE:
+                    MapCreationProgressScreen.Draw(args);
                     break;
-                case GAMESTATE.MAP_DISPLAY:
+                case GAMESTATE.UI_DISPLAY:
                     map.Draw(args);
                     mapCustomizationPanel.Draw(args);
                     if (Map.DebugDrawDebug) { DrawDebug(args); }
@@ -204,62 +204,62 @@ namespace win2d_text_game_world_generator
         {
             if (map == null) { return; }
 
-            lock (Statics.lockDebugLists)
+            lock (Debug.lockLists)
             {
                 DrawDebugRadar(args);
 
                 List<string> DebugStrings = new List<string>();
 
                 // populate list
-                if (Statics.DebugMapCreationTimes != null && Statics.DebugMapCreationTimes.Count > 0)
+                if (Debug.MapCreationTimes != null && Debug.MapCreationTimes.Count > 0)
                 {
-                    DebugStrings.Add("Average map creation time: " + Statics.DebugMapCreationTimes.Average().ToString() + "ms");
-                    DebugStrings.Add("Min map creation time: " + Statics.DebugMapCreationTimes.Min().ToString() + "ms");
-                    DebugStrings.Add("Max map creation time: " + Statics.DebugMapCreationTimes.Max().ToString() + "ms");
+                    DebugStrings.Add("Average map creation time: " + Debug.MapCreationTimes.Average().ToString() + "ms");
+                    DebugStrings.Add("Min map creation time: " + Debug.MapCreationTimes.Min().ToString() + "ms");
+                    DebugStrings.Add("Max map creation time: " + Debug.MapCreationTimes.Max().ToString() + "ms");
                 }
 
                 DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
 
-                if (Statics.DebugMapAbortCounts != null && Statics.DebugMapAbortCounts.Count > 0)
+                if (Debug.MapAbortCounts != null && Debug.MapAbortCounts.Count > 0)
                 {
-                    DebugStrings.Add("Average map abort count: " + Statics.DebugMapAbortCounts.Average().ToString());
-                    DebugStrings.Add("Min map abort count: " + Statics.DebugMapAbortCounts.Min().ToString());
-                    DebugStrings.Add("Max map abort count: " + Statics.DebugMapAbortCounts.Max().ToString());
+                    DebugStrings.Add("Average map abort count: " + Debug.MapAbortCounts.Average().ToString());
+                    DebugStrings.Add("Min map abort count: " + Debug.MapAbortCounts.Min().ToString());
+                    DebugStrings.Add("Max map abort count: " + Debug.MapAbortCounts.Max().ToString());
                 }
 
                 DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
 
-                DebugStrings.Add(Statics.DebugMapTotalTileCountString);
+                DebugStrings.Add(Debug.MapTotalTileCountString);
                 DebugStrings.Add("Map width (tiles): " + map.WidthInTiles.ToString());
                 DebugStrings.Add("Map height (tiles): " + map.HeightInTiles.ToString());
-                DebugStrings.Add("Map count: " + Statics.DebugMapCount.ToString());
-                DebugStrings.Add(Statics.DebugHeightString);
+                DebugStrings.Add("Map count: " + Debug.MapCount.ToString());
+                DebugStrings.Add(Debug.HeightString);
 
-                if (Statics.DebugFixRoomConnectionsCounts != null && Statics.DebugFixRoomConnectionsCounts.Count > 0)
+                if (Debug.FixRoomConnectionsCounts != null && Debug.FixRoomConnectionsCounts.Count > 0)
                 {
-                    DebugStrings.Add("Average fix connections attempts: " + Statics.DebugFixRoomConnectionsCounts.Average().ToString());
-                    DebugStrings.Add("Min fix connections attempts: " + Statics.DebugFixRoomConnectionsCounts.Min().ToString());
-                    DebugStrings.Add("Max fix connections attempts: " + Statics.DebugFixRoomConnectionsCounts.Max().ToString());
+                    DebugStrings.Add("Average fix connections attempts: " + Debug.FixRoomConnectionsCounts.Average().ToString());
+                    DebugStrings.Add("Min fix connections attempts: " + Debug.FixRoomConnectionsCounts.Min().ToString());
+                    DebugStrings.Add("Max fix connections attempts: " + Debug.FixRoomConnectionsCounts.Max().ToString());
                 }
                 DebugStrings.Add("Last fix connections attempts: " + map.DebugFixConnectionsCount.ToString());
                 DebugStrings.Add("Last fix connections time: " + map.DebugFixConnectionsTime.ToString() + "ms");
 
-                if (Statics.DebugCreateRoomConnectionsCounts != null && Statics.DebugCreateRoomConnectionsCounts.Count > 0)
+                if (Debug.CreateRoomConnectionsCounts != null && Debug.CreateRoomConnectionsCounts.Count > 0)
                 {
-                    DebugStrings.Add("Average room connections attempts: " + Statics.DebugCreateRoomConnectionsCounts.Average().ToString());
-                    DebugStrings.Add("Min room connections attempts: " + Statics.DebugCreateRoomConnectionsCounts.Min().ToString());
-                    DebugStrings.Add("Max room connections attempts: " + Statics.DebugCreateRoomConnectionsCounts.Max().ToString());
+                    DebugStrings.Add("Average room connections attempts: " + Debug.CreateRoomConnectionsCounts.Average().ToString());
+                    DebugStrings.Add("Min room connections attempts: " + Debug.CreateRoomConnectionsCounts.Min().ToString());
+                    DebugStrings.Add("Max room connections attempts: " + Debug.CreateRoomConnectionsCounts.Max().ToString());
                 }
                 DebugStrings.Add("Last room connections attempts: " + map.DebugCreateRoomConnectionsCount.ToString());
                 DebugStrings.Add("Last room connections time: " + map.DebugCreateRoomConnectionsTime.ToString() + "ms");
 
                 DebugStrings.Add("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString());
-                if (Statics.DebugCurrentMouseRegion != null)
+                if (Debug.CurrentMouseRegion != null)
                 {
-                    DebugStrings.Add("Region ID: " + Statics.DebugCurrentMouseRegion.ID.ToString());
-                    DebugStrings.Add("Region name: " + Statics.DebugCurrentMouseRegion.Name);
-                    DebugStrings.Add("Region room count: " + Statics.DebugCurrentMouseRegion.RoomCount.ToString());
-                    DebugStrings.Add("Region subregion count: " + Statics.DebugCurrentMouseRegion.Subregions.Count.ToString());
+                    DebugStrings.Add("Region ID: " + Debug.CurrentMouseRegion.ID.ToString());
+                    DebugStrings.Add("Region name: " + Debug.CurrentMouseRegion.Name);
+                    DebugStrings.Add("Region room count: " + Debug.CurrentMouseRegion.RoomCount.ToString());
+                    DebugStrings.Add("Region subregion count: " + Debug.CurrentMouseRegion.Subregions.Count.ToString());
                 }
 
                 // draw
@@ -279,14 +279,14 @@ namespace win2d_text_game_world_generator
                 //    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
                 //}
 
-                //args.DrawingSession.DrawText("NW: " + Statics.DebugNWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
-                //args.DrawingSession.DrawText("N: " + Statics.DebugNConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
-                //args.DrawingSession.DrawText("NE: " + Statics.DebugNEConnectionCount.ToString(), new Vector2(1510, 380), Colors.White);
-                //args.DrawingSession.DrawText("W: " + Statics.DebugWConnectionCount.ToString(), new Vector2(1510, 400), Colors.White);
-                //args.DrawingSession.DrawText("E: " + Statics.DebugEConnectionCount.ToString(), new Vector2(1510, 420), Colors.White);
-                //args.DrawingSession.DrawText("SW: " + Statics.DebugSWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
-                //args.DrawingSession.DrawText("S: " + Statics.DebugSConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
-                //args.DrawingSession.DrawText("SE: " + Statics.DebugSEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
+                //args.DrawingSession.DrawText("NW: " + Debug.NWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
+                //args.DrawingSession.DrawText("N: " + Debug.NConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
+                //args.DrawingSession.DrawText("NE: " + Debug.NEConnectionCount.ToString(), new Vector2(1510, 380), Colors.White);
+                //args.DrawingSession.DrawText("W: " + Debug.WConnectionCount.ToString(), new Vector2(1510, 400), Colors.White);
+                //args.DrawingSession.DrawText("E: " + Debug.EConnectionCount.ToString(), new Vector2(1510, 420), Colors.White);
+                //args.DrawingSession.DrawText("SW: " + Debug.SWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
+                //args.DrawingSession.DrawText("S: " + Debug.SConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
+                //args.DrawingSession.DrawText("SE: " + Debug.SEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
             }
         }
         private void DrawDebugRadar(CanvasAnimatedDrawEventArgs args)
@@ -309,7 +309,7 @@ namespace win2d_text_game_world_generator
         #region Update
         private void canvasMain_Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
         {
-            Statics.FrameCount++;
+            Debug.FrameCount++;
             // map.Update(args);
         }
         #endregion
@@ -327,7 +327,7 @@ namespace win2d_text_game_world_generator
             Statics.CanvasHeight = (int)sender.Size.Height;
 
             MainMenuInitialize(sender.Device);
-            MapCreationScreen.Initialize();
+            MapCreationProgressScreen.Initialize();
             CreateMapCustomizationPanel();
 
             // Reset();
@@ -353,49 +353,33 @@ namespace win2d_text_game_world_generator
         private async void Reset()
         {
             map = null;
-            State = GAMESTATE.MAP_CREATE;
+            State = GAMESTATE.GAME_INITIALIZE;
 
-            Statics.DebugNWConnectionCount = 0;
-            Statics.DebugNConnectionCount = 0;
-            Statics.DebugNEConnectionCount = 0;
-            Statics.DebugWConnectionCount = 0;
-            Statics.DebugEConnectionCount = 0;
-            Statics.DebugSWConnectionCount = 0;
-            Statics.DebugSConnectionCount = 0;
-            Statics.DebugSEConnectionCount = 0;
+            Debug.NWConnectionCount = 0;
+            Debug.NConnectionCount = 0;
+            Debug.NEConnectionCount = 0;
+            Debug.WConnectionCount = 0;
+            Debug.EConnectionCount = 0;
+            Debug.SWConnectionCount = 0;
+            Debug.SConnectionCount = 0;
+            Debug.SEConnectionCount = 0;
 
-            Statics.FrameCount = 0;
-            Statics.DebugMapCount++;
+            Debug.FrameCount = 0;
+            Debug.MapCount++;
 
             // map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
-            await Task.Run(() => map = Map.Create(Statics.MapWidthInPixels - 400, Statics.MapHeightInPixels, new Progress<Tuple<string, float>>(progress => MapCreationScreen.Set(canvasMain.Device, progress))));
+            await Task.Run(() => map = Map.Create(Statics.MapWidthInPixels - 400, Statics.MapHeightInPixels, 
+                new Progress<Tuple<string, float>>(progress => MapCreationProgressScreen.Set(canvasMain.Device, progress))));
 
-            DebugSetMapCreationMetadata();
+            Debug.SetMapCreationMetadata(map);
 
             // if (map.DebugCreationTime.TotalMilliseconds > 20000) { Statics.RollingReset = false; }
 
-            State = GAMESTATE.MAP_DISPLAY;
-        }
-        private void DebugSetMapCreationMetadata()
-        {
-            lock (Statics.lockDebugLists)
-            {
-                Statics.DebugMapCreationTimes.Add(map.DebugCreationTime.TotalMilliseconds);
-                Statics.DebugMapAbortCounts.Add(map.DebugAbortedCount);
-                Statics.DebugCreateRoomConnectionsCounts.Add(map.DebugCreateRoomConnectionsCount);
-                Statics.DebugFixRoomConnectionsCounts.Add(map.DebugFixConnectionsCount);
-            }
-
-            Statics.DebugMapCreationTimeString = "Map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms";
-            Statics.DebugMapTotalRegionCountString = "Total regions: " + map.Regions.Count.ToString();
-            Statics.DebugMapTotalTileCountString = "Total tiles: " + (map.WidthInTiles * map.HeightInTiles).ToString();
+            State = GAMESTATE.UI_DISPLAY;
         }
         private void RollingReset()
         {
-            while (Statics.DebugRollingReset)
-            {
-                Reset();
-            }
+            while (Debug.RollingReset) { Reset(); }
         }
         #endregion
     }

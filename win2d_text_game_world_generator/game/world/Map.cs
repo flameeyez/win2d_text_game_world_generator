@@ -174,11 +174,11 @@ namespace win2d_text_game_world_generator
             {
                 case Windows.System.VirtualKey.H:
                     DebugMapDrawType = MapDrawType.HEIGHTMAP;
-                    Statics.DebugHeightMapOpacity = 255;
+                    Debug.HeightMapOpacity = 255;
                     break;
                 case Windows.System.VirtualKey.R:
                     DebugMapDrawType = MapDrawType.REGIONS;
-                    Statics.DebugHeightMapOpacity = 75;
+                    Debug.HeightMapOpacity = 75;
                     break;
                 case Windows.System.VirtualKey.P:
                     DebugDrawPaths = !DebugDrawPaths;

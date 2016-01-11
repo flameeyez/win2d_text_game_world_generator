@@ -12,7 +12,7 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
-    public static class MapCreationScreen
+    public static class MapCreationProgressScreen
     {
         private static Rect MapCreationScreenBackgroundRect;
 

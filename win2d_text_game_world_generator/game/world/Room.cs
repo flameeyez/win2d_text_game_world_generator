@@ -60,7 +60,7 @@ namespace win2d_text_game_world_generator
                     MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
                     Statics.PixelScale,
                     Statics.PixelScale),
-                    Color.FromArgb(Statics.DebugHeightMapOpacity, ElevationColor.R, ElevationColor.G, ElevationColor.B));
+                    Color.FromArgb(Debug.HeightMapOpacity, ElevationColor.R, ElevationColor.G, ElevationColor.B));
         }
         public void DrawBorder(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {

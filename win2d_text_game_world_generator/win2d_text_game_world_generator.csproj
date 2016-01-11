@@ -99,6 +99,7 @@
     <Compile Include="controls\win2d_Button.cs" />
     <Compile Include="controls\win2d_Control.cs" />
     <Compile Include="controls\win2d_Label.cs" />
+    <Compile Include="controls\win2d_Map.cs" />
     <Compile Include="controls\win2d_Panel.cs" />
     <Compile Include="controls\win2d_ScrollBar.cs" />
     <Compile Include="controls\win2d_Textblock.cs" />
@@ -107,8 +108,10 @@
     <Compile Include="controls\win2d_Textbox.cs" />
     <Compile Include="controls\win2d_TextboxCursor.cs" />
     <Compile Include="game\menu\MainMenu.cs" />
-    <Compile Include="game\menu\MapCreationScreen.cs" />
+    <Compile Include="game\menu\MapCreationProgressScreen.cs" />
+    <Compile Include="game\menu\MapCustomizationScreen.cs" />
     <Compile Include="game\menu\MenuItem.cs" />
+    <Compile Include="game\utility\Debug.cs" />
     <Compile Include="game\utility\PerlinNoise.cs" />
     <Compile Include="game\world\Map.cs" />
     <Compile Include="game\world\proto\ProtoMap.cs" />
