@@ -32,7 +32,7 @@ namespace win2d_text_game_world_generator
         public static object lockLists = new object();
         public static byte HeightMapOpacity = 75;
 
-        public static void SetMapCreationMetadata(Map map)
+        public static void SetMapCreationMetadata(World map)
         {
             lock (Debug.lockLists)
             {

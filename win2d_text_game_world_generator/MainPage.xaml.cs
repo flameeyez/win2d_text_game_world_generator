@@ -39,7 +39,7 @@ namespace win2d_text_game_world_generator
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        Map map;
+        World map;
         win2d_Panel mapCustomizationPanel;
         GAMESTATE State = GAMESTATE.MAIN_MENU_DISPLAY;
 
@@ -97,7 +97,7 @@ namespace win2d_text_game_world_generator
                     PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
                     if (p.IsLeftButtonPressed)
                     {
-                        Map.DebugDrawSubregions = !Map.DebugDrawSubregions;
+                        World.DebugDrawSubregions = !World.DebugDrawSubregions;
                     }
                     else if (p.IsRightButtonPressed)
                     {
@@ -191,7 +191,7 @@ namespace win2d_text_game_world_generator
                 case GAMESTATE.UI_DISPLAY:
                     map.Draw(args);
                     mapCustomizationPanel.Draw(args);
-                    if (Map.DebugDrawDebug) { DrawDebug(args); }
+                    if (World.DebugDrawDebug) { DrawDebug(args); }
                     break;
             }
         }
@@ -368,7 +368,7 @@ namespace win2d_text_game_world_generator
             Debug.MapCount++;
 
             // map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
-            await Task.Run(() => map = Map.Create(Statics.MapWidthInPixels - 400, Statics.MapHeightInPixels, 
+            await Task.Run(() => map = World.Create(Statics.MapWidthInPixels - 400, Statics.MapHeightInPixels, 
                 new Progress<Tuple<string, float>>(progress => MapCreationProgressScreen.Set(canvasMain.Device, progress))));
 
             Debug.SetMapCreationMetadata(map);

@@ -12,13 +12,13 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
-    public enum MapDrawType
+    public enum WorldDrawType
     {
         HEIGHTMAP,
         REGIONS
     }
 
-    public class Map
+    public class World
     {
         public Vector2 Position { get; set; }
         public int WidthInPixels { get; set; }
@@ -28,6 +28,7 @@ namespace win2d_text_game_world_generator
         public int HeightInTiles { get { return HeightInPixels / Statics.PixelScale; } }
 
         public List<Region> Regions = new List<Region>();
+        public ProtoRoom[,] MasterRoomList;
 
         #region Debug
         public TimeSpan DebugCreationTime { get; set; }
@@ -42,43 +43,44 @@ namespace win2d_text_game_world_generator
         public static bool DebugDrawPaths = false;
         public static bool DebugDrawSubregions = false;
         public static bool DebugDrawGrid = false;
-        public static MapDrawType DebugMapDrawType = MapDrawType.REGIONS;
+        public static WorldDrawType DebugMapDrawType = WorldDrawType.REGIONS;
         #endregion
 
         #region Initialization
-        private Map() { }
-        public static Map Create(int width, int height, IProgress<Tuple<string, float>> progress)
+        private World() { }
+        public static World Create(int width, int height, IProgress<Tuple<string, float>> progress)
         {
             // START DEBUG
             Stopwatch s = Stopwatch.StartNew();
             // END DEBUG
 
             // declared here for abort tracking
-            Map map = new Map();
+            World world = new World();
 
-            ProtoMap pm = new ProtoMap(width, height, progress);
-            while (pm.Aborted) { ++map.DebugAbortedCount; pm = new ProtoMap(width, height, progress); }
+            ProtoWorld pw = new ProtoWorld(width, height, progress);
+            while (pw.Aborted) { ++world.DebugAbortedCount; pw = new ProtoWorld(width, height, progress); }
             
-            map.Position = pm.Position;
-            map.WidthInPixels = pm.WidthInPixels;
-            map.HeightInPixels = pm.HeightInPixels;
-            foreach (ProtoRegion pr in pm.ProtoRegions)
+            world.Position = pw.Position;
+            world.WidthInPixels = pw.WidthInPixels;
+            world.HeightInPixels = pw.HeightInPixels;
+            world.MasterRoomList = pw.MasterRoomList;
+            foreach (ProtoRegion pr in pw.ProtoRegions)
             {
-                map.Regions.Add(Region.FromProtoRegion(pr));
+                world.Regions.Add(Region.FromProtoRegion(pr));
             }
 
             // START DEBUG
             s.Stop();
-            map.DebugCreationTime = s.Elapsed;
-            map.TilesNotInMainPath = pm.TilesNotInMainPath;
-            map.MainPath = pm.MainPath;
-            map.DebugFixConnectionsTime = pm.DebugFixConnectionsTime;
-            map.DebugFixConnectionsCount = pm.DebugFixConnectionsCount;
-            map.DebugCreateRoomConnectionsTime = pm.DebugCreateRoomConnectionsTime;
-            map.DebugCreateRoomConnectionsCount = pm.DebugCreateRoomConnectionsCount;
+            world.DebugCreationTime = s.Elapsed;
+            world.TilesNotInMainPath = pw.TilesNotInMainPath;
+            world.MainPath = pw.MainPath;
+            world.DebugFixConnectionsTime = pw.DebugFixConnectionsTime;
+            world.DebugFixConnectionsCount = pw.DebugFixConnectionsCount;
+            world.DebugCreateRoomConnectionsTime = pw.DebugCreateRoomConnectionsTime;
+            world.DebugCreateRoomConnectionsCount = pw.DebugCreateRoomConnectionsCount;
             // END DEBUG
 
-            return map;
+            return world;
         }
         #endregion
 
@@ -87,10 +89,10 @@ namespace win2d_text_game_world_generator
         {
             switch (DebugMapDrawType)
             {
-                case MapDrawType.REGIONS:
+                case WorldDrawType.REGIONS:
                     DrawRegions(args, DebugDrawSubregions, DebugDrawPaths, DebugDrawGrid);
                     break;
-                case MapDrawType.HEIGHTMAP:
+                case WorldDrawType.HEIGHTMAP:
                     DrawHeightMap(args, DebugDrawPaths);
                     DrawTilesNotInMainPath(args);
                     break;
@@ -173,11 +175,11 @@ namespace win2d_text_game_world_generator
             switch (vk)
             {
                 case Windows.System.VirtualKey.H:
-                    DebugMapDrawType = MapDrawType.HEIGHTMAP;
+                    DebugMapDrawType = WorldDrawType.HEIGHTMAP;
                     Debug.HeightMapOpacity = 255;
                     break;
                 case Windows.System.VirtualKey.R:
-                    DebugMapDrawType = MapDrawType.REGIONS;
+                    DebugMapDrawType = WorldDrawType.REGIONS;
                     Debug.HeightMapOpacity = 75;
                     break;
                 case Windows.System.VirtualKey.P:

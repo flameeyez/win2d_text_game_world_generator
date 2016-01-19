@@ -12,21 +12,34 @@ namespace win2d_text_game_world_generator
 {
     public class win2d_Map : win2d_Control
     {
-        private List<win2d_Control> Controls = new List<win2d_Control>();
+        public bool DebugDrawFullScreen = true;
 
-        public win2d_Map(Vector2 position, int width, int height, Map world) : base(position, width, height)
+        public World World { get; set; }
+
+        public int Scale { get; set; } // tile side length, in pixels
+        public int WidthInTiles { get { return Width / Scale; } }
+        public int HeightInTiles { get { return Height / Scale; } }
+
+        public win2d_Map(Vector2 position, int width, int height, World world, int scale) : base(position, width, height)
         {
             World = world;
+            Scale = scale;
         }
-
-        public Map World { get; set; }
 
         public override void Draw(CanvasAnimatedDrawEventArgs args)
         {
-            // border
-            // args.DrawingSession.DrawRectangle(Rect, Colors.White);
-
             // draw scoped world
+            for (int x = 0; x < WidthInTiles; x++)
+            {
+                for (int y = 0; y < HeightInTiles; y++)
+                {
+                    // 
+                    // args.DrawingSession.FillRectangle();
+                }
+            }
+
+            // draw border
+            args.DrawingSession.DrawRectangle(Rect, Colors.White);
         }
     }
 }
