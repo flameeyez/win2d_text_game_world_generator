@@ -1,4 +1,5 @@
-﻿using Microsoft.Graphics.Canvas.UI.Xaml;
+﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,12 +13,6 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
-    public enum WorldDrawType
-    {
-        HEIGHTMAP,
-        REGIONS
-    }
-
     public class World
     {
         public Vector2 Position { get; set; }
@@ -43,8 +38,12 @@ namespace win2d_text_game_world_generator
         public static bool DebugDrawPaths = false;
         public static bool DebugDrawSubregions = false;
         public static bool DebugDrawGrid = false;
-        public static WorldDrawType DebugMapDrawType = WorldDrawType.REGIONS;
         #endregion
+
+        public CanvasRenderTarget RenderTargetRegions { get; set; }
+        public CanvasRenderTarget RenderTargetSubregions { get; set; }
+        public CanvasRenderTarget RenderTargetPaths { get; set; }
+        public CanvasRenderTarget RenderTargetHeightMap { get; set; }
 
         #region Initialization
         private World() { }
@@ -59,7 +58,7 @@ namespace win2d_text_game_world_generator
 
             ProtoWorld pw = new ProtoWorld(width, height, progress);
             while (pw.Aborted) { ++world.DebugAbortedCount; pw = new ProtoWorld(width, height, progress); }
-            
+
             world.Position = pw.Position;
             world.WidthInPixels = pw.WidthInPixels;
             world.HeightInPixels = pw.HeightInPixels;
@@ -68,6 +67,11 @@ namespace win2d_text_game_world_generator
             {
                 world.Regions.Add(Region.FromProtoRegion(pr));
             }
+
+            world.RenderTargetRegions = pw.RenderTargetRegions;
+            world.RenderTargetSubregions = pw.RenderTargetSubregions;
+            world.RenderTargetPaths = pw.RenderTargetPaths;
+            world.RenderTargetHeightMap = pw.RenderTargetHeightMap;
 
             // START DEBUG
             s.Stop();
@@ -85,19 +89,19 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Draw
-        public void Draw(CanvasAnimatedDrawEventArgs args)
-        {
-            switch (DebugMapDrawType)
-            {
-                case WorldDrawType.REGIONS:
-                    DrawRegions(args, DebugDrawSubregions, DebugDrawPaths, DebugDrawGrid);
-                    break;
-                case WorldDrawType.HEIGHTMAP:
-                    DrawHeightMap(args, DebugDrawPaths);
-                    DrawTilesNotInMainPath(args);
-                    break;
-            }
-        }
+        //public void Draw(CanvasAnimatedDrawEventArgs args)
+        //{
+        //    switch (DebugMapDrawType)
+        //    {
+        //        case WorldDrawType.REGIONS:
+        //            DrawRegions(args, DebugDrawSubregions, DebugDrawPaths, DebugDrawGrid);
+        //            break;
+        //        case WorldDrawType.HEIGHTMAP:
+        //            DrawHeightMap(args, DebugDrawPaths);
+        //            DrawTilesNotInMainPath(args);
+        //            break;
+        //    }
+        //}
         private void DrawBorder(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.DrawRectangle(new Rect(Position.X + Statics.Padding, Position.Y + Statics.Padding, WidthInPixels, HeightInPixels), Colors.White);
@@ -169,35 +173,6 @@ namespace win2d_text_game_world_generator
         }
         #endregion
 
-        #region Keyboard
-        public void KeyDown(VirtualKey vk)
-        {
-            switch (vk)
-            {
-                case Windows.System.VirtualKey.H:
-                    DebugMapDrawType = WorldDrawType.HEIGHTMAP;
-                    Debug.HeightMapOpacity = 255;
-                    break;
-                case Windows.System.VirtualKey.R:
-                    DebugMapDrawType = WorldDrawType.REGIONS;
-                    Debug.HeightMapOpacity = 75;
-                    break;
-                case Windows.System.VirtualKey.P:
-                    DebugDrawPaths = !DebugDrawPaths;
-                    break;
-                case Windows.System.VirtualKey.S:
-                    DebugDrawSubregions = !DebugDrawSubregions;
-                    break;
-                case Windows.System.VirtualKey.D:
-                    DebugDrawDebug = !DebugDrawDebug;
-                    break;
-                case Windows.System.VirtualKey.G:
-                    DebugDrawGrid = !DebugDrawGrid;
-                    break;
-            }
-        }
-        #endregion
-
         #region Get Region/Subregion
         public Region GetRegion(int x, int y)
         {
@@ -214,12 +189,11 @@ namespace win2d_text_game_world_generator
 
             return null;
         }
-
         public Room GetRoom(Subregion currentMouseSubregion, int x, int y)
         {
-            foreach(Room room in currentMouseSubregion.Rooms)
+            foreach (Room room in currentMouseSubregion.Rooms)
             {
-                if(room.Coordinates.X == x && room.Coordinates.Y == y)
+                if (room.Coordinates.X == x && room.Coordinates.Y == y)
                 {
                     return room;
                 }
@@ -227,7 +201,6 @@ namespace win2d_text_game_world_generator
 
             return null;
         }
-
         public Subregion GetSubregion(Region region, int x, int y)
         {
             foreach (Subregion s in region.Subregions)

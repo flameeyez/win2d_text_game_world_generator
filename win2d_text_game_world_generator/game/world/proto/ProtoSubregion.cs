@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
+using Microsoft.Graphics.Canvas;
 
 namespace win2d_text_game_world_generator
 {
@@ -67,6 +68,39 @@ namespace win2d_text_game_world_generator
                 CheckAdjacentRooms(AvailableAdjacentRooms, AvailableAdjacentCoordinates, randomNeighbor, MasterRoomList);
             }
         }
+
+        public void DrawRegions(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRoom pr in ProtoRooms)
+            {
+                pr.DrawRegions(ds);
+            }
+        }
+
+        public void DrawSubregions(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRoom pr in ProtoRooms)
+            {
+                pr.DrawSubregions(ds);
+            }
+        }
+
+        public void DrawPaths(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRoom pr in ProtoRooms)
+            {
+                pr.DrawPaths(ds);
+            }
+        }
+
+        public void DrawHeightMap(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRoom pr in ProtoRooms)
+            {
+                pr.DrawHeightMap(ds);
+            }
+        }
+
         private void CheckAdjacentRooms(List<ProtoRoom> AvailableAdjacentRooms, HashSet<PointInt> AvailableAdjacentCoordinates, ProtoRoom protoRoom, ProtoRoom[,] MasterRoomList)
         {
             // left

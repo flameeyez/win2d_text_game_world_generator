@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Graphics.Canvas;
 using Windows.Foundation;
 using Windows.UI;
 
@@ -49,20 +50,102 @@ namespace win2d_text_game_world_generator
             Elevation = 3; // initialize to grass/green
         }
 
+        public bool IsTraversable() { return !(Elevation == 0 || Elevation == 30); }
+
+        #region Hashing
         public override bool Equals(object obj)
         {
             ProtoRoom compare = obj as ProtoRoom;
             return this.Coordinates.Equals(compare.Coordinates);
         }
-
         public override int GetHashCode()
         {
             return Coordinates.GetHashCode();
         }
+        #endregion       
 
-        public bool IsTraversable()
+        #region Drawing
+        public void DrawHeightMap(CanvasDrawingSession ds)
         {
-            return !(Elevation == 0 || Elevation == 30);
+            ds.FillRectangle(new Rect(Coordinates.X, Coordinates.Y, 1, 1), ElevationColor);
         }
+        public void DrawPaths(CanvasDrawingSession ds)
+        {
+            foreach (string DirectionalRoomConnection in DirectionalRoomConnections)
+            {
+                switch (DirectionalRoomConnection)
+                {
+                    case "nw":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             (Coordinates.X - 1) + 0.5f,
+                             (Coordinates.Y - 1) + 0.5f,
+                             Colors.White);
+                        break;
+                    case "n":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             Coordinates.X + 0.5f,
+                             (Coordinates.Y - 1) + 0.5f,
+                             Colors.White);
+                        break;
+                    case "ne":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             (Coordinates.X + 1) + 0.5f,
+                             (Coordinates.Y - 1) + 0.5f,
+                             Colors.White);
+                        break;
+                    case "w":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             (Coordinates.X - 1) + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             Colors.White);
+                        break;
+                    case "o":
+                        break;
+                    case "e":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             (Coordinates.X + 1) + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             Colors.White);
+                        break;
+                    case "sw":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             (Coordinates.X - 1) + 0.5f,
+                             (Coordinates.Y + 1) + 0.5f,
+                             Colors.White);
+                        break;
+                    case "s":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             Coordinates.X + 0.5f,
+                             (Coordinates.Y + 1) + 0.5f,
+                             Colors.White);
+                        break;
+                    case "se":
+                        ds.DrawLine(Coordinates.X + 0.5f,
+                             Coordinates.Y + 0.5f,
+                             (Coordinates.X + 1) + 0.5f,
+                             (Coordinates.Y + 1) + 0.5f,
+                             Colors.White);
+                        break;
+                    default:
+                        throw new Exception();
+                }
+            }
+        }
+        public void DrawRegions(CanvasDrawingSession ds)
+        {
+            ds.FillRectangle(new Rect(Coordinates.X, Coordinates.Y, 1, 1), ProtoRegion.Color);
+        }
+        public void DrawSubregions(CanvasDrawingSession ds)
+        {
+            ds.FillRectangle(new Rect(Coordinates.X, Coordinates.Y, 1, 1), ProtoSubregion.Color);
+        }
+        #endregion
     }
 }

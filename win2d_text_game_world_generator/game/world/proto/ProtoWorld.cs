@@ -1,4 +1,5 @@
-﻿using Microsoft.Graphics.Canvas.Text;
+﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -30,11 +31,17 @@ namespace win2d_text_game_world_generator
         private HashSet<PointInt> OpenSet;
         public HashSet<PointInt> MainPath = new HashSet<PointInt>();
 
+        #region Debug
         public int DebugCreateRoomConnectionsCount { get; set; }
         public int DebugCreateRoomConnectionsTime { get; set; }
         public int DebugFixConnectionsCount { get; set; }
         public int DebugFixConnectionsTime { get; set; }
+        #endregion
 
+        public CanvasRenderTarget RenderTargetRegions { get; set; }
+        public CanvasRenderTarget RenderTargetSubregions { get; set; }
+        public CanvasRenderTarget RenderTargetPaths { get; set; }
+        public CanvasRenderTarget RenderTargetHeightMap { get; set; }
 
         private bool _aborted = false;
         public bool Aborted { get { return _aborted; } }
@@ -43,68 +50,74 @@ namespace win2d_text_game_world_generator
         #region Initialization
         public ProtoWorld(int width, int height, IProgress<Tuple<string, float>> progress)
         {
-            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 13));
+            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 14));
             CalculateLayout(width, height);
             InitializeMasterTileList();
 
-            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)2 / 13));
+            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)2 / 14));
             GenerateHeightMap();
 
-            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)3 / 13));
+            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)3 / 14));
             CalculateTraversability();
 
-            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)4 / 13));
+            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)4 / 14));
             CreateRoomConnections();
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)5 / 13));
+                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)5 / 14));
                 RemoveDisconnectedRoomConnections();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)6 / 13));
+                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)6 / 14));
                 FixCrossedPaths();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Creating regions...", (float)7 / 13));
+                progress.Report(new Tuple<string, float>("Creating regions...", (float)7 / 14));
                 CreateProtoRegions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Folding-in undersized regions...", (float)8 / 13));
+                progress.Report(new Tuple<string, float>("Folding-in undersized regions...", (float)8 / 14));
                 FoldUndersizedRegions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Creating region/subregion hierarchy...", (float)9 / 13));
+                progress.Report(new Tuple<string, float>("Creating region/subregion hierarchy...", (float)9 / 14));
                 MergeProtoRegions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Reindexing regions...", (float)10 / 13));
+                progress.Report(new Tuple<string, float>("Reindexing regions...", (float)10 / 14));
                 ReindexSubregions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)11 / 13));
+                progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)11 / 14));
                 AssignSubregionColors();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Validating world...", (float)12 / 13));
+                progress.Report(new Tuple<string, float>("Validating world...", (float)12 / 14));
                 DebugValidation();
             }
 
-            progress.Report(new Tuple<string, float>("Done!", (float)13 / 13));
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Saving world images...", (float)13 / 14));
+                SaveWorldImages();
+            }
+
+            progress.Report(new Tuple<string, float>("Done!", (float)14 / 14));
         }
         private void CalculateLayout(int width, int height)
         {
@@ -422,6 +435,67 @@ namespace win2d_text_game_world_generator
             if (!DebugValidateRoomOwnership()) { throw new Exception("Wut?!?"); }
             if (!DebugValidateConnectionMirroring()) { throw new Exception("For realz?!?"); }
             DebugCountConnections();
+        }
+        private void SaveWorldImages()
+        {
+            // draw regions
+            RenderTargetRegions = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            using (CanvasDrawingSession ds = RenderTargetRegions.CreateDrawingSession())
+            {
+                DrawRegions(ds);
+            }
+
+            // draw subregions
+            RenderTargetSubregions = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            using (CanvasDrawingSession ds = RenderTargetSubregions.CreateDrawingSession())
+            {
+                DrawSubregions(ds);
+            }
+
+            // draw paths
+            RenderTargetPaths = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            using (CanvasDrawingSession ds = RenderTargetPaths.CreateDrawingSession())
+            {
+                DrawPaths(ds);
+            }
+
+            // draw heightmap
+            RenderTargetHeightMap = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            using (CanvasDrawingSession ds = RenderTargetHeightMap.CreateDrawingSession())
+            {
+                DrawHeightMap(ds);
+            }
+        }
+        #endregion
+
+        #region Drawing
+        private void DrawHeightMap(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRegion pr in ProtoRegions)
+            {
+                pr.DrawHeightMap(ds);
+            }
+        }
+        private void DrawPaths(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRegion pr in ProtoRegions)
+            {
+                pr.DrawPaths(ds);
+            }
+        }
+        private void DrawSubregions(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRegion pr in ProtoRegions)
+            {
+                pr.DrawSubregions(ds);
+            }
+        }
+        private void DrawRegions(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRegion pr in ProtoRegions)
+            {
+                pr.DrawRegions(ds);
+            }
         }
         #endregion
 
