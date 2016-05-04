@@ -16,8 +16,8 @@ namespace win2d_text_game_world_generator
     {
         private static Rect MapCreationScreenBackgroundRect;
 
-        private static CanvasTextLayout ProgressPhaseLayout;
-        private static Vector2 ProgressPhaseLayoutPosition;
+        private static CanvasTextLayout ProgressPhaseTextLayout;
+        private static Vector2 ProgressPhaseTextLayoutPosition;
 
         private static float ProgressPercentage;
         private static Rect ProgressPercentageRect;
@@ -34,9 +34,9 @@ namespace win2d_text_game_world_generator
         {
             args.DrawingSession.FillRectangle(MapCreationScreenBackgroundRect, Colors.CornflowerBlue);
 
-            if (ProgressPhaseLayout != null)
+            if (ProgressPhaseTextLayout != null)
             {
-                args.DrawingSession.DrawTextLayout(ProgressPhaseLayout, ProgressPhaseLayoutPosition, Colors.White);
+                args.DrawingSession.DrawTextLayout(ProgressPhaseTextLayout, ProgressPhaseTextLayoutPosition, Colors.White);
                 args.DrawingSession.FillRectangle(ProgressPercentageRect, Colors.White);
                 args.DrawingSession.DrawRectangle(ProgressPercentageBorderRect, Colors.White);
             }
@@ -44,18 +44,18 @@ namespace win2d_text_game_world_generator
 
         public static void Set(CanvasDevice device, Tuple<string, float> progress)
         {
-            ProgressPhaseLayout = new CanvasTextLayout(device, progress.Item1, Statics.FontMedium, 0, 0);
-            float x = (float)(Statics.CanvasWidth - ProgressPhaseLayout.LayoutBounds.Width) / 2;
-            float y = (float)(Statics.CanvasHeight - ProgressPhaseLayout.LayoutBounds.Height) / 2;
-            ProgressPhaseLayoutPosition = new Vector2(x, y);
+            ProgressPhaseTextLayout = new CanvasTextLayout(device, progress.Item1, Statics.FontMedium, 0, 0);
+            float x = (float)(Statics.CanvasWidth - ProgressPhaseTextLayout.LayoutBounds.Width) / 2;
+            float y = (float)(Statics.CanvasHeight - ProgressPhaseTextLayout.LayoutBounds.Height) / 2;
+            ProgressPhaseTextLayoutPosition = new Vector2(x, y);
 
             ProgressPercentage = progress.Item2;
             ProgressPercentageRect = new Rect((Statics.CanvasWidth - ProgressBarWidth) / 2,
-                                                      ProgressPhaseLayoutPosition.Y + ProgressPhaseLayout.LayoutBounds.Height + 10,
+                                                      ProgressPhaseTextLayoutPosition.Y + ProgressPhaseTextLayout.LayoutBounds.Height + 10,
                                                       ProgressBarWidth * ProgressPercentage,
                                                       20);
             ProgressPercentageBorderRect = new Rect((Statics.CanvasWidth - ProgressBarWidth) / 2,
-                                                            ProgressPhaseLayoutPosition.Y + ProgressPhaseLayout.LayoutBounds.Height + 10,
+                                                            ProgressPhaseTextLayoutPosition.Y + ProgressPhaseTextLayout.LayoutBounds.Height + 10,
                                                             ProgressBarWidth,
                                                             20);
         }

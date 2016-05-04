@@ -99,17 +99,11 @@ namespace win2d_text_game_world_generator
                     PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
                     if (p.IsLeftButtonPressed)
                     {
-                        mapControl.CycleDrawType();
+                        // mapControl.CycleDrawType();
                     }
                     else if (p.IsRightButtonPressed)
                     {
                         Reset();
-
-                        //Statics.RollingReset = !Statics.RollingReset;
-                        //if (Statics.RollingReset)
-                        //{
-                        //    RollingReset();
-                        //}
                     }
                     break;
             }
@@ -124,31 +118,6 @@ namespace win2d_text_game_world_generator
                 case GAMESTATE.MAIN_MENU_DISPLAY:
                     break;
                 case GAMESTATE.UI_DISPLAY:
-                    //if (map == null) { return; }
-
-                    //Point p = e.GetCurrentPoint(gridMain).Position;
-                    //Statics.MouseX = p.X;
-                    //Statics.MouseY = p.Y;
-                    //int x = (int)(p.X - Statics.Padding) / Statics.PixelScale;
-                    //int y = (int)(p.Y - Statics.Padding) / Statics.PixelScale;
-                    //Debug.CurrentMouseRegion = map.GetRegion(x, y);
-                    //if (Debug.CurrentMouseRegion != null)
-                    //{
-                    //    Debug.CurrentMouseSubregion = map.GetSubregion(Debug.CurrentMouseRegion, x, y);
-
-                    //    if (Debug.CurrentMouseSubregion != null)
-                    //    {
-                    //        Room room = map.GetRoom(Debug.CurrentMouseSubregion, x, y);
-                    //        if (room != null)
-                    //        {
-                    //            Debug.HeightString = "Elevation: " + room.Elevation.ToString();
-                    //        }
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    Debug.CurrentMouseSubregion = null;
-                    //}
                     break;
             }
         }
@@ -157,20 +126,18 @@ namespace win2d_text_game_world_generator
         #region Main Menu Handling
         private void AddMainMenuItems()
         {
-            MenuItem menuItem1 = new MenuItem(canvasMain.Device, "Create new map");
-            menuItem1.Select += MenuItem1_Select;
+            MenuItem menuItemCreateNewMap = new MenuItem(canvasMain.Device, "Create new map");
+            menuItemCreateNewMap.Select += MenuItemCreateNewMap_Select;
             MenuItem menuItem2 = new MenuItem(canvasMain.Device, "Anything else");
             menuItem2.Select += MenuItem2_Select;
 
-            MainMenuScreen.AddMenuItem(menuItem1);
+            MainMenuScreen.AddMenuItem(menuItemCreateNewMap);
             MainMenuScreen.AddMenuItem(menuItem2);
         }
-
-        private void MenuItem1_Select()
+        private void MenuItemCreateNewMap_Select()
         {
             Reset();
         }
-
         private void MenuItem2_Select()
         {
 
@@ -196,110 +163,9 @@ namespace win2d_text_game_world_generator
                     break;
             }
         }
-
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
-            // if (map == null) { return; }
 
-            //lock (Debug.lockLists)
-            //{
-            //    DrawDebugRadar(args);
-
-            //    List<string> DebugStrings = new List<string>();
-
-            //    // populate list
-            //    if (Debug.MapCreationTimes != null && Debug.MapCreationTimes.Count > 0)
-            //    {
-            //        DebugStrings.Add("Average map creation time: " + Debug.MapCreationTimes.Average().ToString() + "ms");
-            //        DebugStrings.Add("Min map creation time: " + Debug.MapCreationTimes.Min().ToString() + "ms");
-            //        DebugStrings.Add("Max map creation time: " + Debug.MapCreationTimes.Max().ToString() + "ms");
-            //    }
-
-            //    DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
-
-            //    if (Debug.MapAbortCounts != null && Debug.MapAbortCounts.Count > 0)
-            //    {
-            //        DebugStrings.Add("Average map abort count: " + Debug.MapAbortCounts.Average().ToString());
-            //        DebugStrings.Add("Min map abort count: " + Debug.MapAbortCounts.Min().ToString());
-            //        DebugStrings.Add("Max map abort count: " + Debug.MapAbortCounts.Max().ToString());
-            //    }
-
-            //    DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
-
-            //    DebugStrings.Add(Debug.MapTotalTileCountString);
-            //    DebugStrings.Add("Map width (tiles): " + map.WidthInTiles.ToString());
-            //    DebugStrings.Add("Map height (tiles): " + map.HeightInTiles.ToString());
-            //    DebugStrings.Add("Map count: " + Debug.MapCount.ToString());
-            //    DebugStrings.Add(Debug.HeightString);
-
-            //    if (Debug.FixRoomConnectionsCounts != null && Debug.FixRoomConnectionsCounts.Count > 0)
-            //    {
-            //        DebugStrings.Add("Average fix connections attempts: " + Debug.FixRoomConnectionsCounts.Average().ToString());
-            //        DebugStrings.Add("Min fix connections attempts: " + Debug.FixRoomConnectionsCounts.Min().ToString());
-            //        DebugStrings.Add("Max fix connections attempts: " + Debug.FixRoomConnectionsCounts.Max().ToString());
-            //    }
-            //    DebugStrings.Add("Last fix connections attempts: " + map.DebugFixConnectionsCount.ToString());
-            //    DebugStrings.Add("Last fix connections time: " + map.DebugFixConnectionsTime.ToString() + "ms");
-
-            //    if (Debug.CreateRoomConnectionsCounts != null && Debug.CreateRoomConnectionsCounts.Count > 0)
-            //    {
-            //        DebugStrings.Add("Average room connections attempts: " + Debug.CreateRoomConnectionsCounts.Average().ToString());
-            //        DebugStrings.Add("Min room connections attempts: " + Debug.CreateRoomConnectionsCounts.Min().ToString());
-            //        DebugStrings.Add("Max room connections attempts: " + Debug.CreateRoomConnectionsCounts.Max().ToString());
-            //    }
-            //    DebugStrings.Add("Last room connections attempts: " + map.DebugCreateRoomConnectionsCount.ToString());
-            //    DebugStrings.Add("Last room connections time: " + map.DebugCreateRoomConnectionsTime.ToString() + "ms");
-
-            //    DebugStrings.Add("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString());
-            //    if (Debug.CurrentMouseRegion != null)
-            //    {
-            //        DebugStrings.Add("Region ID: " + Debug.CurrentMouseRegion.ID.ToString());
-            //        DebugStrings.Add("Region name: " + Debug.CurrentMouseRegion.Name);
-            //        DebugStrings.Add("Region room count: " + Debug.CurrentMouseRegion.RoomCount.ToString());
-            //        DebugStrings.Add("Region subregion count: " + Debug.CurrentMouseRegion.Subregions.Count.ToString());
-            //    }
-
-            //    // draw
-            //    Rect DebugRect = new Rect(1500, 10, 400, 20 * (DebugStrings.Count + 1));
-            //    args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
-
-            //    float fCurrentY = 20;
-            //    foreach (string strDebugString in DebugStrings)
-            //    {
-            //        args.DrawingSession.DrawText(strDebugString, new Vector2(1510, fCurrentY), Colors.White);
-            //        fCurrentY += 20;
-            //    }
-
-                //if (Statics.CurrentMouseSubregion != null)
-                //{
-                //    args.DrawingSession.DrawText("Subregion: " + Statics.CurrentMouseSubregion.ID.ToString(), new Vector2(1510, 280), Colors.White);
-                //    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
-                //}
-
-                //args.DrawingSession.DrawText("NW: " + Debug.NWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
-                //args.DrawingSession.DrawText("N: " + Debug.NConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
-                //args.DrawingSession.DrawText("NE: " + Debug.NEConnectionCount.ToString(), new Vector2(1510, 380), Colors.White);
-                //args.DrawingSession.DrawText("W: " + Debug.WConnectionCount.ToString(), new Vector2(1510, 400), Colors.White);
-                //args.DrawingSession.DrawText("E: " + Debug.EConnectionCount.ToString(), new Vector2(1510, 420), Colors.White);
-                //args.DrawingSession.DrawText("SW: " + Debug.SWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
-                //args.DrawingSession.DrawText("S: " + Debug.SConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
-                //args.DrawingSession.DrawText("SE: " + Debug.SEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
-            // }
-        }
-        private void DrawDebugRadar(CanvasAnimatedDrawEventArgs args)
-        {
-            CanvasTextLayout LayoutHundred = new CanvasTextLayout(args.DrawingSession, (100 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-            args.DrawingSession.DrawTextLayout(LayoutHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 70), Colors.White);
-
-            CanvasTextLayout LayoutTwoHundred = new CanvasTextLayout(args.DrawingSession, (200 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-            args.DrawingSession.DrawTextLayout(LayoutTwoHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 120), Colors.White);
-
-            CanvasTextLayout LayoutThreeHundred = new CanvasTextLayout(args.DrawingSession, (300 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
-            args.DrawingSession.DrawTextLayout(LayoutThreeHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 170), Colors.White);
-
-            args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 50, Statics.MouseY - 50, 100, 100), Colors.White);
-            args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 100, Statics.MouseY - 100, 200, 200), Colors.White);
-            args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 150, Statics.MouseY - 150, 300, 300), Colors.White);
         }
         #endregion
 
@@ -318,8 +184,6 @@ namespace win2d_text_game_world_generator
         }
         private async Task CreateResourcesAsync(CanvasAnimatedControl sender)
         {
-            // c.TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 200);
-            // c.Paused = true;
             Statics.CanvasWidth = (int)sender.Size.Width;
             Statics.CanvasHeight = (int)sender.Size.Height;
 
@@ -349,25 +213,10 @@ namespace win2d_text_game_world_generator
             world = null;
             State = GAMESTATE.GAME_INITIALIZE;
 
-            Debug.NWConnectionCount = 0;
-            Debug.NConnectionCount = 0;
-            Debug.NEConnectionCount = 0;
-            Debug.WConnectionCount = 0;
-            Debug.EConnectionCount = 0;
-            Debug.SWConnectionCount = 0;
-            Debug.SConnectionCount = 0;
-            Debug.SEConnectionCount = 0;
-
-            Debug.FrameCount = 0;
-            Debug.MapCount++;
-
-            // map = Map.Create(Statics.MapWidthInPixels, Statics.MapHeightInPixels);
-            await Task.Run(() => world = World.Create(Statics.MapWidthInPixels - 400, Statics.MapHeightInPixels,
+            await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
                 new Progress<Tuple<string, float>>(progress => MapCreationProgressScreen.Set(canvasMain.Device, progress))));
 
-            Debug.SetMapCreationMetadata(world);
-
-            // if (map.DebugCreationTime.TotalMilliseconds > 20000) { Statics.RollingReset = false; }
+            mapControl = new win2d_Map(new Vector2(Statics.CanvasWidth - world.Width - 10, Statics.CanvasHeight - world.Height - 10), 100, 100, world);            
 
             State = GAMESTATE.UI_DISPLAY;
         }
@@ -378,3 +227,166 @@ namespace win2d_text_game_world_generator
         #endregion
     }
 }
+
+#region Old Code
+// if (map == null) { return; }
+
+//lock (Debug.lockLists)
+//{
+//    DrawDebugRadar(args);
+
+//    List<string> DebugStrings = new List<string>();
+
+//    // populate list
+//    if (Debug.MapCreationTimes != null && Debug.MapCreationTimes.Count > 0)
+//    {
+//        DebugStrings.Add("Average map creation time: " + Debug.MapCreationTimes.Average().ToString() + "ms");
+//        DebugStrings.Add("Min map creation time: " + Debug.MapCreationTimes.Min().ToString() + "ms");
+//        DebugStrings.Add("Max map creation time: " + Debug.MapCreationTimes.Max().ToString() + "ms");
+//    }
+
+//    DebugStrings.Add("Last map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms");
+
+//    if (Debug.MapAbortCounts != null && Debug.MapAbortCounts.Count > 0)
+//    {
+//        DebugStrings.Add("Average map abort count: " + Debug.MapAbortCounts.Average().ToString());
+//        DebugStrings.Add("Min map abort count: " + Debug.MapAbortCounts.Min().ToString());
+//        DebugStrings.Add("Max map abort count: " + Debug.MapAbortCounts.Max().ToString());
+//    }
+
+//    DebugStrings.Add("Last map abort count: " + map.DebugAbortedCount.ToString());
+
+//    DebugStrings.Add(Debug.MapTotalTileCountString);
+//    DebugStrings.Add("Map width (tiles): " + map.WidthInTiles.ToString());
+//    DebugStrings.Add("Map height (tiles): " + map.HeightInTiles.ToString());
+//    DebugStrings.Add("Map count: " + Debug.MapCount.ToString());
+//    DebugStrings.Add(Debug.HeightString);
+
+//    if (Debug.FixRoomConnectionsCounts != null && Debug.FixRoomConnectionsCounts.Count > 0)
+//    {
+//        DebugStrings.Add("Average fix connections attempts: " + Debug.FixRoomConnectionsCounts.Average().ToString());
+//        DebugStrings.Add("Min fix connections attempts: " + Debug.FixRoomConnectionsCounts.Min().ToString());
+//        DebugStrings.Add("Max fix connections attempts: " + Debug.FixRoomConnectionsCounts.Max().ToString());
+//    }
+//    DebugStrings.Add("Last fix connections attempts: " + map.DebugFixConnectionsCount.ToString());
+//    DebugStrings.Add("Last fix connections time: " + map.DebugFixConnectionsTime.ToString() + "ms");
+
+//    if (Debug.CreateRoomConnectionsCounts != null && Debug.CreateRoomConnectionsCounts.Count > 0)
+//    {
+//        DebugStrings.Add("Average room connections attempts: " + Debug.CreateRoomConnectionsCounts.Average().ToString());
+//        DebugStrings.Add("Min room connections attempts: " + Debug.CreateRoomConnectionsCounts.Min().ToString());
+//        DebugStrings.Add("Max room connections attempts: " + Debug.CreateRoomConnectionsCounts.Max().ToString());
+//    }
+//    DebugStrings.Add("Last room connections attempts: " + map.DebugCreateRoomConnectionsCount.ToString());
+//    DebugStrings.Add("Last room connections time: " + map.DebugCreateRoomConnectionsTime.ToString() + "ms");
+
+//    DebugStrings.Add("Mouse: " + ((int)Statics.MouseX).ToString() + ", " + ((int)Statics.MouseY).ToString());
+//    if (Debug.CurrentMouseRegion != null)
+//    {
+//        DebugStrings.Add("Region ID: " + Debug.CurrentMouseRegion.ID.ToString());
+//        DebugStrings.Add("Region name: " + Debug.CurrentMouseRegion.Name);
+//        DebugStrings.Add("Region room count: " + Debug.CurrentMouseRegion.RoomCount.ToString());
+//        DebugStrings.Add("Region subregion count: " + Debug.CurrentMouseRegion.Subregions.Count.ToString());
+//    }
+
+//    // draw
+//    Rect DebugRect = new Rect(1500, 10, 400, 20 * (DebugStrings.Count + 1));
+//    args.DrawingSession.FillRectangle(DebugRect, Colors.CornflowerBlue);
+
+//    float fCurrentY = 20;
+//    foreach (string strDebugString in DebugStrings)
+//    {
+//        args.DrawingSession.DrawText(strDebugString, new Vector2(1510, fCurrentY), Colors.White);
+//        fCurrentY += 20;
+//    }
+
+//if (Statics.CurrentMouseSubregion != null)
+//{
+//    args.DrawingSession.DrawText("Subregion: " + Statics.CurrentMouseSubregion.ID.ToString(), new Vector2(1510, 280), Colors.White);
+//    args.DrawingSession.DrawText("Subregion room count: " + Statics.CurrentMouseSubregion.Rooms.Count.ToString(), new Vector2(1510, 300), Colors.White);
+//}
+
+//args.DrawingSession.DrawText("NW: " + Debug.NWConnectionCount.ToString(), new Vector2(1510, 340), Colors.White);
+//args.DrawingSession.DrawText("N: " + Debug.NConnectionCount.ToString(), new Vector2(1510, 360), Colors.White);
+//args.DrawingSession.DrawText("NE: " + Debug.NEConnectionCount.ToString(), new Vector2(1510, 380), Colors.White);
+//args.DrawingSession.DrawText("W: " + Debug.WConnectionCount.ToString(), new Vector2(1510, 400), Colors.White);
+//args.DrawingSession.DrawText("E: " + Debug.EConnectionCount.ToString(), new Vector2(1510, 420), Colors.White);
+//args.DrawingSession.DrawText("SW: " + Debug.SWConnectionCount.ToString(), new Vector2(1510, 440), Colors.White);
+//args.DrawingSession.DrawText("S: " + Debug.SConnectionCount.ToString(), new Vector2(1510, 460), Colors.White);
+//args.DrawingSession.DrawText("SE: " + Debug.SEConnectionCount.ToString(), new Vector2(1510, 480), Colors.White);
+// }
+
+
+//Statics.RollingReset = !Statics.RollingReset;
+//if (Statics.RollingReset)
+//{
+//    RollingReset();
+//}
+
+
+//if (map == null) { return; }
+
+//Point p = e.GetCurrentPoint(gridMain).Position;
+//Statics.MouseX = p.X;
+//Statics.MouseY = p.Y;
+//int x = (int)(p.X - Statics.Padding) / Statics.PixelScale;
+//int y = (int)(p.Y - Statics.Padding) / Statics.PixelScale;
+//Debug.CurrentMouseRegion = map.GetRegion(x, y);
+//if (Debug.CurrentMouseRegion != null)
+//{
+//    Debug.CurrentMouseSubregion = map.GetSubregion(Debug.CurrentMouseRegion, x, y);
+
+//    if (Debug.CurrentMouseSubregion != null)
+//    {
+//        Room room = map.GetRoom(Debug.CurrentMouseSubregion, x, y);
+//        if (room != null)
+//        {
+//            Debug.HeightString = "Elevation: " + room.Elevation.ToString();
+//        }
+//    }
+//}
+//else
+//{
+//    Debug.CurrentMouseSubregion = null;
+//}
+
+
+
+//private void DrawDebugRadar(CanvasAnimatedDrawEventArgs args)
+//{
+//    CanvasTextLayout LayoutHundred = new CanvasTextLayout(args.DrawingSession, (100 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+//    args.DrawingSession.DrawTextLayout(LayoutHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 70), Colors.White);
+
+//    CanvasTextLayout LayoutTwoHundred = new CanvasTextLayout(args.DrawingSession, (200 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+//    args.DrawingSession.DrawTextLayout(LayoutTwoHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 120), Colors.White);
+
+//    CanvasTextLayout LayoutThreeHundred = new CanvasTextLayout(args.DrawingSession, (300 / Statics.PixelScale).ToString(), Statics.FontSmall, 0, 0);
+//    args.DrawingSession.DrawTextLayout(LayoutThreeHundred, new Vector2((float)Statics.MouseX - (float)LayoutHundred.LayoutBounds.Width / 2, (float)Statics.MouseY - 170), Colors.White);
+
+//    args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 50, Statics.MouseY - 50, 100, 100), Colors.White);
+//    args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 100, Statics.MouseY - 100, 200, 200), Colors.White);
+//    args.DrawingSession.DrawRectangle(new Rect(Statics.MouseX - 150, Statics.MouseY - 150, 300, 300), Colors.White);
+//}
+
+
+
+
+
+// Debug.SetMapCreationMetadata(world);
+// if (map.DebugCreationTime.TotalMilliseconds > 20000) { Statics.RollingReset = false; }
+
+
+
+
+//Debug.NWConnectionCount = 0;
+//Debug.NConnectionCount = 0;
+//Debug.NEConnectionCount = 0;
+//Debug.WConnectionCount = 0;
+//Debug.EConnectionCount = 0;
+//Debug.SWConnectionCount = 0;
+//Debug.SConnectionCount = 0;
+//Debug.SEConnectionCount = 0;
+//Debug.FrameCount = 0;
+//Debug.MapCount++;
+
+#endregion

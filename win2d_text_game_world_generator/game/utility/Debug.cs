@@ -32,19 +32,19 @@ namespace win2d_text_game_world_generator
         public static object lockLists = new object();
         public static byte HeightMapOpacity = 75;
 
-        public static void SetMapCreationMetadata(World map)
-        {
-            lock (Debug.lockLists)
-            {
-                Debug.MapCreationTimes.Add(map.DebugCreationTime.TotalMilliseconds);
-                Debug.MapAbortCounts.Add(map.DebugAbortedCount);
-                Debug.CreateRoomConnectionsCounts.Add(map.DebugCreateRoomConnectionsCount);
-                Debug.FixRoomConnectionsCounts.Add(map.DebugFixConnectionsCount);
-            }
+        //public static void SetMapCreationMetadata(World map)
+        //{
+        //    lock (Debug.lockLists)
+        //    {
+        //        Debug.MapCreationTimes.Add(map.DebugCreationTime.TotalMilliseconds);
+        //        Debug.MapAbortCounts.Add(map.DebugAbortedCount);
+        //        Debug.CreateRoomConnectionsCounts.Add(map.DebugCreateRoomConnectionsCount);
+        //        Debug.FixRoomConnectionsCounts.Add(map.DebugFixConnectionsCount);
+        //    }
 
-            Debug.MapCreationTimeString = "Map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms";
-            Debug.MapTotalRegionCountString = "Total regions: " + map.Regions.Count.ToString();
-            Debug.MapTotalTileCountString = "Total tiles: " + (map.WidthInTiles * map.HeightInTiles).ToString();
-        }
+        //    Debug.MapCreationTimeString = "Map creation time: " + map.DebugCreationTime.TotalMilliseconds.ToString() + "ms";
+        //    Debug.MapTotalRegionCountString = "Total regions: " + map.Regions.Count.ToString();
+        //    Debug.MapTotalTileCountString = "Total tiles: " + (map.Width * map.Height).ToString();
+        //}
     }
 }

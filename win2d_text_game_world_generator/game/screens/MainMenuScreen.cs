@@ -15,7 +15,7 @@ namespace win2d_text_game_world_generator
 {
     public static class MainMenuScreen
     {
-        public static MainMenu MainMenu = new MainMenu();
+        public static Menu MainMenu = new Menu();
 
         private static Rect BackgroundRect;
 
@@ -76,7 +76,7 @@ namespace win2d_text_game_world_generator
             {
                 Vector2 position = new Vector2(fCurrentX, fCurrentY);
 
-                if (i == MainMenu.SelectedIndex)
+                if (i == Menu.SelectedIndex)
                 {
                     MainMenu.MenuItems[i].DrawSelected(args);
                 }

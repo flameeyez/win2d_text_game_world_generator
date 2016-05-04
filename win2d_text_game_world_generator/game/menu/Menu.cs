@@ -13,7 +13,7 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
-    public class MainMenu
+    public class Menu
     {
         public List<MenuItem> MenuItems = new List<MenuItem>();
 

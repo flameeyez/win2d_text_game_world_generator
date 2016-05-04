@@ -15,12 +15,9 @@ namespace win2d_text_game_world_generator
     {
         public List<ProtoRegion> ProtoRegions = new List<ProtoRegion>();
         public ProtoRoom[,] MasterRoomList;
-        public Vector2 Position { get; set; }
-        public int WidthInPixels { get; set; }
-        public int HeightInPixels { get; set; }
-        public int WidthInTiles { get { return WidthInPixels / Statics.PixelScale; } }
-        public int HeightInTiles { get { return HeightInPixels / Statics.PixelScale; } }
-        public int TotalTiles { get { return WidthInTiles * HeightInTiles; } }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public int TotalTiles { get { return Width * Height; } }
 
         private int TraversableTiles = 0;
         private int UntraversableTiles = 0;
@@ -48,96 +45,79 @@ namespace win2d_text_game_world_generator
         private void AbortConstruction() { _aborted = true; }
 
         #region Initialization
-        public ProtoWorld(int width, int height, IProgress<Tuple<string, float>> progress)
+        public ProtoWorld(CanvasDevice device, int width, int height, IProgress<Tuple<string, float>> progress)
         {
-            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 14));
-            CalculateLayout(width, height);
+            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 13));
+            Width = width;
+            Height = height;
             InitializeMasterTileList();
 
-            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)2 / 14));
+            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)2 / 13));
             GenerateHeightMap();
 
-            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)3 / 14));
+            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)3 / 13));
             CalculateTraversability();
 
-            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)4 / 14));
+            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)4 / 13));
             CreateRoomConnections();
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)5 / 14));
+                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)5 / 13));
                 RemoveDisconnectedRoomConnections();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)6 / 14));
+                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)6 / 13));
                 FixCrossedPaths();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Creating regions...", (float)7 / 14));
+                progress.Report(new Tuple<string, float>("Creating regions...", (float)7 / 13));
                 CreateProtoRegions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Folding-in undersized regions...", (float)8 / 14));
+                progress.Report(new Tuple<string, float>("Folding-in undersized regions...", (float)8 / 13));
                 FoldUndersizedRegions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Creating region/subregion hierarchy...", (float)9 / 14));
+                progress.Report(new Tuple<string, float>("Creating region/subregion hierarchy...", (float)9 / 13));
                 MergeProtoRegions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Reindexing regions...", (float)10 / 14));
+                progress.Report(new Tuple<string, float>("Reindexing regions...", (float)10 / 13));
                 ReindexSubregions();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)11 / 14));
+                progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)11 / 13));
                 AssignSubregionColors();
             }
 
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Validating world...", (float)12 / 14));
-                DebugValidation();
+                progress.Report(new Tuple<string, float>("Saving world images...", (float)12 / 13));
+                SaveWorldImages(device);
             }
 
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Saving world images...", (float)13 / 14));
-                SaveWorldImages();
-            }
-
-            progress.Report(new Tuple<string, float>("Done!", (float)14 / 14));
-        }
-        private void CalculateLayout(int width, int height)
-        {
-            Position = Statics.MapPosition;
-
-            // stretched layout
-            // WidthInPixels = Statics.CanvasWidth - Statics.Padding * 2;
-            // HeightInPixels = Statics.CanvasHeight - Statics.Padding * 2;
-
-            // parameterized layout
-            WidthInPixels = width - Statics.Padding * 2;
-            HeightInPixels = height - Statics.Padding * 2;
+            progress.Report(new Tuple<string, float>("Done!", (float)13 / 13));
         }
         private void InitializeMasterTileList()
         {
             // initialize master array of tiles
-            MasterRoomList = new ProtoRoom[WidthInTiles, HeightInTiles];
-            for (int x = 0; x < WidthInTiles; x++)
+            MasterRoomList = new ProtoRoom[Width, Height];
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     MasterRoomList[x, y] = new ProtoRoom(new PointInt(x, y));
                 }
@@ -150,9 +130,9 @@ namespace win2d_text_game_world_generator
             int[,] forestMap = GenerateHeightMapForest();
             // int[,] desertMap = GenerateHeightMapDesert();
 
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     if (mountainMap[x, y] >= 27) { MasterRoomList[x, y].Elevation = mountainMap[x, y]; }
                     else if (waterMap[x, y] == 25 || waterMap[x, y] == 26) { MasterRoomList[x, y].Elevation = 1; }
@@ -164,9 +144,9 @@ namespace win2d_text_game_world_generator
         }
         private void CalculateTraversability()
         {
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     if (MasterRoomList[x, y].Elevation == 0 || MasterRoomList[x, y].Elevation == 30) { UntraversableTiles++; }
                     else { TraversableTiles++; }
@@ -192,9 +172,9 @@ namespace win2d_text_game_world_generator
                     return;
                 }
 
-                for (int x = 0; x < WidthInTiles; x++)
+                for (int x = 0; x < Width; x++)
                 {
-                    for (int y = 0; y < HeightInTiles; y++)
+                    for (int y = 0; y < Height; y++)
                     {
                         ProtoRoom currentRoom = MasterRoomList[x, y];
                         if (!currentRoom.IsTraversable()) { continue; }
@@ -252,9 +232,9 @@ namespace win2d_text_game_world_generator
             PointInt neighborCoordinates = GetNeighborCoordinates(protoRoom.Coordinates, strDirection);
 
             if (neighborCoordinates.X < 0) { return false; }
-            if (neighborCoordinates.X > WidthInTiles - 1) { return false; }
+            if (neighborCoordinates.X > Width - 1) { return false; }
             if (neighborCoordinates.Y < 0) { return false; }
-            if (neighborCoordinates.Y > HeightInTiles - 1) { return false; }
+            if (neighborCoordinates.Y > Height - 1) { return false; }
             if (!MainPath.Contains(neighborCoordinates)) { return false; }
 
             ProtoRoom neighborRoom = MasterRoomList[neighborCoordinates.X, neighborCoordinates.Y];
@@ -270,9 +250,9 @@ namespace win2d_text_game_world_generator
         }
         private void FixCrossedPaths()
         {
-            for (int x = 0; x < WidthInTiles - 1; x++)
+            for (int x = 0; x < Width - 1; x++)
             {
-                for (int y = 0; y < HeightInTiles - 1; y++)
+                for (int y = 0; y < Height - 1; y++)
                 {
                     ProtoRoom topLeft = MasterRoomList[x, y];
                     ProtoRoom topRight = MasterRoomList[x + 1, y];
@@ -373,7 +353,7 @@ namespace win2d_text_game_world_generator
         {
             // now we have a grid of available/unavailable [proto]rooms (tiles/pixels)
             // while we have available rooms, create regions, each with a single subregion
-            int AvailableTileCount = WidthInTiles * HeightInTiles;
+            int AvailableTileCount = Width * Height;
             int nCurrentRegionId = 0;
             while (AvailableTileCount > 0)
             {
@@ -428,39 +408,31 @@ namespace win2d_text_game_world_generator
             }
         }
 
-        private void DebugValidation()
-        {
-            // checks to ensure that rooms within a region/subregion actually point back to the containing region/subregion
-            // would theoretically catch reassignment misses during merge
-            if (!DebugValidateRoomOwnership()) { throw new Exception("Wut?!?"); }
-            if (!DebugValidateConnectionMirroring()) { throw new Exception("For realz?!?"); }
-            DebugCountConnections();
-        }
-        private void SaveWorldImages()
+        private void SaveWorldImages(CanvasDevice device)
         {
             // draw regions
-            RenderTargetRegions = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            RenderTargetRegions = new CanvasRenderTarget(device, Width, Height, 96);
             using (CanvasDrawingSession ds = RenderTargetRegions.CreateDrawingSession())
             {
                 DrawRegions(ds);
             }
 
             // draw subregions
-            RenderTargetSubregions = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            RenderTargetSubregions = new CanvasRenderTarget(device, Width, Height, 96);
             using (CanvasDrawingSession ds = RenderTargetSubregions.CreateDrawingSession())
             {
                 DrawSubregions(ds);
             }
 
             // draw paths
-            RenderTargetPaths = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            RenderTargetPaths = new CanvasRenderTarget(device, Width, Height, 96);
             using (CanvasDrawingSession ds = RenderTargetPaths.CreateDrawingSession())
             {
                 DrawPaths(ds);
             }
 
             // draw heightmap
-            RenderTargetHeightMap = new CanvasRenderTarget(CanvasDevice.GetSharedDevice(), WidthInPixels, HeightInPixels, 96);
+            RenderTargetHeightMap = new CanvasRenderTarget(device, Width, Height, 96);
             using (CanvasDrawingSession ds = RenderTargetHeightMap.CreateDrawingSession())
             {
                 DrawHeightMap(ds);
@@ -586,7 +558,7 @@ namespace win2d_text_game_world_generator
                         break;
                     case 1:
                         // right
-                        if (tileRandomX < WidthInTiles - 1)
+                        if (tileRandomX < Width - 1)
                         {
                             region = MasterRoomList[tileRandomX + 1, tileRandomY].ProtoRegion;
                         }
@@ -600,7 +572,7 @@ namespace win2d_text_game_world_generator
                         break;
                     case 3:
                         // down
-                        if (tileRandomY < HeightInTiles - 1)
+                        if (tileRandomY < Height - 1)
                         {
                             region = MasterRoomList[tileRandomX, tileRandomY + 1].ProtoRegion;
                         }
@@ -655,9 +627,9 @@ namespace win2d_text_game_world_generator
             }
 
             if (connectingRoomCoordinates.X < 0) { return currentRoom; }
-            if (connectingRoomCoordinates.X > WidthInTiles - 1) { return currentRoom; }
+            if (connectingRoomCoordinates.X > Width - 1) { return currentRoom; }
             if (connectingRoomCoordinates.Y < 0) { return currentRoom; }
-            if (connectingRoomCoordinates.Y > HeightInTiles - 1) { return currentRoom; }
+            if (connectingRoomCoordinates.Y > Height - 1) { return currentRoom; }
 
             ProtoRoom connectingRoom = MasterRoomList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
             if (connectingRoom.Elevation == 0 || connectingRoom.Elevation == 30) { return currentRoom; }
@@ -699,9 +671,9 @@ namespace win2d_text_game_world_generator
 
             // initialize TilesNotInMainPath
             TilesNotInMainPath = new HashSet<PointInt>();
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     if (MasterRoomList[x, y].IsTraversable())
                     {
@@ -712,14 +684,14 @@ namespace win2d_text_game_world_generator
 
             // initialize OpenSet with a random tile
             OpenSet = new HashSet<PointInt>();
-            int initialX = Statics.Random.Next(WidthInTiles);
-            int initialY = Statics.Random.Next(HeightInTiles);
+            int initialX = Statics.Random.Next(Width);
+            int initialY = Statics.Random.Next(Height);
             ProtoRoom protoRoom = MasterRoomList[initialX, initialY];
 
             while (!protoRoom.IsTraversable())
             {
-                initialX = Statics.Random.Next(WidthInTiles);
-                initialY = Statics.Random.Next(HeightInTiles);
+                initialX = Statics.Random.Next(Width);
+                initialY = Statics.Random.Next(Height);
                 protoRoom = MasterRoomList[initialX, initialY];
             }
 
@@ -882,16 +854,16 @@ namespace win2d_text_game_world_generator
         private int[,] GenerateHeightMapMountains()
         {
             // mountain pass
-            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            PerlinNoise pn = new PerlinNoise(Width, Height);
             float fFrequency = 0.02f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
             float fAmplitude = 2.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
             float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
             int nOctaves = 1;// + Statics.Random.Next(5); // 5;
-            int[,] mountainMap = new int[WidthInTiles, HeightInTiles];
+            int[,] mountainMap = new int[Width, Height];
 
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 27) { mountainMap[x, y] = nElevation; }
@@ -904,15 +876,15 @@ namespace win2d_text_game_world_generator
         private int[,] GenerateHeightMapWater()
         {
             // water pass
-            int[,] waterMap = new int[WidthInTiles, HeightInTiles];
-            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            int[,] waterMap = new int[Width, Height];
+            PerlinNoise pn = new PerlinNoise(Width, Height);
             float fFrequency = 0.05f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
             float fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
             float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
             int nOctaves = 1;// + Statics.Random.Next(5); // 5;
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 25) { waterMap[x, y] = nElevation; }
@@ -924,16 +896,16 @@ namespace win2d_text_game_world_generator
         private int[,] GenerateHeightMapForest()
         {
             // forest pass
-            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            PerlinNoise pn = new PerlinNoise(Width, Height);
             float fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
             float fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
             float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
             int nOctaves = 1;// + Statics.Random.Next(5); // 5;
-            int[,] forestMap = new int[WidthInTiles, HeightInTiles];
+            int[,] forestMap = new int[Width, Height];
 
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 20) { forestMap[x, y] = 30; }
@@ -946,16 +918,16 @@ namespace win2d_text_game_world_generator
         private int[,] GenerateHeightMapDesert()
         {
             // desert pass
-            PerlinNoise pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+            PerlinNoise pn = new PerlinNoise(Width, Height);
             float fFrequency = 0.03f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
             float fAmplitude = 1.5f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
             float fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
             int nOctaves = 1;// + Statics.Random.Next(5); // 5;
-            int[,] desertMap = new int[WidthInTiles, HeightInTiles];
+            int[,] desertMap = new int[Width, Height];
 
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, fFrequency, fAmplitude, fPersistence, nOctaves);
                     if (nElevation >= 20) { desertMap[x, y] = 30; }
@@ -978,28 +950,28 @@ namespace win2d_text_game_world_generator
 
             for (int i = 0; i < iterations; i++)
             {
-                float[,] fIntermediateBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
-                float[,] fFinalBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+                float[,] fIntermediateBlurredHeightValues = new float[Width, Height];
+                float[,] fFinalBlurredHeightValues = new float[Width, Height];
 
-                for (int x = 0; x < WidthInTiles; x++)
+                for (int x = 0; x < Width; x++)
                 {
-                    for (int y = 0; y < HeightInTiles; y++)
+                    for (int y = 0; y < Height; y++)
                     {
                         fIntermediateBlurredHeightValues[x, y] = ComputeXValue(heightMap, FilterKernel, x, y);
                     }
                 }
 
-                for (int x = 0; x < WidthInTiles; x++)
+                for (int x = 0; x < Width; x++)
                 {
-                    for (int y = 0; y < HeightInTiles; y++)
+                    for (int y = 0; y < Height; y++)
                     {
                         fFinalBlurredHeightValues[x, y] = ComputeYValue(fIntermediateBlurredHeightValues, FilterKernel, x, y);
                     }
                 }
 
-                for (int x = 0; x < WidthInTiles; x++)
+                for (int x = 0; x < Width; x++)
                 {
-                    for (int y = 0; y < HeightInTiles; y++)
+                    for (int y = 0; y < Height; y++)
                     {
                         heightMap[x, y] = (int)fFinalBlurredHeightValues[x, y];
                     }
@@ -1014,7 +986,7 @@ namespace win2d_text_game_world_generator
             {
                 int offset = kvp.Key;
                 if (x + kvp.Key < 0) { offset = 0; }
-                if (x + kvp.Key > WidthInTiles - 1) { offset = 0; }
+                if (x + kvp.Key > Width - 1) { offset = 0; }
 
                 fValue += kvp.Value * heightMap[x + offset, y]; // MasterTileList[x + offset, y].Elevation;
             }
@@ -1029,7 +1001,7 @@ namespace win2d_text_game_world_generator
             {
                 int offset = kvp.Key;
                 if (y + kvp.Key < 0) { offset = 0; }
-                if (y + kvp.Key > HeightInTiles - 1) { offset = 0; }
+                if (y + kvp.Key > Height - 1) { offset = 0; }
 
                 fValue += kvp.Value * fIntermediateBlurredHeightValues[x, y + offset];
             }
@@ -1039,6 +1011,13 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Debug
+        private void DebugValidation()
+        {
+            // checks to ensure that rooms within a region/subregion actually point back to the containing region/subregion
+            // would theoretically catch reassignment misses during merge
+            if (!DebugValidateRoomOwnership()) { throw new Exception("Wut?!?"); }
+            if (!DebugValidateConnectionMirroring()) { throw new Exception("For realz?!?"); }
+        }
         private bool DebugValidateRoomOwnership()
         {
             foreach (ProtoRegion pr in ProtoRegions)
@@ -1058,9 +1037,9 @@ namespace win2d_text_game_world_generator
         }
         private bool DebugValidateConnectionMirroring()
         {
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     ProtoRoom currentRoom = MasterRoomList[x, y];
                     ProtoRoom connectionRoom = null;
@@ -1111,9 +1090,9 @@ namespace win2d_text_game_world_generator
         }
         private void DebugCountConnections()
         {
-            for (int x = 0; x < WidthInTiles; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < HeightInTiles; y++)
+                for (int y = 0; y < Height; y++)
                 {
                     ProtoRoom protoRoom = MasterRoomList[x, y];
                     foreach (string strConnection in protoRoom.DirectionalRoomConnections)
@@ -1174,7 +1153,7 @@ namespace win2d_text_game_world_generator
         //                for (int i = TilesNotInMainPath.Count - 1; i >= 0; i--)
         //                {
         //                    PointInt currentCoordinates = TilesNotInMainPath.ElementAt(i);
-        //                    if (currentCoordinates.Y == HeightInTiles - 1)
+        //                    if (currentCoordinates.Y == Height - 1)
         //                    {
         //                        int q = 0;
         //q++;
@@ -1241,8 +1220,8 @@ namespace win2d_text_game_world_generator
         //{
         //    if (x < 0) { return false; }
         //    if (y < 0) { return false; }
-        //    if (x > WidthInTiles - 1) { return false; }
-        //    if (y > HeightInTiles - 1) { return false; }
+        //    if (x > Width - 1) { return false; }
+        //    if (y > Height - 1) { return false; }
 
         //    ProtoRoom targetRoom = MasterTileList[x, y];
         //    if (targetRoom.Elevation < sourceRoom.Elevation - Statics.HeightMapElevationFactor)
@@ -1272,37 +1251,37 @@ namespace win2d_text_game_world_generator
 
         //    for (int i = 0; i < iterations; i++)
         //    {
-        //        float[,] fIntermediateBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
-        //        float[,] fFinalBlurredHeightValues = new float[WidthInTiles, HeightInTiles];
+        //        float[,] fIntermediateBlurredHeightValues = new float[Width, Height];
+        //        float[,] fFinalBlurredHeightValues = new float[Width, Height];
 
-        //        for (int x = 0; x < WidthInTiles; x++)
+        //        for (int x = 0; x < Width; x++)
         //        {
-        //            for (int y = 0; y < HeightInTiles; y++)
+        //            for (int y = 0; y < Height; y++)
         //            {
         //                fIntermediateBlurredHeightValues[x, y] = ComputeXValue(FilterKernel, x, y);
         //            }
         //        }
 
-        //        for (int x = 0; x < WidthInTiles; x++)
+        //        for (int x = 0; x < Width; x++)
         //        {
-        //            for (int y = 0; y < HeightInTiles; y++)
+        //            for (int y = 0; y < Height; y++)
         //            {
         //                fFinalBlurredHeightValues[x, y] = ComputeYValue(fIntermediateBlurredHeightValues, FilterKernel, x, y);
         //            }
         //        }
 
-        //        for (int x = 0; x < WidthInTiles; x++)
+        //        for (int x = 0; x < Width; x++)
         //        {
-        //            for (int y = 0; y < HeightInTiles; y++)
+        //            for (int y = 0; y < Height; y++)
         //            {
         //                MasterTileList[x, y].Elevation = (int)fFinalBlurredHeightValues[x, y];
         //            }
         //        }
         //    }
         //}
-        //for (int x = 0; x < WidthInTiles; x++)
+        //for (int x = 0; x < Width; x++)
         //{
-        //    for (int y = 0; y < HeightInTiles; y++)
+        //    for (int y = 0; y < Height; y++)
         //    {
         //        int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
         //        if (nElevation >= 27) { MasterTileList[x, y].Elevation = nElevation; }
@@ -1316,14 +1295,14 @@ namespace win2d_text_game_world_generator
 
 
         //// forest pass
-        //pn = new PerlinNoise(WidthInTiles, HeightInTiles);
+        //pn = new PerlinNoise(Width, Height);
         //Statics.fFrequency = 0.02f;// + Statics.Random.Next(30) * 0.1f; // 0.1f;
         //Statics.fAmplitude = 3.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 1.2f;
         //Statics.fPersistence = 1.0f; // 0.1f + Statics.Random.Next(30) * 0.1f; // 0.5f;
         //Statics.nOctaves = 1;// + Statics.Random.Next(5); // 5;
-        //for (int x = 0; x < WidthInTiles; x++)
+        //for (int x = 0; x < Width; x++)
         //{
-        //    for (int y = 0; y < HeightInTiles; y++)
+        //    for (int y = 0; y < Height; y++)
         //    {
         //        int nElevation = 15 + (int)pn.GetRandomHeight(x, y, 15, Statics.fFrequency, Statics.fAmplitude, Statics.fPersistence, Statics.nOctaves);
         //        if (nElevation >= 27 && MasterTileList[x, y].Elevation == 3) { MasterTileList[x, y].Elevation = 50; }
