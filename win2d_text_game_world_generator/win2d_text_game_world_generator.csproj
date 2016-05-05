@@ -110,6 +110,7 @@
     <Compile Include="game\menu\Menu.cs" />
     <Compile Include="game\screens\MainMenuScreen.cs" />
     <Compile Include="game\screens\MapCreationProgressScreen.cs" />
+    <Compile Include="game\screens\MainGameScreen.cs" />
     <Compile Include="game\screens\MapCustomizationScreen.cs" />
     <Compile Include="game\menu\MenuItem.cs" />
     <Compile Include="game\utility\Debug.cs" />

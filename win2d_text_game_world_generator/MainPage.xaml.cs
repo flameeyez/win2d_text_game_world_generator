@@ -78,7 +78,7 @@ namespace win2d_text_game_world_generator
                             Reset();
                             break;
                         default:
-                            if (mapControl != null) { mapControl.KeyDown(args.VirtualKey); }
+                            MainGameScreen.KeyDown(args.VirtualKey);
                             break;
                     }
                     break;
@@ -156,7 +156,9 @@ namespace win2d_text_game_world_generator
                     MapCreationProgressScreen.Draw(args);
                     break;
                 case GAMESTATE.UI_DISPLAY:
-                    mapControl.Draw(args);
+                    MainGameScreen.Draw(args);
+
+                    //mapControl.Draw(args);
 
                     //mapCustomizationPanel.Draw(args);
                     //if (World.DebugDrawDebug) { DrawDebug(args); }
@@ -210,13 +212,13 @@ namespace win2d_text_game_world_generator
 
         private async void Reset()
         {
-            world = null;
             State = GAMESTATE.GAME_INITIALIZE;
 
-            await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
+            world = null;
+            await Task.Run(() => world = World.Create(canvasMain.Device, 400, 400,
                 new Progress<Tuple<string, float>>(progress => MapCreationProgressScreen.Set(canvasMain.Device, progress))));
 
-            mapControl = new win2d_Map(new Vector2(Statics.CanvasWidth - world.Width - 10, Statics.CanvasHeight - world.Height - 10), 100, 100, world);            
+            MainGameScreen.Initialize(canvasMain.Device, world);
 
             State = GAMESTATE.UI_DISPLAY;
         }

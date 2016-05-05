@@ -33,6 +33,8 @@ namespace win2d_text_game_world_generator
             Height = height;
             Position = position;
 
+            Rect = new Rect(Position.X, Position.Y, Width, Height);
+
             HasFocus = false;
         }
 
