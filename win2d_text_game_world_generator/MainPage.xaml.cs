@@ -31,6 +31,7 @@ namespace win2d_text_game_world_generator
     {
         MAIN_MENU_DISPLAY,
         GAME_INITIALIZE,
+        CUSTOMIZATION_DISPLAY,
         UI_DISPLAY
     }
 
@@ -40,9 +41,6 @@ namespace win2d_text_game_world_generator
     public sealed partial class MainPage : Page
     {
         World world;
-        win2d_Map mapControl;
-
-        win2d_Panel mapCustomizationPanel;
         GAMESTATE State = GAMESTATE.MAIN_MENU_DISPLAY;
 
         public MainPage()
@@ -56,10 +54,7 @@ namespace win2d_text_game_world_generator
         }
 
         #region Keyboard
-        private void CoreWindow_KeyUp(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
-        {
-
-        }
+        private void CoreWindow_KeyUp(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args) { }
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
             switch (State)
@@ -67,6 +62,7 @@ namespace win2d_text_game_world_generator
                 case GAMESTATE.MAIN_MENU_DISPLAY:
                     MainMenuScreen.KeyDown(args.VirtualKey);
                     break;
+                case GAMESTATE.CUSTOMIZATION_DISPLAY:
                 case GAMESTATE.UI_DISPLAY:
                     switch (args.VirtualKey)
                     {
@@ -89,38 +85,42 @@ namespace win2d_text_game_world_generator
         #region Mouse
         private void gridMain_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            PointerPointProperties pointProperties = e.GetCurrentPoint(gridMain).Properties;
+            PointerPoint point = e.GetCurrentPoint(canvasMain);
+
             switch (State)
             {
                 case GAMESTATE.MAIN_MENU_DISPLAY:
                     break;
+                case GAMESTATE.CUSTOMIZATION_DISPLAY:
+                    MapCustomizationScreen.PointerPressed(point, pointProperties);
+                    break;
                 case GAMESTATE.UI_DISPLAY:
                     if (world == null) { return; }
-
-                    PointerPointProperties p = e.GetCurrentPoint(gridMain).Properties;
-                    if (p.IsLeftButtonPressed)
-                    {
-                        // mapControl.CycleDrawType();
-                    }
-                    else if (p.IsRightButtonPressed)
-                    {
-                        Reset();
-                    }
+                    if (pointProperties.IsRightButtonPressed) { Reset(); }
                     break;
             }
         }
         private void gridMain_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
-        }
-        private void gridMain_PointerMoved(object sender, PointerRoutedEventArgs e)
-        {
+            PointerPointProperties pointProperties = e.GetCurrentPoint(gridMain).Properties;
+            PointerPoint point = e.GetCurrentPoint(canvasMain);
+
             switch (State)
             {
                 case GAMESTATE.MAIN_MENU_DISPLAY:
                     break;
+                case GAMESTATE.CUSTOMIZATION_DISPLAY:
+                    MapCustomizationScreen.PointerReleased(point, pointProperties);
+                    break;
                 case GAMESTATE.UI_DISPLAY:
+                    if (world == null) { return; }
+                    if (pointProperties.IsRightButtonPressed) { Reset(); }
                     break;
             }
         }
+
+        private void gridMain_PointerMoved(object sender, PointerRoutedEventArgs e) { }
         #endregion
 
         #region Main Menu Handling
@@ -155,15 +155,15 @@ namespace win2d_text_game_world_generator
                 case GAMESTATE.GAME_INITIALIZE:
                     MapCreationProgressScreen.Draw(args);
                     break;
+                case GAMESTATE.CUSTOMIZATION_DISPLAY:
+                    MapCustomizationScreen.Draw(args);
+                    break;
                 case GAMESTATE.UI_DISPLAY:
                     MainGameScreen.Draw(args);
-
-                    //mapControl.Draw(args);
-
-                    //mapCustomizationPanel.Draw(args);
-                    //if (World.DebugDrawDebug) { DrawDebug(args); }
                     break;
             }
+
+            //if (World.DebugDrawDebug) { DrawDebug(args); }
         }
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
@@ -195,7 +195,7 @@ namespace win2d_text_game_world_generator
             AddTestButtonToMapCustomizationPanel();
 
             MainMenuScreen.Initialize(sender.Device);
-            AddMainMenuItems();            
+            AddMainMenuItems();
         }
 
         private void AddTestButtonToMapCustomizationPanel()
@@ -207,7 +207,7 @@ namespace win2d_text_game_world_generator
 
         private void Button_Click(PointerPoint point)
         {
-            // int i = 0;
+            Reset();
         }
 
         private async void Reset()
@@ -215,12 +215,14 @@ namespace win2d_text_game_world_generator
             State = GAMESTATE.GAME_INITIALIZE;
 
             world = null;
-            await Task.Run(() => world = World.Create(canvasMain.Device, 400, 400,
+            await Task.Run(() => world = World.Create(canvasMain.Device, 600, 200,
                 new Progress<Tuple<string, float>>(progress => MapCreationProgressScreen.Set(canvasMain.Device, progress))));
 
-            MainGameScreen.Initialize(canvasMain.Device, world);
+            MapCustomizationScreen.SetWorldData(world);
+            State = GAMESTATE.CUSTOMIZATION_DISPLAY;
 
-            State = GAMESTATE.UI_DISPLAY;
+            // MainGameScreen.Initialize(canvasMain.Device, world);
+            // State = GAMESTATE.UI_DISPLAY;
         }
         private void RollingReset()
         {

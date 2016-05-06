@@ -28,7 +28,7 @@ namespace win2d_text_game_world_generator
             float mapPositionX = Statics.CanvasWidth - mapWidth - Statics.Padding;
             float mapPositionY = Statics.CanvasHeight - mapHeight - Statics.Padding;
 
-            Map = new win2d_Map(new Vector2(mapPositionX, mapPositionY), mapWidth, mapHeight, world);
+            Map = new win2d_Map(new Vector2(mapPositionX, mapPositionY), mapWidth, mapHeight, world, drawCallout:true, drawStretched:false);
         }
 
         public static void AddControl(win2d_Control control)

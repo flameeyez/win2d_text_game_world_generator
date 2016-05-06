@@ -56,6 +56,7 @@ namespace win2d_text_game_world_generator
 
         public override void MouseDown(PointerPoint p)
         {
+            HasFocus = true;
             Color = Colors.LightGray;
         }
 

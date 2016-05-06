@@ -7,6 +7,7 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.UI;
+using Windows.UI.Input;
 
 namespace win2d_text_game_world_generator
 {
@@ -38,6 +39,28 @@ namespace win2d_text_game_world_generator
             control.Position = new Vector2(control.Position.X + Position.X, control.Position.Y + Position.Y);
             control.RecalculateLayout();
             Controls.Add(control);
+        }
+
+        public override void MouseDown(PointerPoint p)
+        {
+            foreach(win2d_Control control in Controls)
+            {
+                if(control.HitTest(p.Position))
+                {
+                    control.MouseDown(p);
+                }
+            }
+        }
+
+        public override void MouseUp(PointerPoint p)
+        {
+            foreach (win2d_Control control in Controls)
+            {
+                if (control.HitTest(p.Position))
+                {
+                    control.MouseUp(p);
+                }
+            }
         }
     }
 }
