@@ -16,7 +16,7 @@ namespace win2d_text_game_world_generator
         private List<win2d_TextblockString> Strings = new List<win2d_TextblockString>();
         public int Count { get { return Strings.Count; } }
 
-        private Vector2 StringsPosition { get; set; }
+        public Vector2 Position { get; set; }
         private static int StringPaddingY = 5;
 
         private int nFirstStringToDraw = 0;
@@ -32,7 +32,7 @@ namespace win2d_text_game_world_generator
 
         public win2d_TextblockStringCollection(Vector2 position, int drawingwidth, int drawingheight, bool scrolltobottomonappend = false)
         {
-            StringsPosition = position;
+            Position = position;
             DrawingWidth = drawingwidth;
             DrawingHeight = drawingheight;
             ScrollToBottomOnAppend = scrolltobottomonappend;
@@ -49,10 +49,10 @@ namespace win2d_text_game_world_generator
             else if (nLastStringToDraw == -1)
             {
                 int i = nFirstStringToDraw;
-                float fCurrentY = StringsPosition.Y;
-                while (i < Strings.Count && fCurrentY + Strings[i].Height < StringsPosition.Y + DrawingHeight)
+                float fCurrentY = Position.Y;
+                while (i < Strings.Count && fCurrentY + Strings[i].Height < Position.Y + DrawingHeight)
                 {
-                    args.DrawingSession.DrawTextLayout(Strings[i].Text, new Vector2(StringsPosition.X, fCurrentY), Colors.White);
+                    args.DrawingSession.DrawTextLayout(Strings[i].Text, new Vector2(Position.X, fCurrentY), Colors.White);
                     fCurrentY += Strings[i].Height + StringPaddingY;
                     i++;
                 }
@@ -61,10 +61,10 @@ namespace win2d_text_game_world_generator
             }
             else
             {
-                float fCurrentY = StringsPosition.Y;
+                float fCurrentY = Position.Y;
                 for (int i = nFirstStringToDraw; i <= nLastStringToDraw; i++)
                 {
-                    args.DrawingSession.DrawTextLayout(Strings[i].Text, new Vector2(StringsPosition.X, fCurrentY), Colors.White);
+                    args.DrawingSession.DrawTextLayout(Strings[i].Text, new Vector2(Position.X, fCurrentY), Colors.White);
                     fCurrentY += Strings[i].Height + StringPaddingY;
                 }
             }
@@ -72,11 +72,11 @@ namespace win2d_text_game_world_generator
 
         private void DrawAllStrings(CanvasAnimatedDrawEventArgs args)
         {
-            float fCurrentY = StringsPosition.Y;
+            float fCurrentY = Position.Y;
 
             foreach (win2d_TextblockString str in Strings)
             {
-                args.DrawingSession.DrawTextLayout(str.Text, new Vector2(StringsPosition.X, fCurrentY), Colors.White);
+                args.DrawingSession.DrawTextLayout(str.Text, new Vector2(Position.X, fCurrentY), Colors.White);
                 fCurrentY += str.Height + StringPaddingY;
             }
         }

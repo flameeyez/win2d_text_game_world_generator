@@ -23,7 +23,7 @@ namespace win2d_text_game_world_generator
 
         protected Rect Rect;
 
-        protected bool HasFocus { get; set; }
+        public bool HasFocus { get; set; }
 
         public event ClickEventHandler Click;
 
@@ -33,7 +33,7 @@ namespace win2d_text_game_world_generator
             Height = height;
             Position = position;
 
-            Rect = new Rect(Position.X, Position.Y, Width, Height);
+            if (width > 0 && height > 0) { Rect = new Rect(Position.X, Position.Y, Width, Height); }
 
             HasFocus = false;
         }
@@ -55,7 +55,7 @@ namespace win2d_text_game_world_generator
 
         public virtual bool KeyDown(VirtualKey virtualKey) { return false; }
         public virtual bool KeyUp(VirtualKey virtualKey) { return false; }
-        public virtual void MouseDown(PointerPoint p) { }
+        public virtual void MouseDown(PointerPoint p) { GiveFocus(); }
         public virtual void MouseUp(PointerPoint p) { if (HasFocus) { OnClick(p); } }
         public virtual void MouseEnter(PointerPoint p) { }
         public virtual void MouseLeave() { }

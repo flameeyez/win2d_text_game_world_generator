@@ -19,7 +19,7 @@ namespace win2d_text_game_world_generator
         private static int PaddingX = 10;
         private static int PaddingY = 10;
 
-        private string _text;
+        private string _text = string.Empty;
         public string Text
         {
             get
@@ -40,6 +40,7 @@ namespace win2d_text_game_world_generator
             }
         }
 
+        private CanvasDevice _device;
         private CanvasTextLayout TextBeforeCursor;
         private CanvasTextLayout TextAfterCursor;
 
@@ -60,15 +61,16 @@ namespace win2d_text_game_world_generator
 
         public win2d_Textbox(CanvasDevice device, Vector2 position, int width) : base(position, width, -1)
         {
-            CanvasTextLayout layout = new CanvasTextLayout(device, "TEST!", Statics.DefaultFontNoWrap, 0, 0);
+            _device = device;
+
+            CanvasTextLayout layout = new CanvasTextLayout(_device, "TEST!", Statics.DefaultFontNoWrap, 0, 0);
             Height = (int)layout.LayoutBounds.Height + PaddingY * 2;
             Color = Colors.White;
 
-            TextPosition = new Vector2(position.X + PaddingX, position.Y + PaddingY);
-
-            Cursor = new win2d_TextboxCursor(device, Colors.White);
+            Cursor = new win2d_TextboxCursor(_device, Colors.White);
             CursorStringIndex = 0;
-            bRecalculateLayout = true;
+
+            RecalculateLayout();
         }
 
         #region Draw / Update
@@ -88,12 +90,18 @@ namespace win2d_text_game_world_generator
         }
         private void DrawText(CanvasAnimatedDrawEventArgs args)
         {
+            if (Text.Length > 3)
+            {
+                int i = 0;
+                i++;
+            }
+
             if (TextBeforeCursor != null) { args.DrawingSession.DrawTextLayout(TextBeforeCursor, TextPosition, Colors.White); }
             if (TextAfterCursor != null) { args.DrawingSession.DrawTextLayout(TextAfterCursor, new Vector2(TextPosition.X + (float)TextBeforeCursor.LayoutBounds.Width + 3, TextPosition.Y), Colors.White); }
         }
         private void DrawCursor(CanvasAnimatedDrawEventArgs args)
         {
-            if (bRecalculateLayout) { RecalculateLayout(args.DrawingSession); }
+            if (bRecalculateLayout) { RecalculateLayout(); }
             Cursor.Draw(args);
         }
         public override void Update(CanvasAnimatedUpdateEventArgs args)
@@ -196,28 +204,31 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Layout
-        private void RecalculateLayout(ICanvasResourceCreator resourceCreator)
+        public override void RecalculateLayout()
         {
             bRecalculateLayout = false;
 
-            CalculateCursorPosition(resourceCreator);
-            CreateTextLayoutBeforeCursor(resourceCreator);
-            CreateTextLayoutAfterCursor(resourceCreator);
+            TextPosition = new Vector2(Position.X + PaddingX, Position.Y + PaddingY);
+            Rect = new Rect(Position.X, Position.Y, Width, Height);
+
+            CalculateCursorPosition();
+            CreateTextLayoutBeforeCursor();
+            CreateTextLayoutAfterCursor();
         }
 
-        private void CreateTextLayoutBeforeCursor(ICanvasResourceCreator resourceCreator)
+        private void CreateTextLayoutBeforeCursor()
         {
             if (Text != null)
             {
-                TextBeforeCursor = new CanvasTextLayout(resourceCreator, Text.Substring(0, CursorStringIndex), Statics.DefaultFontNoWrap, 0, 0);
+                TextBeforeCursor = new CanvasTextLayout(_device, Text.Substring(0, CursorStringIndex), Statics.DefaultFontNoWrap, 0, 0);
             }
         }
 
-        private void CreateTextLayoutAfterCursor(ICanvasResourceCreator resourceCreator)
+        private void CreateTextLayoutAfterCursor()
         {
             if (Text != null && Text.Length >= CursorStringIndex)
             {
-                TextAfterCursor = new CanvasTextLayout(resourceCreator, Text.Substring(CursorStringIndex), Statics.DefaultFontNoWrap, 0, 0);
+                TextAfterCursor = new CanvasTextLayout(_device, Text.Substring(CursorStringIndex), Statics.DefaultFontNoWrap, 0, 0);
             }
             else
             {
@@ -225,7 +236,7 @@ namespace win2d_text_game_world_generator
             }
         }
 
-        private void CalculateCursorPosition(ICanvasResourceCreator resourceCreator)
+        private void CalculateCursorPosition()
         {
             if (Text == null || Text.Length == 0 || CursorStringIndex == 0)
             {
@@ -233,12 +244,12 @@ namespace win2d_text_game_world_generator
             }
             else if (CursorStringIndex == -1)
             {
-                CanvasTextLayout layout = new CanvasTextLayout(resourceCreator, Text.Replace(' ', '.'), Statics.DefaultFontNoWrap, 0, 0);
+                CanvasTextLayout layout = new CanvasTextLayout(_device, Text.Replace(' ', '.'), Statics.DefaultFontNoWrap, 0, 0);
                 Cursor.Position = new Vector2(Position.X + (float)layout.LayoutBounds.Width + PaddingX, Position.Y + PaddingY);
             }
             else
             {
-                CanvasTextLayout layout = new CanvasTextLayout(resourceCreator, Text.Substring(0, CursorStringIndex), Statics.DefaultFontNoWrap, 0, 0);
+                CanvasTextLayout layout = new CanvasTextLayout(_device, Text.Substring(0, CursorStringIndex), Statics.DefaultFontNoWrap, 0, 0);
                 Cursor.Position = new Vector2(Position.X + (float)layout.LayoutBounds.Width + PaddingX, Position.Y + PaddingY);
             }
         }

@@ -33,6 +33,14 @@ namespace win2d_text_game_world_generator
             args.DrawingSession.DrawRectangle(Rect, Colors.White);
         }
 
+        public override void Update(CanvasAnimatedUpdateEventArgs args)
+        {
+            foreach(win2d_Control control in Controls)
+            {
+                control.Update(args);
+            }
+        }
+
         public void AddControl(win2d_Control control)
         {
             // convert relative position to absolute

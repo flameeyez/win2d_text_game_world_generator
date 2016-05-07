@@ -75,5 +75,11 @@ namespace win2d_text_game_world_generator
         public void ScrollToTop() { Strings.ScrollToTop(); }
         public void ScrollToBottom() { Strings.ScrollToBottom(); }
         #endregion
+
+        public override void RecalculateLayout()
+        {
+            base.RecalculateLayout();
+            Strings.Position = new Vector2(Position.X + PaddingX, Position.Y + PaddingY);
+        }
     }
 }

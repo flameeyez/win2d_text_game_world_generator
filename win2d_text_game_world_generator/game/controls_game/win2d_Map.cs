@@ -27,6 +27,7 @@ namespace win2d_text_game_world_generator
         private Rect _drawingRectSource;
         private Rect _drawingRectDestination;
 
+        private bool _bDrawStretched;
         private bool _bDrawCallout;
         private int _calloutPositionX = 0;
         private int _calloutPositionY = 0;
@@ -62,36 +63,10 @@ namespace win2d_text_game_world_generator
             _maxScale = 10;
             Scale = 2;
 
-            if(drawStretched)
-            {
-                double dRatioX = (double)(Width - Statics.Padding * 2) / world.Width;
-                double dRatioY = (double)(Height - Statics.Padding * 2) / world.Height;
-                double dRatio = Math.Min(dRatioX, dRatioY);
+            _bDrawStretched = drawStretched;
+            _bDrawCallout = drawCallout;
 
-                double dNewWidth = world.Width * dRatio;
-                double dNewHeight = world.Height * dRatio;
-
-                double dPositionX = (Width - dNewWidth) / 2 + Statics.Padding;
-                double dPositionY = (Height - dNewHeight) / 2 + Statics.Padding;
-
-                _drawingRectDestination = new Rect(dPositionX, dPositionY, dNewWidth, dNewHeight);
-                _drawingRectSource = new Rect(0, 0, world.Width, world.Height);
-            }
-            else
-            {
-                // set up callout AFTER scaling
-                _bDrawCallout = drawCallout;
-                if (drawCallout)
-                {
-                    CenterOnPoint(_calloutPositionX, _calloutPositionY);
-                }
-                else
-                {
-                    _drawingRectSource = new Rect(_drawingoffsetX, _drawingoffsetY, ScaledWidth, ScaledHeight);
-                }
-
-                _drawingRectDestination = new Rect(Position.X, Position.Y, Width, Height);
-            }
+            RecalculateLayout();
         }
 
         public override void Draw(CanvasAnimatedDrawEventArgs args)
@@ -246,6 +221,40 @@ namespace win2d_text_game_world_generator
 
             _calloutDrawRect = new Rect(_calloutDrawPositionX + (Scale - _calloutSideLength) / 2, _calloutDrawPositionY + (Scale - _calloutSideLength) / 2, _calloutSideLength, _calloutSideLength);
             _drawingRectSource = new Rect(_drawingoffsetX, _drawingoffsetY, ScaledWidth, ScaledHeight);
+        }
+
+        public override void RecalculateLayout()
+        {
+            base.RecalculateLayout();
+
+            if (_bDrawStretched)
+            {
+                double dRatioX = (double)(Width - Statics.Padding * 2) / World.Width;
+                double dRatioY = (double)(Height - Statics.Padding * 2) / World.Height;
+                double dRatio = Math.Min(dRatioX, dRatioY);
+
+                double dNewWidth = World.Width * dRatio;
+                double dNewHeight = World.Height * dRatio;
+
+                double dPositionX = (Width - dNewWidth) / 2 + Statics.Padding;
+                double dPositionY = (Height - dNewHeight) / 2 + Statics.Padding;
+
+                _drawingRectDestination = new Rect(dPositionX, dPositionY, dNewWidth, dNewHeight);
+                _drawingRectSource = new Rect(0, 0, World.Width, World.Height);
+            }
+            else
+            {
+                if (_bDrawCallout)
+                {
+                    CenterOnPoint(_calloutPositionX, _calloutPositionY);
+                }
+                else
+                {
+                    _drawingRectSource = new Rect(_drawingoffsetX, _drawingoffsetY, ScaledWidth, ScaledHeight);
+                }
+
+                _drawingRectDestination = new Rect(Position.X, Position.Y, Width, Height);
+            }
         }
     }
 }

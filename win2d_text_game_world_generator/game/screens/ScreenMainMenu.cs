@@ -13,7 +13,7 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
-    public static class MainMenuScreen
+    public static class ScreenMainMenu
     {
         public static Menu MainMenu = new Menu();
 

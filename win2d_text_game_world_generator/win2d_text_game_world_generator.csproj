@@ -108,10 +108,10 @@
     <Compile Include="controls_base\win2d_Textbox.cs" />
     <Compile Include="controls_base\win2d_TextboxCursor.cs" />
     <Compile Include="game\menu\Menu.cs" />
-    <Compile Include="game\screens\MainMenuScreen.cs" />
-    <Compile Include="game\screens\MapCreationProgressScreen.cs" />
-    <Compile Include="game\screens\MainGameScreen.cs" />
-    <Compile Include="game\screens\MapCustomizationScreen.cs" />
+    <Compile Include="game\screens\ScreenMainMenu.cs" />
+    <Compile Include="game\screens\ScreenMapCreationProgress.cs" />
+    <Compile Include="game\screens\ScreenMainGame.cs" />
+    <Compile Include="game\screens\ScreenMapCustomization.cs" />
     <Compile Include="game\menu\MenuItem.cs" />
     <Compile Include="game\utility\Debug.cs" />
     <Compile Include="game\utility\PerlinNoise.cs" />

@@ -12,7 +12,7 @@ using Windows.System;
 
 namespace win2d_text_game_world_generator
 {
-    public static class MapCustomizationScreen
+    public static class ScreenMapCustomization
     {
         public static win2d_Map Map { get; set; }
         public static win2d_Panel CustomizationPanel { get; set; }
