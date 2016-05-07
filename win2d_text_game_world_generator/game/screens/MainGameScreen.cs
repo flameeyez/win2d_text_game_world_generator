@@ -14,6 +14,9 @@ namespace win2d_text_game_world_generator
     public static class MainGameScreen
     {
         public static win2d_Map Map { get; set; }
+        public static win2d_Textblock TextblockMain { get; set; }
+        public static win2d_Textbox TextboxInput { get; set; }
+        public static win2d_Button ButtonSubmitInput { get; set; }
 
         public static void Draw(CanvasAnimatedDrawEventArgs args)
         {
@@ -29,6 +32,10 @@ namespace win2d_text_game_world_generator
             float mapPositionY = Statics.CanvasHeight - mapHeight - Statics.Padding;
 
             Map = new win2d_Map(new Vector2(mapPositionX, mapPositionY), mapWidth, mapHeight, world, drawCallout:true, drawStretched:false);
+
+            int x = Statics.Random.Next(world.Width);
+            int y = Statics.Random.Next(world.Height);
+            Map.CenterOnPoint(x, y);
         }
 
         public static void AddControl(win2d_Control control)

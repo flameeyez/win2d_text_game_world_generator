@@ -207,8 +207,11 @@ namespace win2d_text_game_world_generator
             return true;
         }
 
-        private void CenterOnPoint(int x, int y)
+        public void CenterOnPoint(int x, int y)
         {
+            _calloutPositionX = x;
+            _calloutPositionY = y;
+
             if (x < ScaledWidth / 2)
             {
                 _drawingoffsetX = 0;

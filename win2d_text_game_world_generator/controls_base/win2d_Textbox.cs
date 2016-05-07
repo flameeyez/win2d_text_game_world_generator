@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 
 namespace win2d_text_game_world_generator
 {
-    class win2d_Textbox : win2d_Control
+    public class win2d_Textbox : win2d_Control
     {
         private static int PaddingX = 10;
         private static int PaddingY = 10;

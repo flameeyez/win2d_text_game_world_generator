@@ -63,15 +63,23 @@ namespace win2d_text_game_world_generator
                     MainMenuScreen.KeyDown(args.VirtualKey);
                     break;
                 case GAMESTATE.CUSTOMIZATION_DISPLAY:
-                case GAMESTATE.UI_DISPLAY:
                     switch (args.VirtualKey)
                     {
                         case VirtualKey.Escape:
                             MainMenuScreen.Reset();
                             State = GAMESTATE.MAIN_MENU_DISPLAY;
                             break;
-                        case VirtualKey.Enter:
-                            Reset();
+                        default:
+                            MapCustomizationScreen.KeyDown(args.VirtualKey);
+                            break;
+                    }
+                    break;
+                case GAMESTATE.UI_DISPLAY:
+                    switch (args.VirtualKey)
+                    {
+                        case VirtualKey.Escape:
+                            MainMenuScreen.Reset();
+                            State = GAMESTATE.MAIN_MENU_DISPLAY;
                             break;
                         default:
                             MainGameScreen.KeyDown(args.VirtualKey);
@@ -192,22 +200,38 @@ namespace win2d_text_game_world_generator
             MapCreationProgressScreen.Initialize();
 
             MapCustomizationScreen.Initialize(sender.Device);
-            AddTestButtonToMapCustomizationPanel();
+            AddControlsToMapCustomizationPanel();
 
             MainMenuScreen.Initialize(sender.Device);
             AddMainMenuItems();
         }
 
-        private void AddTestButtonToMapCustomizationPanel()
+        private void AddControlsToMapCustomizationPanel()
         {
-            win2d_Button button = new win2d_Button(canvasMain.Device, new Vector2(10, 10), 200, 40, "Hello!");
-            button.Click += Button_Click;
-            MapCustomizationScreen.AddControl(button);
+            int btnRegenerateWidth = 360;
+            int btnRegenerateHeight = 30;
+            Vector2 btnRegeneratePosition = new Vector2((400 - btnRegenerateWidth - Statics.Padding) / 2, Statics.CanvasHeight - Statics.Padding * 3 - btnRegenerateHeight);
+            win2d_Button btnRegenerate = new win2d_Button(canvasMain.Device, btnRegeneratePosition, btnRegenerateWidth, btnRegenerateHeight, "Regenerate");
+            btnRegenerate.Click += BtnRegenerate_Click;
+            MapCustomizationScreen.AddControl(btnRegenerate);
+
+            int btnAcceptWidth = 360;
+            int btnAcceptHeight = 30;
+            Vector2 btnAcceptPosition = new Vector2((400 - btnAcceptWidth - Statics.Padding) / 2, btnRegeneratePosition.Y - Statics.Padding - btnAcceptHeight);
+            win2d_Button btnAccept = new win2d_Button(canvasMain.Device, btnAcceptPosition, btnAcceptWidth, btnAcceptHeight, "Accept");
+            btnAccept.Click += BtnAccept_Click;
+            MapCustomizationScreen.AddControl(btnAccept);
         }
 
-        private void Button_Click(PointerPoint point)
+        private void BtnRegenerate_Click(PointerPoint point)
         {
             Reset();
+        }
+
+        private void BtnAccept_Click(PointerPoint point)
+        {
+            MainGameScreen.Initialize(canvasMain.Device, world);
+            State = GAMESTATE.UI_DISPLAY;
         }
 
         private async void Reset()
@@ -215,18 +239,11 @@ namespace win2d_text_game_world_generator
             State = GAMESTATE.GAME_INITIALIZE;
 
             world = null;
-            await Task.Run(() => world = World.Create(canvasMain.Device, 600, 200,
+            await Task.Run(() => world = World.Create(canvasMain.Device, 600, 420,
                 new Progress<Tuple<string, float>>(progress => MapCreationProgressScreen.Set(canvasMain.Device, progress))));
 
             MapCustomizationScreen.SetWorldData(world);
             State = GAMESTATE.CUSTOMIZATION_DISPLAY;
-
-            // MainGameScreen.Initialize(canvasMain.Device, world);
-            // State = GAMESTATE.UI_DISPLAY;
-        }
-        private void RollingReset()
-        {
-            while (Debug.RollingReset) { Reset(); }
         }
         #endregion
     }
@@ -392,5 +409,10 @@ namespace win2d_text_game_world_generator
 //Debug.SEConnectionCount = 0;
 //Debug.FrameCount = 0;
 //Debug.MapCount++;
+
+//private void RollingReset()
+//{
+//    while (Debug.RollingReset) { Reset(); }
+//}
 
 #endregion
