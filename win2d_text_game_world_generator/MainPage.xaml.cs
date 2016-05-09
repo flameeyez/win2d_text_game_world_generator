@@ -254,8 +254,8 @@ namespace win2d_text_game_world_generator
             State = GAMESTATE.GAME_INITIALIZE;
 
             world = null;
-            // await Task.Run(() => world = World.Create(canvasMain.Device, 600, 420,
-            await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
+            await Task.Run(() => world = World.Create(canvasMain.Device, 600, 420,
+            //await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
                 new Progress<Tuple<string, float>>(progress => ScreenMapCreationProgress.Set(canvasMain.Device, progress))));
 
             ScreenMapCustomization.SetWorldData(world);

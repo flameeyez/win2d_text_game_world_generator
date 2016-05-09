@@ -22,6 +22,7 @@ namespace win2d_text_game_world_generator
         public static int Padding = 10;
         public static Vector2 MapPosition = Vector2.Zero;
         public static int RoomMaxConnections = 3;
+        public static int MapResolution = 16;
 
         // probability that region will continue to try to expand past minimum size
         // calculated once for each tile added
@@ -29,6 +30,7 @@ namespace win2d_text_game_world_generator
         //  then an n% chance of attempting to add another tile after that, and so on
         public static int ProbabilityOfExpansion = 0;
         public static int MinimumRegionSize = 100;
+        public static int MinimumCaveSize = 100;
         public static int MergeThreshold = 500;
         #endregion
 
@@ -149,9 +151,28 @@ namespace win2d_text_game_world_generator
             "Thamasa"
         };
 
+        //public static string[] CaveNames = {
+        //    ""
+        //};
+
+        public static string[] CaveNameStyles =
+        {
+            "Cave of /1",
+            "/1 Cave",
+            "Caverns of /1",
+            "/1 Caverns"
+        };
+
         public static string RandomRegionName()
         {
             return RegionNames.RandomArrayItem();
+        }
+
+        public static string RandomCaveName()
+        {
+            // TODO: using region names for now; replace with cave names
+            string strCaveName = RegionNames.RandomArrayItem();
+            return CaveNameStyles.RandomArrayItem().Replace("/1", strCaveName);
         }
 
         public static string RandomRegionType()
@@ -302,7 +323,7 @@ namespace win2d_text_game_world_generator
 
         public static string GetOppositeDirection(string strDirection)
         {
-            switch(strDirection)
+            switch (strDirection)
             {
                 case "nw":
                     return "se";

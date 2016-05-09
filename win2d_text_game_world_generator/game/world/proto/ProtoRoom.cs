@@ -15,7 +15,8 @@ namespace win2d_text_game_world_generator
         public ProtoRegion ProtoRegion { get; set; }
         public ProtoSubregion ProtoSubregion { get; set; }
         public List<string> DirectionalRoomConnections;
-        public bool Available { get; set; }
+        public bool AvailableOverground { get; set; }
+        public bool AvailableUnderground { get; set; }
         private int _elevation;
         public int Elevation
         {
@@ -40,14 +41,15 @@ namespace win2d_text_game_world_generator
         private Color _elevationcolor;
         public Color ElevationColor { get { return _elevationcolor; } }
 
-        public ProtoRoom(PointInt coordinates)
+        public ProtoRoom(PointInt coordinates, int elevation = 3)
         {
             ProtoRegion = null;
             ProtoSubregion = null;
             Coordinates = coordinates;
             DirectionalRoomConnections = new List<string>();
-            Available = true;
-            Elevation = 3; // initialize to grass/green
+            AvailableOverground = true;
+            AvailableUnderground = true;
+            Elevation = elevation; // default (3) is grass/green
         }
 
         public bool IsTraversable() { return !(Elevation == 0 || Elevation == 30); }
@@ -67,7 +69,7 @@ namespace win2d_text_game_world_generator
         #region Drawing
         public void DrawHeightMap(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X, Coordinates.Y, 1, 1), ElevationColor);
+            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ElevationColor);
         }
         public void DrawPaths(CanvasDrawingSession ds)
         {
@@ -76,61 +78,61 @@ namespace win2d_text_game_world_generator
                 switch (DirectionalRoomConnection)
                 {
                     case "nw":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             (Coordinates.X - 1) + 0.5f,
-                             (Coordinates.Y - 1) + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.X - 1) + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.Y - 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "n":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             Coordinates.X + 0.5f,
-                             (Coordinates.Y - 1) + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             (Coordinates.X + 0.5f) *Statics.MapResolution,
+                             ((Coordinates.Y - 1) + 0.5f) *Statics.MapResolution,
                              Colors.White);
                         break;
                     case "ne":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             (Coordinates.X + 1) + 0.5f,
-                             (Coordinates.Y - 1) + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.X + 1) + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.Y - 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "w":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             (Coordinates.X - 1) + 0.5f,
-                             Coordinates.Y + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) *Statics.MapResolution,
+                             ((Coordinates.X - 1) + 0.5f) *Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) *Statics.MapResolution,
                              Colors.White);
                         break;
                     case "o":
                         break;
                     case "e":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             (Coordinates.X + 1) + 0.5f,
-                             Coordinates.Y + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.X + 1) + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "sw":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             (Coordinates.X - 1) + 0.5f,
-                             (Coordinates.Y + 1) + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.X - 1) + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.Y + 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "s":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             Coordinates.X + 0.5f,
-                             (Coordinates.Y + 1) + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             (Coordinates.X + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.Y + 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "se":
-                        ds.DrawLine(Coordinates.X + 0.5f,
-                             Coordinates.Y + 0.5f,
-                             (Coordinates.X + 1) + 0.5f,
-                             (Coordinates.Y + 1) + 0.5f,
+                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.X + 1) + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.Y + 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     default:
@@ -140,11 +142,15 @@ namespace win2d_text_game_world_generator
         }
         public void DrawRegions(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X, Coordinates.Y, 1, 1), ProtoRegion.Color);
+            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ProtoRegion.Color);
         }
         public void DrawSubregions(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X, Coordinates.Y, 1, 1), ProtoSubregion.Color);
+            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ProtoSubregion.Color);
+        }
+        public void DrawCaves(CanvasDrawingSession ds)
+        {
+            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), Colors.Gray);
         }
         #endregion
     }

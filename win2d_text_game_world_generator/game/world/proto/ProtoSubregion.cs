@@ -33,7 +33,7 @@ namespace win2d_text_game_world_generator
             // grab random point as starting room
             int x = Statics.Random.Next(RoomCountX);
             int y = Statics.Random.Next(RoomCountY);
-            while (!MasterRoomList[x, y].Available)
+            while (!MasterRoomList[x, y].AvailableOverground)
             {
                 x = Statics.Random.Next(RoomCountX);
                 y = Statics.Random.Next(RoomCountY);
@@ -47,7 +47,7 @@ namespace win2d_text_game_world_generator
             // create starting room
             ProtoRoom startingRoom = MasterRoomList[x, y];
             ProtoRooms.Add(startingRoom);
-            startingRoom.Available = false;
+            startingRoom.AvailableOverground = false;
             startingRoom.ProtoRegion = region;
             startingRoom.ProtoSubregion = this;
             CheckAdjacentRooms(AvailableAdjacentRooms, AvailableAdjacentCoordinates, startingRoom, MasterRoomList);
@@ -56,7 +56,7 @@ namespace win2d_text_game_world_generator
             {
                 // pick a random room from the available set
                 ProtoRoom randomNeighbor = AvailableAdjacentRooms.RandomListItem();
-                randomNeighbor.Available = false;
+                randomNeighbor.AvailableOverground = false;
                 randomNeighbor.ProtoRegion = region;
                 randomNeighbor.ProtoSubregion = this;
 
@@ -107,7 +107,7 @@ namespace win2d_text_game_world_generator
             if (protoRoom.Coordinates.X > 0)
             {
                 ProtoRoom neighborLeft = MasterRoomList[protoRoom.Coordinates.X - 1, protoRoom.Coordinates.Y];
-                if (neighborLeft.Available && !AvailableAdjacentCoordinates.Contains(neighborLeft.Coordinates))
+                if (neighborLeft.AvailableOverground && !AvailableAdjacentCoordinates.Contains(neighborLeft.Coordinates))
                 {
                     AvailableAdjacentRooms.Add(neighborLeft);
                     AvailableAdjacentCoordinates.Add(neighborLeft.Coordinates);
@@ -117,7 +117,7 @@ namespace win2d_text_game_world_generator
             if (protoRoom.Coordinates.X < MasterRoomList.GetLength(0) - 1)
             {
                 ProtoRoom neighborRight = MasterRoomList[protoRoom.Coordinates.X + 1, protoRoom.Coordinates.Y];
-                if (neighborRight.Available && !AvailableAdjacentCoordinates.Contains(neighborRight.Coordinates))
+                if (neighborRight.AvailableOverground && !AvailableAdjacentCoordinates.Contains(neighborRight.Coordinates))
                 {
                     AvailableAdjacentRooms.Add(neighborRight);
                     AvailableAdjacentCoordinates.Add(neighborRight.Coordinates);
@@ -127,7 +127,7 @@ namespace win2d_text_game_world_generator
             if (protoRoom.Coordinates.Y > 0)
             {
                 ProtoRoom neighborAbove = MasterRoomList[protoRoom.Coordinates.X, protoRoom.Coordinates.Y - 1];
-                if (neighborAbove.Available && !AvailableAdjacentCoordinates.Contains(neighborAbove.Coordinates))
+                if (neighborAbove.AvailableOverground && !AvailableAdjacentCoordinates.Contains(neighborAbove.Coordinates))
                 {
                     AvailableAdjacentRooms.Add(neighborAbove);
                     AvailableAdjacentCoordinates.Add(neighborAbove.Coordinates);
@@ -137,7 +137,7 @@ namespace win2d_text_game_world_generator
             if (protoRoom.Coordinates.Y < MasterRoomList.GetLength(1) - 1)
             {
                 ProtoRoom neighborBelow = MasterRoomList[protoRoom.Coordinates.X, protoRoom.Coordinates.Y + 1];
-                if (neighborBelow.Available && !AvailableAdjacentCoordinates.Contains(neighborBelow.Coordinates))
+                if (neighborBelow.AvailableOverground && !AvailableAdjacentCoordinates.Contains(neighborBelow.Coordinates))
                 {
                     AvailableAdjacentRooms.Add(neighborBelow);
                     AvailableAdjacentCoordinates.Add(neighborBelow.Coordinates);
@@ -152,16 +152,16 @@ namespace win2d_text_game_world_generator
             foreach (ProtoRoom room in ProtoRooms)
             {
                 // check left
-                if (room.Coordinates.X > 0 && MasterRoomList[(int)room.Coordinates.X - 1, (int)room.Coordinates.Y].Available) { return true; }
+                if (room.Coordinates.X > 0 && MasterRoomList[(int)room.Coordinates.X - 1, (int)room.Coordinates.Y].AvailableOverground) { return true; }
 
                 // check right
-                if (room.Coordinates.X < RoomCountX - 1 && MasterRoomList[(int)room.Coordinates.X + 1, (int)room.Coordinates.Y].Available) { return true; }
+                if (room.Coordinates.X < RoomCountX - 1 && MasterRoomList[(int)room.Coordinates.X + 1, (int)room.Coordinates.Y].AvailableOverground) { return true; }
 
                 // check up
-                if (room.Coordinates.Y > 0 && MasterRoomList[(int)room.Coordinates.X, (int)room.Coordinates.Y - 1].Available) { return true; }
+                if (room.Coordinates.Y > 0 && MasterRoomList[(int)room.Coordinates.X, (int)room.Coordinates.Y - 1].AvailableOverground) { return true; }
 
                 // check down
-                if (room.Coordinates.Y < RoomCountY - 1 && MasterRoomList[(int)room.Coordinates.X, (int)room.Coordinates.Y + 1].Available) { return true; }
+                if (room.Coordinates.Y < RoomCountY - 1 && MasterRoomList[(int)room.Coordinates.X, (int)room.Coordinates.Y + 1].AvailableOverground) { return true; }
             }
 
             return false;

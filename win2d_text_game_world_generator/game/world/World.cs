@@ -19,11 +19,13 @@ namespace win2d_text_game_world_generator
         public int Height { get; set; }
 
         public List<Region> Regions = new List<Region>();
+        public List<Cave> Caves = new List<Cave>();
 
         public CanvasRenderTarget RenderTargetRegions { get; set; }
         public CanvasRenderTarget RenderTargetSubregions { get; set; }
         public CanvasRenderTarget RenderTargetPaths { get; set; }
         public CanvasRenderTarget RenderTargetHeightMap { get; set; }
+        public CanvasRenderTarget RenderTargetCaves { get; set; }
 
         #region Initialization
         private World() { }
@@ -41,10 +43,16 @@ namespace win2d_text_game_world_generator
                 world.Regions.Add(Region.FromProtoRegion(pr));
             }
 
+            foreach(ProtoCave pc in pw.ProtoCaves)
+            {
+                world.Caves.Add(Cave.FromProtoCave(pc));
+            }
+
             world.RenderTargetRegions = pw.RenderTargetRegions;
             world.RenderTargetSubregions = pw.RenderTargetSubregions;
             world.RenderTargetPaths = pw.RenderTargetPaths;
             world.RenderTargetHeightMap = pw.RenderTargetHeightMap;
+            world.RenderTargetCaves = pw.RenderTargetCaves;
 
             return world;
         }
