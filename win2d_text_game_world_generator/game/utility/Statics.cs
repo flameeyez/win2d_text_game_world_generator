@@ -180,7 +180,7 @@ namespace win2d_text_game_world_generator
             string strRegionType = RegionTypes.RandomArrayItem();
             string strRegionName = RegionNames.RandomArrayItem();
 
-            switch (Statics.Random.Next(2))
+            switch (Random.Next(2))
             {
                 case 0:
                     // use region type as prefix
@@ -198,19 +198,27 @@ namespace win2d_text_game_world_generator
         public static Random Random = new Random(DateTime.Now.Millisecond);
         public static Color RandomColor()
         {
-            int red = 20 + Statics.Random.Next(235);
-            int green = 20 + Statics.Random.Next(235);
-            int blue = 20 + Statics.Random.Next(235);
+            int red = 20 + Random.Next(235);
+            int green = 20 + Random.Next(235);
+            int blue = 20 + Random.Next(235);
+
+            return Color.FromArgb(255, (byte)red, (byte)green, (byte)blue);
+        }
+        internal static Color RandomCaveColor()
+        {
+            int red = 150 + Random.Next(75);
+            int green = red;
+            int blue = red;
 
             return Color.FromArgb(255, (byte)red, (byte)green, (byte)blue);
         }
         public static T RandomListItem<T>(this List<T> list)
         {
-            return list[Statics.Random.Next(list.Count)];
+            return list[Random.Next(list.Count)];
         }
         public static T RandomArrayItem<T>(this T[] array)
         {
-            return array[Statics.Random.Next(array.Length)];
+            return array[Random.Next(array.Length)];
         }
         #endregion
 
@@ -283,10 +291,10 @@ namespace win2d_text_game_world_generator
         {
             LoadCharacterWidths(device);
 
-            UpArrow = new CanvasTextLayout(device, "\u2191", Statics.DefaultFontNoWrap, 0, 0);
-            DoubleUpArrow = new CanvasTextLayout(device, "\u219f", Statics.DefaultFontNoWrap, 0, 0);
-            DownArrow = new CanvasTextLayout(device, "\u2193", Statics.DefaultFontNoWrap, 0, 0);
-            DoubleDownArrow = new CanvasTextLayout(device, "\u21a1", Statics.DefaultFontNoWrap, 0, 0);
+            UpArrow = new CanvasTextLayout(device, "\u2191", DefaultFontNoWrap, 0, 0);
+            DoubleUpArrow = new CanvasTextLayout(device, "\u219f", DefaultFontNoWrap, 0, 0);
+            DownArrow = new CanvasTextLayout(device, "\u2193", DefaultFontNoWrap, 0, 0);
+            DoubleDownArrow = new CanvasTextLayout(device, "\u21a1", DefaultFontNoWrap, 0, 0);
         }
         private static void LoadCharacterWidths(CanvasDevice device)
         {
@@ -300,7 +308,7 @@ namespace win2d_text_game_world_generator
 
             foreach (char c in str)
             {
-                CanvasTextLayout l = new CanvasTextLayout(device, c.ToString(), Statics.DefaultFontNoWrap, 0, 0);
+                CanvasTextLayout l = new CanvasTextLayout(device, c.ToString(), DefaultFontNoWrap, 0, 0);
                 CharacterWidthDictionary.Add(c, l.LayoutBounds.Width);
             }
         }
@@ -325,22 +333,14 @@ namespace win2d_text_game_world_generator
         {
             switch (strDirection)
             {
-                case "nw":
-                    return "se";
-                case "n":
-                    return "s";
-                case "ne":
-                    return "sw";
-                case "w":
-                    return "e";
-                case "e":
-                    return "w";
-                case "sw":
-                    return "ne";
-                case "s":
-                    return "n";
-                case "se":
-                    return "nw";
+                case "nw": return "se";
+                case "n": return "s";
+                case "ne": return "sw";
+                case "w": return "e";
+                case "e": return "w";
+                case "sw": return "ne";
+                case "s": return "n";
+                case "se": return "nw";
             }
 
             return string.Empty;

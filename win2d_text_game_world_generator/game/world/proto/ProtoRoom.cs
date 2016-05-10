@@ -15,8 +15,7 @@ namespace win2d_text_game_world_generator
         public ProtoRegion ProtoRegion { get; set; }
         public ProtoSubregion ProtoSubregion { get; set; }
         public List<string> DirectionalRoomConnections;
-        public bool AvailableOverground { get; set; }
-        public bool AvailableUnderground { get; set; }
+        public bool Available { get; set; }
         private int _elevation;
         public int Elevation
         {
@@ -47,8 +46,7 @@ namespace win2d_text_game_world_generator
             ProtoSubregion = null;
             Coordinates = coordinates;
             DirectionalRoomConnections = new List<string>();
-            AvailableOverground = true;
-            AvailableUnderground = true;
+            Available = true;
             Elevation = elevation; // default (3) is grass/green
         }
 
@@ -87,8 +85,8 @@ namespace win2d_text_game_world_generator
                     case "n":
                         ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
                              (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             (Coordinates.X + 0.5f) *Statics.MapResolution,
-                             ((Coordinates.Y - 1) + 0.5f) *Statics.MapResolution,
+                             (Coordinates.X + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.Y - 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "ne":
@@ -100,9 +98,9 @@ namespace win2d_text_game_world_generator
                         break;
                     case "w":
                         ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) *Statics.MapResolution,
-                             ((Coordinates.X - 1) + 0.5f) *Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) *Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                             ((Coordinates.X - 1) + 0.5f) * Statics.MapResolution,
+                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "o":

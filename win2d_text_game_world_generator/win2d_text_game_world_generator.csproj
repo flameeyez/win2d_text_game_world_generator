@@ -115,8 +115,6 @@
     <Compile Include="game\menu\MenuItem.cs" />
     <Compile Include="game\utility\Debug.cs" />
     <Compile Include="game\utility\PerlinNoise.cs" />
-    <Compile Include="game\world\Cave.cs" />
-    <Compile Include="game\world\proto\ProtoCave.cs" />
     <Compile Include="game\world\World.cs" />
     <Compile Include="game\world\proto\ProtoWorld.cs" />
     <Compile Include="game\utility\PointInt.cs" />
