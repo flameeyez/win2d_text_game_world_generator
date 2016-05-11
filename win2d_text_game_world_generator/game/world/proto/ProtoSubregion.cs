@@ -61,7 +61,7 @@ namespace win2d_text_game_world_generator
                 randomNeighbor.ProtoSubregion = this;
 
                 AvailableAdjacentRooms.Remove(randomNeighbor);
-                AvailableAdjacentCoordinates.Remove(randomNeighbor.Coordinates);
+                AvailableAdjacentCoordinates.Remove(randomNeighbor.CoordinatesXY);
                 ProtoRooms.Add(randomNeighbor);
 
                 // add new room's available neighbors to the available list
@@ -104,43 +104,43 @@ namespace win2d_text_game_world_generator
         private void UpdateAdjacentRooms(List<ProtoRoom> AvailableAdjacentRooms, HashSet<PointInt> AvailableAdjacentCoordinates, ProtoRoom protoRoom, ProtoRoom[,] MasterRoomList)
         {
             // left
-            if (protoRoom.Coordinates.X > 0)
+            if (protoRoom.CoordinatesXY.X > 0)
             {
-                ProtoRoom neighborLeft = MasterRoomList[protoRoom.Coordinates.X - 1, protoRoom.Coordinates.Y];
-                if (neighborLeft.Available && !AvailableAdjacentCoordinates.Contains(neighborLeft.Coordinates))
+                ProtoRoom neighborLeft = MasterRoomList[protoRoom.CoordinatesXY.X - 1, protoRoom.CoordinatesXY.Y];
+                if (neighborLeft.Available && !AvailableAdjacentCoordinates.Contains(neighborLeft.CoordinatesXY))
                 {
                     AvailableAdjacentRooms.Add(neighborLeft);
-                    AvailableAdjacentCoordinates.Add(neighborLeft.Coordinates);
+                    AvailableAdjacentCoordinates.Add(neighborLeft.CoordinatesXY);
                 }
             }
             // right
-            if (protoRoom.Coordinates.X < MasterRoomList.GetLength(0) - 1)
+            if (protoRoom.CoordinatesXY.X < MasterRoomList.GetLength(0) - 1)
             {
-                ProtoRoom neighborRight = MasterRoomList[protoRoom.Coordinates.X + 1, protoRoom.Coordinates.Y];
-                if (neighborRight.Available && !AvailableAdjacentCoordinates.Contains(neighborRight.Coordinates))
+                ProtoRoom neighborRight = MasterRoomList[protoRoom.CoordinatesXY.X + 1, protoRoom.CoordinatesXY.Y];
+                if (neighborRight.Available && !AvailableAdjacentCoordinates.Contains(neighborRight.CoordinatesXY))
                 {
                     AvailableAdjacentRooms.Add(neighborRight);
-                    AvailableAdjacentCoordinates.Add(neighborRight.Coordinates);
+                    AvailableAdjacentCoordinates.Add(neighborRight.CoordinatesXY);
                 }
             }
             // above
-            if (protoRoom.Coordinates.Y > 0)
+            if (protoRoom.CoordinatesXY.Y > 0)
             {
-                ProtoRoom neighborAbove = MasterRoomList[protoRoom.Coordinates.X, protoRoom.Coordinates.Y - 1];
-                if (neighborAbove.Available && !AvailableAdjacentCoordinates.Contains(neighborAbove.Coordinates))
+                ProtoRoom neighborAbove = MasterRoomList[protoRoom.CoordinatesXY.X, protoRoom.CoordinatesXY.Y - 1];
+                if (neighborAbove.Available && !AvailableAdjacentCoordinates.Contains(neighborAbove.CoordinatesXY))
                 {
                     AvailableAdjacentRooms.Add(neighborAbove);
-                    AvailableAdjacentCoordinates.Add(neighborAbove.Coordinates);
+                    AvailableAdjacentCoordinates.Add(neighborAbove.CoordinatesXY);
                 }
             }
             // below
-            if (protoRoom.Coordinates.Y < MasterRoomList.GetLength(1) - 1)
+            if (protoRoom.CoordinatesXY.Y < MasterRoomList.GetLength(1) - 1)
             {
-                ProtoRoom neighborBelow = MasterRoomList[protoRoom.Coordinates.X, protoRoom.Coordinates.Y + 1];
-                if (neighborBelow.Available && !AvailableAdjacentCoordinates.Contains(neighborBelow.Coordinates))
+                ProtoRoom neighborBelow = MasterRoomList[protoRoom.CoordinatesXY.X, protoRoom.CoordinatesXY.Y + 1];
+                if (neighborBelow.Available && !AvailableAdjacentCoordinates.Contains(neighborBelow.CoordinatesXY))
                 {
                     AvailableAdjacentRooms.Add(neighborBelow);
-                    AvailableAdjacentCoordinates.Add(neighborBelow.Coordinates);
+                    AvailableAdjacentCoordinates.Add(neighborBelow.CoordinatesXY);
                 }
             }
         }
@@ -152,23 +152,24 @@ namespace win2d_text_game_world_generator
             foreach (ProtoRoom room in ProtoRooms)
             {
                 // check left
-                if (room.Coordinates.X > 0 && MasterRoomList[(int)room.Coordinates.X - 1, (int)room.Coordinates.Y].Available) { return true; }
+                if (room.CoordinatesXY.X > 0 && MasterRoomList[(int)room.CoordinatesXY.X - 1, (int)room.CoordinatesXY.Y].Available) { return true; }
                 // check right
-                if (room.Coordinates.X < RoomCountX - 1 && MasterRoomList[(int)room.Coordinates.X + 1, (int)room.Coordinates.Y].Available) { return true; }
+                if (room.CoordinatesXY.X < RoomCountX - 1 && MasterRoomList[(int)room.CoordinatesXY.X + 1, (int)room.CoordinatesXY.Y].Available) { return true; }
                 // check up
-                if (room.Coordinates.Y > 0 && MasterRoomList[(int)room.Coordinates.X, (int)room.Coordinates.Y - 1].Available) { return true; }
+                if (room.CoordinatesXY.Y > 0 && MasterRoomList[(int)room.CoordinatesXY.X, (int)room.CoordinatesXY.Y - 1].Available) { return true; }
                 // check down
-                if (room.Coordinates.Y < RoomCountY - 1 && MasterRoomList[(int)room.Coordinates.X, (int)room.Coordinates.Y + 1].Available) { return true; }
+                if (room.CoordinatesXY.Y < RoomCountY - 1 && MasterRoomList[(int)room.CoordinatesXY.X, (int)room.CoordinatesXY.Y + 1].Available) { return true; }
             }
 
             return false;
         }
         public void ReindexRooms()
         {
-            foreach (ProtoRoom room in ProtoRooms)
+            for (int i = 0; i < ProtoRooms.Count; i++)
             {
-                room.ProtoRegion = ProtoRegion;
-                room.ProtoSubregion = this;
+                ProtoRooms[i].ID = i;
+                ProtoRooms[i].ProtoRegion = ProtoRegion;
+                ProtoRooms[i].ProtoSubregion = this;
             }
         }
         #endregion

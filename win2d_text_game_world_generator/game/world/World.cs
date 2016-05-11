@@ -74,7 +74,7 @@ namespace win2d_text_game_world_generator
                 {
                     foreach (Room rm in s.Rooms)
                     {
-                        if (rm.Coordinates.X == x && rm.Coordinates.Y == y) { return r; }
+                        if (rm.CoordinatesXY.X == x && rm.CoordinatesXY.Y == y) { return r; }
                     }
                 }
             }
@@ -85,7 +85,7 @@ namespace win2d_text_game_world_generator
         {
             foreach (Room room in currentMouseSubregion.Rooms)
             {
-                if (room.Coordinates.X == x && room.Coordinates.Y == y)
+                if (room.CoordinatesXY.X == x && room.CoordinatesXY.Y == y)
                 {
                     return room;
                 }
@@ -99,7 +99,7 @@ namespace win2d_text_game_world_generator
             {
                 foreach (Room rm in s.Rooms)
                 {
-                    if (rm.Coordinates.X == x && rm.Coordinates.Y == y) { return s; }
+                    if (rm.CoordinatesXY.X == x && rm.CoordinatesXY.Y == y) { return s; }
                 }
             }
 

@@ -11,10 +11,14 @@ namespace win2d_text_game_world_generator
 {
     public class ProtoRoom
     {
-        public PointInt Coordinates { get; set; }
+        public int ID { get; set; }
+        public PointInt CoordinatesXY { get; set; }
+        public Tuple<int, int, int> WorldCoordinatesAsTuple { get { return new Tuple<int, int, int>(ProtoRegion.ID, ProtoSubregion.ID, ID); } }
         public ProtoRegion ProtoRegion { get; set; }
         public ProtoSubregion ProtoSubregion { get; set; }
-        public List<string> DirectionalRoomConnections;
+        // public List<string> DirectionalRoomConnections;
+        public Dictionary<string, Tuple<int, int, int>> DirectionalRoomConnections;
+        public List<RoomConnection> ProtoRoomConnections;
         public bool Available { get; set; }
         private int _elevation;
         public int Elevation
@@ -40,12 +44,15 @@ namespace win2d_text_game_world_generator
         private Color _elevationcolor;
         public Color ElevationColor { get { return _elevationcolor; } }
 
-        public ProtoRoom(PointInt coordinates, int elevation = 3)
+        public ProtoRoom(int id, PointInt coordinatesXY, int elevation = 3)
         {
+            ID = id;
             ProtoRegion = null;
             ProtoSubregion = null;
-            Coordinates = coordinates;
-            DirectionalRoomConnections = new List<string>();
+            CoordinatesXY = coordinatesXY;
+            // DirectionalRoomConnections = new List<string>();
+            DirectionalRoomConnections = new Dictionary<string, Tuple<int, int, int>>();
+            ProtoRoomConnections = new List<RoomConnection>();
             Available = true;
             Elevation = elevation; // default (3) is grass/green
         }
@@ -56,81 +63,81 @@ namespace win2d_text_game_world_generator
         public override bool Equals(object obj)
         {
             ProtoRoom compare = obj as ProtoRoom;
-            return this.Coordinates.Equals(compare.Coordinates);
+            return this.CoordinatesXY.Equals(compare.CoordinatesXY);
         }
         public override int GetHashCode()
         {
-            return Coordinates.GetHashCode();
+            return CoordinatesXY.GetHashCode();
         }
         #endregion       
 
         #region Drawing
         public void DrawHeightMap(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ElevationColor);
+            ds.FillRectangle(new Rect(CoordinatesXY.X * Statics.MapResolution, CoordinatesXY.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ElevationColor);
         }
         public void DrawPaths(CanvasDrawingSession ds)
         {
-            foreach (string DirectionalRoomConnection in DirectionalRoomConnections)
+            foreach (string DirectionalRoomConnection in DirectionalRoomConnections.Keys)
             {
                 switch (DirectionalRoomConnection)
                 {
                     case "nw":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.X - 1) + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.Y - 1) + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.X - 1) + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.Y - 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "n":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             (Coordinates.X + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.Y - 1) + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.Y - 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "ne":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.X + 1) + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.Y - 1) + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.X + 1) + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.Y - 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "w":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.X - 1) + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.X - 1) + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "o":
                         break;
                     case "e":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.X + 1) + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.X + 1) + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "sw":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.X - 1) + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.Y + 1) + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.X - 1) + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.Y + 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "s":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             (Coordinates.X + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.Y + 1) + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.Y + 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     case "se":
-                        ds.DrawLine((Coordinates.X + 0.5f) * Statics.MapResolution,
-                             (Coordinates.Y + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.X + 1) + 0.5f) * Statics.MapResolution,
-                             ((Coordinates.Y + 1) + 0.5f) * Statics.MapResolution,
+                        ds.DrawLine((CoordinatesXY.X + 0.5f) * Statics.MapResolution,
+                             (CoordinatesXY.Y + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.X + 1) + 0.5f) * Statics.MapResolution,
+                             ((CoordinatesXY.Y + 1) + 0.5f) * Statics.MapResolution,
                              Colors.White);
                         break;
                     default:
@@ -140,15 +147,27 @@ namespace win2d_text_game_world_generator
         }
         public void DrawRegions(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ProtoRegion.Color);
+            Tuple<int, int, int> debug;
+            if (DirectionalRoomConnections.TryGetValue("o", out debug))
+            {
+                ds.FillRectangle(new Rect(CoordinatesXY.X * Statics.MapResolution, CoordinatesXY.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), Colors.Red);
+            }
+            else
+            {
+                ds.FillRectangle(new Rect(CoordinatesXY.X * Statics.MapResolution, CoordinatesXY.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ProtoRegion.Color);
+            }
         }
         public void DrawSubregions(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ProtoSubregion.Color);
+            ds.FillRectangle(new Rect(CoordinatesXY.X * Statics.MapResolution, CoordinatesXY.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), ProtoSubregion.Color);
         }
         public void DrawCaves(CanvasDrawingSession ds)
         {
-            ds.FillRectangle(new Rect(Coordinates.X * Statics.MapResolution, Coordinates.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), Colors.Gray);
+            ds.FillRectangle(new Rect(CoordinatesXY.X * Statics.MapResolution, CoordinatesXY.Y * Statics.MapResolution, Statics.MapResolution, Statics.MapResolution), Colors.Gray);
+        }
+        internal void AddConnection(string verb, string noun, Tuple<int, int, int> roomWorldCoordinates)
+        {
+            ProtoRoomConnections.Add(new RoomConnection(roomWorldCoordinates.Item1, roomWorldCoordinates.Item2, roomWorldCoordinates.Item3, verb, noun));
         }
         #endregion
     }

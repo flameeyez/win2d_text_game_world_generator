@@ -6,21 +6,27 @@ using System.Threading.Tasks;
 
 namespace win2d_text_game_world_generator
 {
-    // immutable
     public class RoomConnection
     {
-        private Region _region;
-        public Region Region { get { return _region; } }
-        private Subregion _subregion;
-        public Subregion Subregion { get { return _subregion; } }
-        private Room _room;
-        public Room Room { get { return _room; } }
+        private int _regionid;
+        public int RegionID { get { return _regionid; } }
+        private int _subregionid;
+        public int SubregionID { get { return _subregionid; } }
+        private int _roomid;
+        public int RoomID { get { return _roomid; } }
 
-        public RoomConnection(Region region, Subregion subregion, Room room)
+        private string _verb;
+        public string Verb { get { return _verb; } }
+        private string _noun;
+        public string Noun { get { return _noun; } }
+
+        public RoomConnection(int regionID, int subregionID, int roomID, string verb, string noun)
         {
-            _region = region;
-            _subregion = subregion;
-            _room = room;
+            _regionid = regionID;
+            _subregionid = subregionID;
+            _roomid = RoomID;
+            _verb = verb;
+            _noun = noun;
         }
     }
 }

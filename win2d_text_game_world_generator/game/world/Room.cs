@@ -13,13 +13,16 @@ namespace win2d_text_game_world_generator
 {
     public class Room
     {
-        private PointInt _coordinates;
-        public PointInt Coordinates { get { return _coordinates; } }
+        public int ID { get; set; }
+        private PointInt _coordinatesXY;
+        public PointInt CoordinatesXY { get { return _coordinatesXY; } }
         private Region _region;
         public Region Region { get { return _region; } }
         private Subregion _subregion;
         public Subregion Subregion { get { return _subregion; } }
-        public ReadOnlyCollection<string> DirectionalRoomConnections;
+        // public ReadOnlyCollection<string> DirectionalRoomConnections;
+        public Dictionary<string, Tuple<int, int, int>> DirectionalRoomConnections;
+        public ReadOnlyCollection<RoomConnection> RoomConnections;
         private int _elevation;
         public int Elevation { get { return _elevation; } }
         private Color _elevationcolor;
@@ -29,10 +32,13 @@ namespace win2d_text_game_world_generator
         public static Room FromProtoRoom(Region region, Subregion subregion, ProtoRoom pr)
         {
             Room room = new Room();
-            room._coordinates = pr.Coordinates;
+            room.ID = pr.ID;
+            room._coordinatesXY = pr.CoordinatesXY;
             room._region = region;
             room._subregion = subregion;
-            room.DirectionalRoomConnections = new ReadOnlyCollection<string>(pr.DirectionalRoomConnections);
+            // room.DirectionalRoomConnections = new ReadOnlyCollection<string>(pr.DirectionalRoomConnections);
+            room.DirectionalRoomConnections = pr.DirectionalRoomConnections;
+            room.RoomConnections = new ReadOnlyCollection<RoomConnection>(pr.ProtoRoomConnections);
             room._elevation = pr.Elevation;
             room._elevationcolor = pr.ElevationColor;
             return room;
@@ -42,8 +48,8 @@ namespace win2d_text_game_world_generator
         public void DrawTile(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args, bool bDrawSubregions, bool bDrawGrid)
         {
             args.DrawingSession.FillRectangle(
-                new Rect(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale,
-                    MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
+                new Rect(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale,
+                    MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale,
                     Statics.PixelScale,
                     Statics.PixelScale),
                     bDrawSubregions ? Subregion.Color : Region.Color);
@@ -56,8 +62,8 @@ namespace win2d_text_game_world_generator
         public void DrawHeight(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.FillRectangle(
-                new Rect(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale,
-                    MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
+                new Rect(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale,
+                    MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale,
                     Statics.PixelScale,
                     Statics.PixelScale),
                     Color.FromArgb(Debug.HeightMapOpacity, ElevationColor.R, ElevationColor.G, ElevationColor.B));
@@ -65,74 +71,74 @@ namespace win2d_text_game_world_generator
         public void DrawBorder(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.DrawRectangle(
-                new Rect(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale,
-                    MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale,
+                new Rect(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale,
+                    MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale,
                     Statics.PixelScale,
                     Statics.PixelScale),
                     Colors.Black);
         }
         public void DrawRoomConnections(Vector2 MapPosition, CanvasAnimatedDrawEventArgs args)
         {
-            foreach (string DirectionalRoomConnection in DirectionalRoomConnections)
+            foreach (string DirectionalRoomConnection in DirectionalRoomConnections.Keys)
             {
                 switch (DirectionalRoomConnection)
                 {
                     case "nw":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + (Coordinates.X - 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + (Coordinates.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + (CoordinatesXY.X - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (CoordinatesXY.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "n":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + (Coordinates.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (CoordinatesXY.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "ne":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + (Coordinates.X + 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + (Coordinates.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + (CoordinatesXY.X + 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (CoordinatesXY.Y - 1) * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "w":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + (Coordinates.X - 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + (CoordinatesXY.X - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "o":
                         break;
                     case "e":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + (Coordinates.X + 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + (CoordinatesXY.X + 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "sw":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + (Coordinates.X - 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + (Coordinates.Y + 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + (CoordinatesXY.X - 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (CoordinatesXY.Y + 1) * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "s":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + (Coordinates.Y + 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (CoordinatesXY.Y + 1) * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     case "se":
-                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + Coordinates.X * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + Coordinates.Y * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.X + Statics.Padding + (Coordinates.X + 1) * Statics.PixelScale + Statics.PixelScale / 2,
-                             MapPosition.Y + Statics.Padding + (Coordinates.Y + 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                        args.DrawingSession.DrawLine(MapPosition.X + Statics.Padding + CoordinatesXY.X * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + CoordinatesXY.Y * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.X + Statics.Padding + (CoordinatesXY.X + 1) * Statics.PixelScale + Statics.PixelScale / 2,
+                             MapPosition.Y + Statics.Padding + (CoordinatesXY.Y + 1) * Statics.PixelScale + Statics.PixelScale / 2,
                              Colors.White);
                         break;
                     default:

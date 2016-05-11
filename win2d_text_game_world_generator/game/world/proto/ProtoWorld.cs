@@ -20,6 +20,7 @@ namespace win2d_text_game_world_generator
         public int Width { get; set; }
         public int Height { get; set; }
         public int TotalTiles { get { return Width * Height; } }
+        private int nNextRegionId = 0;
 
         private int TraversableTiles = 0;
         private int UntraversableTiles = 0;
@@ -42,6 +43,7 @@ namespace win2d_text_game_world_generator
         public CanvasRenderTarget RenderTargetPaths { get; set; }
         public CanvasRenderTarget RenderTargetHeightMap { get; set; }
         public CanvasRenderTarget RenderTargetCaves { get; set; }
+        public CanvasRenderTarget RenderTargetCavePaths { get; set; }
 
         private bool _aborted = false;
         public bool Aborted { get { return _aborted; } }
@@ -50,81 +52,59 @@ namespace win2d_text_game_world_generator
         #region Initialization
         public ProtoWorld(CanvasDevice device, int width, int height, IProgress<Tuple<string, float>> progress)
         {
-            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 15));
             Width = width;
             Height = height;
+
+            progress.Report(new Tuple<string, float>("Initializing grid...", (float)1 / 16));
             InitializeMasterRoomLists();
-
-            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)2 / 15));
+            progress.Report(new Tuple<string, float>("Creating subregions...", (float)2 / 16));
+            CreateProtoRegions();
+            progress.Report(new Tuple<string, float>("Folding-in undersized subregions...", (float)3 / 16));
+            FoldUndersizedRegions();
+            progress.Report(new Tuple<string, float>("Merging subregions into regions...", (float)4 / 16));
+            MergeProtoRegions();
+            progress.Report(new Tuple<string, float>("Reindexing regions...", (float)5 / 16));
+            ReindexSubregions();
+            progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)6 / 16));
+            AssignSubregionColors();
+            progress.Report(new Tuple<string, float>("Generating heightmap data...", (float)7 / 16));
             GenerateHeightMap();
-
-            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)3 / 15));
+            progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)7 / 16));
             CalculateTraversability();
-
-            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)4 / 15));
+            progress.Report(new Tuple<string, float>("Connecting rooms...", (float)9 / 16));
             CreateRoomConnections();
-
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)5 / 15));
-                RemoveDisconnectedRoomConnections();
+                progress.Report(new Tuple<string, float>("Removing disconnected rooms...", (float)10 / 16));
+                RemoveDisconnectedRooms();
             }
-
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)6 / 15));
+                progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)11 / 16));
                 FixCrossedPaths();
             }
-
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Creating subregions...", (float)7 / 15));
-                CreateProtoRegions();
-            }
-
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Folding-in undersized subregions...", (float)8 / 15));
-                FoldUndersizedRegions();
-            }
-
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Merging subregions into regions...", (float)9 / 15));
-                MergeProtoRegions();
-            }
-
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Reindexing regions...", (float)10 / 15));
-                ReindexSubregions();
-            }
-
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Assigning region/subregion colors...", (float)11 / 15));
-                AssignSubregionColors();
-            }
-
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Creating caves...", (float)12 / 15));
+                progress.Report(new Tuple<string, float>("Creating caves...", (float)12 / 16));
                 CreateCaves();
             }
-
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Connecting caves to overground...", (float)13 / 15));
+                progress.Report(new Tuple<string, float>("Connecting caves to overground...", (float)13 / 16));
                 ConnectCavesToOverground();
             }
-
             if (!_aborted)
             {
-                progress.Report(new Tuple<string, float>("Saving world images...", (float)14 / 15));
+                progress.Report(new Tuple<string, float>("Creating cave paths...", (float)14 / 16));
+                CreateCavePaths();
+            }
+            if (!_aborted)
+            {
+                progress.Report(new Tuple<string, float>("Saving world images...", (float)15 / 16));
                 SaveWorldImages(device);
             }
 
-            progress.Report(new Tuple<string, float>("Done!", (float)15 / 15));
+            progress.Report(new Tuple<string, float>("Done!", (float)16 / 16));
         }
         private void InitializeMasterRoomLists()
         {
@@ -135,11 +115,69 @@ namespace win2d_text_game_world_generator
             {
                 for (int y = 0; y < Height; y++)
                 {
-                    MasterOvergroundRoomList[x, y] = new ProtoRoom(new PointInt(x, y));
-                    MasterUndergroundRoomList[x, y] = new ProtoRoom(new PointInt(x, y));
+                    MasterOvergroundRoomList[x, y] = new ProtoRoom(-1, new PointInt(x, y));
+                    MasterUndergroundRoomList[x, y] = new ProtoRoom(-1, new PointInt(x, y));
                 }
             }
         }
+        private void CreateProtoRegions()
+        {
+            // now we have a grid of available/unavailable [proto]rooms (tiles/pixels)
+            // while we have available rooms, create regions, each with a single subregion
+            int AvailableTileCount = Width * Height;
+            while (AvailableTileCount > 0)
+            {
+                ProtoRegion protoRegion = new ProtoRegion(nNextRegionId++, MasterOvergroundRoomList);
+                ProtoRegions.Add(protoRegion);
+                AvailableTileCount -= protoRegion.RoomCount;
+            }
+        }
+        private void FoldUndersizedRegions()
+        {
+            // all rooms are now unavailable
+            // all regions contain one subregion that contains all region rooms
+            // we're left with a swath of tiny regions
+
+            // pass 1: fold tiny regions into neighbors
+            // result is that all regions still only have one subregion, but regions are guaranteed to be a certain size
+            MergeRegions(MasterOvergroundRoomList, 100, false);
+        }
+        private void MergeProtoRegions()
+        {
+            // pass 2: fold regions into each other (as subregions)
+            // result is fewer regions that now contain multiple subregions
+            MergeRegions(MasterOvergroundRoomList, 2000, true);
+        }
+        private void ReindexSubregions()
+        {
+            ReindexRegions(0, true);
+        }
+        private void AssignSubregionColors()
+        {
+            foreach (ProtoRegion pr in ProtoRegions)
+            {
+                foreach (ProtoSubregion ps in pr.ProtoSubregions)
+                {
+                    int nVariance = 20 - Statics.Random.Next(41);
+                    while (Math.Abs(nVariance) < 5) { nVariance = 20 - Statics.Random.Next(41); }
+
+                    int r = pr.Color.R + nVariance;
+                    if (r < 0) { r = 0; }
+                    else if (r > 255) { r = 255; }
+
+                    int g = pr.Color.G + nVariance;
+                    if (g < 0) { g = 0; }
+                    else if (g > 255) { g = 255; }
+
+                    int b = pr.Color.B + nVariance;
+                    if (b < 0) { b = 0; }
+                    else if (b > 255) { b = 255; }
+
+                    ps.Color = Color.FromArgb(255, (byte)r, (byte)g, (byte)b);
+                }
+            }
+        }
+
         private void GenerateHeightMap()
         {
             int[,] mountainMap = GenerateHeightMapMountains();
@@ -224,29 +262,32 @@ namespace win2d_text_game_world_generator
             DebugCreateRoomConnectionsTime = (int)s.ElapsedMilliseconds;
             // END DEBUG
         }
-        private void RemoveDisconnectedRoomConnections()
+        private void RemoveDisconnectedRooms()
         {
             foreach (PointInt pi in TilesNotInMainPath)
             {
                 ProtoRoom pr = MasterOvergroundRoomList[pi.X, pi.Y];
                 for (int i = pr.DirectionalRoomConnections.Count - 1; i >= 0; i--)
                 {
-                    PointInt neighborCoordinates = GetNeighborCoordinates(pi, pr.DirectionalRoomConnections[i]);
+                    KeyValuePair<string, Tuple<int, int, int>> connection = pr.DirectionalRoomConnections.ElementAt(i);
+                    PointInt neighborCoordinates = GetNeighborCoordinates(pi, connection.Key);
                     ProtoRoom neighborRoom = MasterOvergroundRoomList[neighborCoordinates.X, neighborCoordinates.Y];
-                    bool bRemoved = neighborRoom.DirectionalRoomConnections.Remove(Statics.GetOppositeDirection(pr.DirectionalRoomConnections[i]));
+                    bool bRemoved = neighborRoom.DirectionalRoomConnections.Remove(Statics.GetOppositeDirection(connection.Key));
 
                     // BEGIN DEBUG
                     if (!bRemoved) { int j = 0; j++; }
                     // END DEBUG
 
-                    pr.DirectionalRoomConnections.RemoveAt(i);
+                    pr.DirectionalRoomConnections.Remove(connection.Key);
                 }
+
+                // TODO: consider removing the room itself from its containing region/subregion
             }
             return;
         }
         private bool FixDisconnectedRoom(ProtoRoom protoRoom, string strDirection)
         {
-            PointInt neighborCoordinates = GetNeighborCoordinates(protoRoom.Coordinates, strDirection);
+            PointInt neighborCoordinates = GetNeighborCoordinates(protoRoom.CoordinatesXY, strDirection);
 
             if (neighborCoordinates.X < 0) { return false; }
             if (neighborCoordinates.X > Width - 1) { return false; }
@@ -258,8 +299,8 @@ namespace win2d_text_game_world_generator
             if (neighborRoom.IsTraversable())
             {
                 AddRoomConnection(protoRoom, strDirection, true);
-                TilesNotInMainPath.Remove(protoRoom.Coordinates);
-                MainPath.Add(protoRoom.Coordinates);
+                TilesNotInMainPath.Remove(protoRoom.CoordinatesXY);
+                MainPath.Add(protoRoom.CoordinatesXY);
                 return true;
             }
 
@@ -276,7 +317,8 @@ namespace win2d_text_game_world_generator
                     ProtoRoom bottomLeft = MasterOvergroundRoomList[x, y + 1];
                     ProtoRoom bottomRight = MasterOvergroundRoomList[x + 1, y + 1];
 
-                    if (topLeft.DirectionalRoomConnections.Contains("se") && topRight.DirectionalRoomConnections.Contains("sw"))
+                    Tuple<int, int, int> connectionWorldCoordinates;
+                    if (topLeft.DirectionalRoomConnections.TryGetValue("se", out connectionWorldCoordinates) && topRight.DirectionalRoomConnections.TryGetValue("sw", out connectionWorldCoordinates))
                     {
                         switch (Statics.Random.Next(2))
                         {
@@ -287,35 +329,35 @@ namespace win2d_text_game_world_generator
                                 switch (Statics.Random.Next(2))
                                 {
                                     case 0:
-                                        if (!topLeft.DirectionalRoomConnections.Contains("s"))
+                                        if (!topLeft.DirectionalRoomConnections.TryGetValue("s", out connectionWorldCoordinates))
                                         {
-                                            topLeft.DirectionalRoomConnections.Add("s");
+                                            topLeft.DirectionalRoomConnections.Add("s", bottomLeft.WorldCoordinatesAsTuple);
 
-                                            if (bottomLeft.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
-                                            bottomLeft.DirectionalRoomConnections.Add("n");
+                                            if (bottomLeft.DirectionalRoomConnections.TryGetValue("n", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            bottomLeft.DirectionalRoomConnections.Add("n", topLeft.WorldCoordinatesAsTuple);
                                         }
-                                        if (!bottomLeft.DirectionalRoomConnections.Contains("e"))
+                                        if (!bottomLeft.DirectionalRoomConnections.TryGetValue("e", out connectionWorldCoordinates))
                                         {
-                                            bottomLeft.DirectionalRoomConnections.Add("e");
+                                            bottomLeft.DirectionalRoomConnections.Add("e", bottomRight.WorldCoordinatesAsTuple);
 
-                                            if (bottomRight.DirectionalRoomConnections.Contains("w")) { throw new Exception(); }
-                                            bottomRight.DirectionalRoomConnections.Add("w");
+                                            if (bottomRight.DirectionalRoomConnections.TryGetValue("w", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            bottomRight.DirectionalRoomConnections.Add("w", bottomLeft.WorldCoordinatesAsTuple);
                                         }
                                         break;
                                     case 1:
-                                        if (!topLeft.DirectionalRoomConnections.Contains("e"))
+                                        if (!topLeft.DirectionalRoomConnections.TryGetValue("e", out connectionWorldCoordinates))
                                         {
-                                            topLeft.DirectionalRoomConnections.Add("e");
+                                            topLeft.DirectionalRoomConnections.Add("e", topRight.WorldCoordinatesAsTuple);
 
-                                            if (topRight.DirectionalRoomConnections.Contains("w")) { throw new Exception(); }
-                                            topRight.DirectionalRoomConnections.Add("w");
+                                            if (topRight.DirectionalRoomConnections.TryGetValue("w", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            topRight.DirectionalRoomConnections.Add("w", topLeft.WorldCoordinatesAsTuple);
                                         }
-                                        if (!topRight.DirectionalRoomConnections.Contains("s"))
+                                        if (!topRight.DirectionalRoomConnections.TryGetValue("s", out connectionWorldCoordinates))
                                         {
-                                            topRight.DirectionalRoomConnections.Add("s");
+                                            topRight.DirectionalRoomConnections.Add("s", bottomRight.WorldCoordinatesAsTuple);
 
-                                            if (bottomRight.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
-                                            bottomRight.DirectionalRoomConnections.Add("n");
+                                            if (bottomRight.DirectionalRoomConnections.TryGetValue("n", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            bottomRight.DirectionalRoomConnections.Add("n", topRight.WorldCoordinatesAsTuple);
                                         }
                                         break;
                                 }
@@ -327,35 +369,35 @@ namespace win2d_text_game_world_generator
                                 switch (Statics.Random.Next(1))
                                 {
                                     case 0:
-                                        if (!topRight.DirectionalRoomConnections.Contains("s"))
+                                        if (!topRight.DirectionalRoomConnections.TryGetValue("s", out connectionWorldCoordinates))
                                         {
-                                            topRight.DirectionalRoomConnections.Add("s");
+                                            topRight.DirectionalRoomConnections.Add("s", bottomRight.WorldCoordinatesAsTuple);
 
-                                            if (bottomRight.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
-                                            bottomRight.DirectionalRoomConnections.Add("n");
+                                            if (bottomRight.DirectionalRoomConnections.TryGetValue("n", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            bottomRight.DirectionalRoomConnections.Add("n", topRight.WorldCoordinatesAsTuple);
                                         }
-                                        if (!bottomRight.DirectionalRoomConnections.Contains("w"))
+                                        if (!bottomRight.DirectionalRoomConnections.TryGetValue("w", out connectionWorldCoordinates))
                                         {
-                                            bottomRight.DirectionalRoomConnections.Add("w");
+                                            bottomRight.DirectionalRoomConnections.Add("w", bottomLeft.WorldCoordinatesAsTuple);
 
-                                            if (bottomLeft.DirectionalRoomConnections.Contains("e")) { throw new Exception(); }
-                                            bottomLeft.DirectionalRoomConnections.Add("e");
+                                            if (bottomLeft.DirectionalRoomConnections.TryGetValue("e", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            bottomLeft.DirectionalRoomConnections.Add("e", bottomRight.WorldCoordinatesAsTuple);
                                         }
                                         break;
                                     case 1:
-                                        if (!topRight.DirectionalRoomConnections.Contains("w"))
+                                        if (!topRight.DirectionalRoomConnections.TryGetValue("w", out connectionWorldCoordinates))
                                         {
-                                            topRight.DirectionalRoomConnections.Add("w");
+                                            topRight.DirectionalRoomConnections.Add("w", topLeft.WorldCoordinatesAsTuple);
 
-                                            if (topLeft.DirectionalRoomConnections.Contains("e")) { throw new Exception(); }
-                                            topLeft.DirectionalRoomConnections.Add("e");
+                                            if (topLeft.DirectionalRoomConnections.TryGetValue("e", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            topLeft.DirectionalRoomConnections.Add("e", topRight.WorldCoordinatesAsTuple);
                                         }
-                                        if (!topLeft.DirectionalRoomConnections.Contains("s"))
+                                        if (!topLeft.DirectionalRoomConnections.TryGetValue("s", out connectionWorldCoordinates))
                                         {
-                                            topLeft.DirectionalRoomConnections.Add("s");
+                                            topLeft.DirectionalRoomConnections.Add("s", bottomLeft.WorldCoordinatesAsTuple);
 
-                                            if (bottomLeft.DirectionalRoomConnections.Contains("n")) { throw new Exception(); }
-                                            bottomLeft.DirectionalRoomConnections.Add("n");
+                                            if (bottomLeft.DirectionalRoomConnections.TryGetValue("n", out connectionWorldCoordinates)) { throw new Exception(); }
+                                            bottomLeft.DirectionalRoomConnections.Add("n", topLeft.WorldCoordinatesAsTuple);
                                         }
                                         break;
                                 }
@@ -366,90 +408,30 @@ namespace win2d_text_game_world_generator
             }
         }
 
-        private void CreateProtoRegions()
-        {
-            // now we have a grid of available/unavailable [proto]rooms (tiles/pixels)
-            // while we have available rooms, create regions, each with a single subregion
-            int AvailableTileCount = Width * Height;
-            int nCurrentRegionId = 0;
-            while (AvailableTileCount > 0)
-            {
-                ProtoRegion protoRegion = new ProtoRegion(nCurrentRegionId++, MasterOvergroundRoomList);
-                ProtoRegions.Add(protoRegion);
-                AvailableTileCount -= protoRegion.RoomCount;
-            }
-        }
-        private void FoldUndersizedRegions()
-        {
-            // all rooms are now unavailable
-            // all regions contain one subregion that contains all region rooms
-            // we're left with a swath of tiny regions
-
-            // pass 1: fold tiny regions into neighbors
-            // result is that all regions still only have one subregion, but regions are guaranteed to be a certain size
-            MergeRegions(MasterOvergroundRoomList, 100, false);
-        }
-        private void MergeProtoRegions()
-        {
-            // pass 2: fold regions into each other (as subregions)
-            // result is fewer regions that now contain multiple subregions
-            MergeRegions(MasterOvergroundRoomList, 2000, true);
-        }
-        private void ReindexSubregions()
-        {
-            ReindexRegions(0, true);
-        }
-        private void AssignSubregionColors()
-        {
-            foreach (ProtoRegion pr in ProtoRegions)
-            {
-                foreach (ProtoSubregion ps in pr.ProtoSubregions)
-                {
-                    int nVariance = 20 - Statics.Random.Next(41);
-                    while (Math.Abs(nVariance) < 5) { nVariance = 20 - Statics.Random.Next(41); }
-
-                    int r = pr.Color.R + nVariance;
-                    if (r < 0) { r = 0; }
-                    else if (r > 255) { r = 255; }
-
-                    int g = pr.Color.G + nVariance;
-                    if (g < 0) { g = 0; }
-                    else if (g > 255) { g = 255; }
-
-                    int b = pr.Color.B + nVariance;
-                    if (b < 0) { b = 0; }
-                    else if (b > 255) { b = 255; }
-
-                    ps.Color = Color.FromArgb(255, (byte)r, (byte)g, (byte)b);
-                }
-            }
-        }
-
         private void CreateCaves()
         {
             int nNumberOfCaves = Width * Height / 2500; // ~100 caves at tested resolution (600 x 420)
             for (int i = 0; i < nNumberOfCaves; i++)
             {
-                ProtoCaves.Add(new ProtoRegion(i, MasterUndergroundRoomList, REGION_TYPE.UNDERGROUND));
+                ProtoCaves.Add(new ProtoRegion(nNextRegionId++, MasterUndergroundRoomList, REGION_TYPE.UNDERGROUND));
             }
         }
-
         private void ConnectCavesToOverground()
         {
             for (int i = ProtoCaves.Count - 1; i >= 0; i--)
             {
                 ProtoRoom roomUnderground = ProtoCaves[i].ProtoSubregions[0].ProtoRooms.RandomListItem();
-                ProtoRoom roomOverground = MasterOvergroundRoomList[roomUnderground.Coordinates.X, roomUnderground.Coordinates.Y];
+                ProtoRoom roomOverground = MasterOvergroundRoomList[roomUnderground.CoordinatesXY.X, roomUnderground.CoordinatesXY.Y];
 
                 int nFailCount = 0;
-                while(!roomOverground.IsTraversable() && nFailCount < 10)
+                while (!roomOverground.IsTraversable() && nFailCount < 10)
                 {
                     nFailCount++;
                     roomUnderground = ProtoCaves[i].ProtoSubregions[0].ProtoRooms.RandomListItem();
-                    roomOverground = MasterOvergroundRoomList[roomUnderground.Coordinates.X, roomUnderground.Coordinates.Y];
+                    roomOverground = MasterOvergroundRoomList[roomUnderground.CoordinatesXY.X, roomUnderground.CoordinatesXY.Y];
                 }
 
-                if(nFailCount == 10)
+                if (nFailCount == 10)
                 {
                     ProtoCaves.RemoveAt(i);
                     continue;
@@ -457,11 +439,15 @@ namespace win2d_text_game_world_generator
                 else
                 {
                     // add under to over connection
-                    // roomUnderground.DirectionalRoomConnections.Add()
-
+                    roomUnderground.DirectionalRoomConnections.Add("o", roomOverground.WorldCoordinatesAsTuple);
                     // add over to under connection
+                    roomOverground.AddConnection("go", "cave", roomUnderground.WorldCoordinatesAsTuple);
                 }
             }
+        }
+        private void CreateCavePaths()
+        {
+
         }
 
         private void SaveWorldImages(CanvasDevice device)
@@ -500,6 +486,13 @@ namespace win2d_text_game_world_generator
             {
                 DrawCaves(ds);
             }
+
+            // draw cave paths
+            RenderTargetCavePaths = new CanvasRenderTarget(device, Width * Statics.MapResolution, Height * Statics.MapResolution, 96);
+            using (CanvasDrawingSession ds = RenderTargetCavePaths.CreateDrawingSession())
+            {
+                DrawCavePaths(ds);
+            }
         }
         #endregion
 
@@ -537,6 +530,13 @@ namespace win2d_text_game_world_generator
             foreach (ProtoRegion pcr in ProtoCaves)
             {
                 pcr.DrawRegions(ds);
+            }
+        }
+        private void DrawCavePaths(CanvasDrawingSession ds)
+        {
+            foreach (ProtoRegion pc in ProtoCaves)
+            {
+                pc.DrawPaths(ds);
             }
         }
         #endregion
@@ -614,8 +614,8 @@ namespace win2d_text_game_world_generator
             {
                 ProtoSubregion subregionRandom = ProtoRegions[nRegionID].ProtoSubregions.RandomListItem();
                 ProtoRoom tileRandom = subregionRandom.ProtoRooms.RandomListItem();
-                int tileRandomX = (int)tileRandom.Coordinates.X;
-                int tileRandomY = (int)tileRandom.Coordinates.Y;
+                int tileRandomX = (int)tileRandom.CoordinatesXY.X;
+                int tileRandomY = (int)tileRandom.CoordinatesXY.Y;
 
                 switch (Statics.Random.Next(4))
                 {
@@ -654,7 +654,8 @@ namespace win2d_text_game_world_generator
         }
         private ProtoRoom AddRoomConnection(ProtoRoom currentRoom, string strDirection, bool bForce = false)
         {
-            if (currentRoom.DirectionalRoomConnections.Contains(strDirection)) { return currentRoom; }
+            Tuple<int, int, int> connectionWorldCoordinates;
+            if (currentRoom.DirectionalRoomConnections.TryGetValue(strDirection, out connectionWorldCoordinates)) { return currentRoom; }
 
             string strOppositeDirection = string.Empty;
             PointInt connectingRoomCoordinates = null;
@@ -662,35 +663,35 @@ namespace win2d_text_game_world_generator
             {
                 case "nw":
                     strOppositeDirection = "se";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y - 1);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X - 1, currentRoom.CoordinatesXY.Y - 1);
                     break;
                 case "n":
                     strOppositeDirection = "s";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X, currentRoom.Coordinates.Y - 1);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X, currentRoom.CoordinatesXY.Y - 1);
                     break;
                 case "ne":
                     strOppositeDirection = "sw";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y - 1);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X + 1, currentRoom.CoordinatesXY.Y - 1);
                     break;
                 case "w":
                     strOppositeDirection = "e";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X - 1, currentRoom.CoordinatesXY.Y);
                     break;
                 case "e":
                     strOppositeDirection = "w";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X + 1, currentRoom.CoordinatesXY.Y);
                     break;
                 case "sw":
                     strOppositeDirection = "ne";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X - 1, currentRoom.Coordinates.Y + 1);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X - 1, currentRoom.CoordinatesXY.Y + 1);
                     break;
                 case "s":
                     strOppositeDirection = "n";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X, currentRoom.Coordinates.Y + 1);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X, currentRoom.CoordinatesXY.Y + 1);
                     break;
                 case "se":
                     strOppositeDirection = "nw";
-                    connectingRoomCoordinates = new PointInt(currentRoom.Coordinates.X + 1, currentRoom.Coordinates.Y + 1);
+                    connectingRoomCoordinates = new PointInt(currentRoom.CoordinatesXY.X + 1, currentRoom.CoordinatesXY.Y + 1);
                     break;
                 default:
                     throw new Exception();
@@ -704,8 +705,8 @@ namespace win2d_text_game_world_generator
             ProtoRoom connectingRoom = MasterOvergroundRoomList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
             if (connectingRoom.Elevation == 0 || connectingRoom.Elevation == 30) { return currentRoom; }
             if (connectingRoom.DirectionalRoomConnections.Count >= Statics.RoomMaxConnections && !bForce) { return currentRoom; }
-            currentRoom.DirectionalRoomConnections.Add(strDirection);
-            connectingRoom.DirectionalRoomConnections.Add(strOppositeDirection);
+            currentRoom.DirectionalRoomConnections.Add(strDirection, connectingRoom.WorldCoordinatesAsTuple);
+            connectingRoom.DirectionalRoomConnections.Add(strOppositeDirection, currentRoom.WorldCoordinatesAsTuple);
             return connectingRoom;
         }
         #endregion
@@ -747,7 +748,7 @@ namespace win2d_text_game_world_generator
                 {
                     if (MasterOvergroundRoomList[x, y].IsTraversable())
                     {
-                        TilesNotInMainPath.Add(MasterOvergroundRoomList[x, y].Coordinates);
+                        TilesNotInMainPath.Add(MasterOvergroundRoomList[x, y].CoordinatesXY);
                     }
                 }
             }
@@ -774,7 +775,7 @@ namespace win2d_text_game_world_generator
                 TilesNotInMainPath.Remove(currentCoordinates);
                 MainPath.Add(currentCoordinates);
 
-                foreach (string strConnection in MasterOvergroundRoomList[currentCoordinates.X, currentCoordinates.Y].DirectionalRoomConnections)
+                foreach (string strConnection in MasterOvergroundRoomList[currentCoordinates.X, currentCoordinates.Y].DirectionalRoomConnections.Keys)
                 {
                     PointInt connectingCoordinates;
                     switch (strConnection)
@@ -844,14 +845,14 @@ namespace win2d_text_game_world_generator
             HashSet<PointInt> Path = new HashSet<PointInt>();
 
             OpenSet = new HashSet<PointInt>();
-            OpenSet.Add(prInitial.Coordinates);
+            OpenSet.Add(prInitial.CoordinatesXY);
             while (OpenSet.Count > 0)
             {
                 PointInt currentCoordinates = OpenSet.ElementAt(0);
                 OpenSet.Remove(currentCoordinates);
                 Path.Add(currentCoordinates);
 
-                foreach (string strConnection in MasterOvergroundRoomList[currentCoordinates.X, currentCoordinates.Y].DirectionalRoomConnections)
+                foreach (string strConnection in MasterOvergroundRoomList[currentCoordinates.X, currentCoordinates.Y].DirectionalRoomConnections.Keys)
                 {
                     PointInt connectingCoordinates;
                     switch (strConnection)
@@ -1114,41 +1115,42 @@ namespace win2d_text_game_world_generator
                     ProtoRoom currentRoom = MasterOvergroundRoomList[x, y];
                     ProtoRoom connectionRoom = null;
 
-                    foreach (string strConnection in currentRoom.DirectionalRoomConnections)
+                    Tuple<int, int, int> connectionWorldCoordinates;
+                    foreach (string strConnection in currentRoom.DirectionalRoomConnections.Keys)
                     {
                         switch (strConnection)
                         {
                             case "nw":
                                 connectionRoom = MasterOvergroundRoomList[x - 1, y - 1];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("se")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("se", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "n":
                                 connectionRoom = MasterOvergroundRoomList[x, y - 1];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("s")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("s", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "ne":
                                 connectionRoom = MasterOvergroundRoomList[x + 1, y - 1];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("sw")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("sw", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "w":
                                 connectionRoom = MasterOvergroundRoomList[x - 1, y];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("e")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("e", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "e":
                                 connectionRoom = MasterOvergroundRoomList[x + 1, y];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("w")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("w", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "sw":
                                 connectionRoom = MasterOvergroundRoomList[x - 1, y + 1];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("ne")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("ne", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "s":
                                 connectionRoom = MasterOvergroundRoomList[x, y + 1];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("n")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("n", out connectionWorldCoordinates)) { return false; }
                                 break;
                             case "se":
                                 connectionRoom = MasterOvergroundRoomList[x + 1, y + 1];
-                                if (!connectionRoom.DirectionalRoomConnections.Contains("nw")) { return false; }
+                                if (!connectionRoom.DirectionalRoomConnections.TryGetValue("nw", out connectionWorldCoordinates)) { return false; }
                                 break;
                             default:
                                 throw new Exception();
@@ -1165,7 +1167,7 @@ namespace win2d_text_game_world_generator
                 for (int y = 0; y < Height; y++)
                 {
                     ProtoRoom protoRoom = MasterOvergroundRoomList[x, y];
-                    foreach (string strConnection in protoRoom.DirectionalRoomConnections)
+                    foreach (string strConnection in protoRoom.DirectionalRoomConnections.Keys)
                     {
                         switch (strConnection)
                         {
@@ -1624,6 +1626,29 @@ namespace win2d_text_game_world_generator
         // public int FailedExpansionCount { get { return ProtoRegions.Select(x => x.FailedExpansionCount).Sum(); } }
         // public int MergeCount { get; set; }
         // END CUT debug
+
+
+        //foreach(ProtoRegion pc in ProtoCaves)
+        //{
+        //    int nTotal = 0;
+        //    foreach (ProtoSubregion ps in pc.ProtoSubregions)
+        //    {
+        //        foreach(ProtoRoom pr in ps.ProtoRooms)
+        //        {
+        //            nTotal += pr.DirectionalRoomConnections.Keys.Where(x => x == "o").Count();
+        //        }
+        //    }
+
+        //    if (nTotal == 1)
+        //    {
+        //        int i = 0;
+        //        i++;
+        //    }
+        //    else
+        //    {
+        //        throw new Exception();
+        //    }
+        //}
         #endregion
     }
 }
