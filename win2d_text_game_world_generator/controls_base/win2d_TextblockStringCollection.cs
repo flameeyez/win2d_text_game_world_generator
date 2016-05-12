@@ -12,6 +12,8 @@ namespace win2d_text_game_world_generator
 {
     class win2d_TextblockStringCollection
     {
+        private CanvasDevice _device;
+
         // keep track of total height
         private List<win2d_TextblockString> Strings = new List<win2d_TextblockString>();
         public int Count { get { return Strings.Count; } }
@@ -30,8 +32,9 @@ namespace win2d_text_game_world_generator
 
         private bool ScrollToBottomOnAppend { get; set; }
 
-        public win2d_TextblockStringCollection(Vector2 position, int drawingwidth, int drawingheight, bool scrolltobottomonappend = false)
+        public win2d_TextblockStringCollection(CanvasDevice device, Vector2 position, int drawingwidth, int drawingheight, bool scrolltobottomonappend = false)
         {
+            _device = device;
             Position = position;
             DrawingWidth = drawingwidth;
             DrawingHeight = drawingheight;
@@ -88,9 +91,9 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Add
-        public void Add(CanvasDevice device, string str)
+        public void Add(string str)
         {
-            win2d_TextblockString s = new win2d_TextblockString(device, str, DrawingWidth);
+            win2d_TextblockString s = new win2d_TextblockString(_device, str, DrawingWidth);
             Strings.Add(s);
             _totalstringsheight += s.Height + StringPaddingY;
 

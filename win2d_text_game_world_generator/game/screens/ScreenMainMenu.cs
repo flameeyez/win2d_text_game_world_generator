@@ -10,11 +10,17 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI;
+using Windows.UI.Input;
 
 namespace win2d_text_game_world_generator
 {
     public static class ScreenMainMenu
     {
+        public static event TransitionStateEventHandler TransitionState;
+        private static void OnTransitionState(GAMESTATE state) { if (TransitionState != null) { TransitionState(state); } }
+
+        private static CanvasDevice _device;
+
         public static Menu MainMenu = new Menu();
 
         private static Rect BackgroundRect;
@@ -33,6 +39,7 @@ namespace win2d_text_game_world_generator
 
         public static void Initialize(CanvasDevice device)
         {
+            _device = device;
             BackgroundRect = new Rect(0, 0, Statics.CanvasWidth, Statics.CanvasHeight);
 
             TitleLayout = new CanvasTextLayout(device, Title, Statics.FontLarge, 0, 0);
@@ -49,6 +56,7 @@ namespace win2d_text_game_world_generator
             MenuItemsPosition = new Vector2(nX + nPadding, nY + nPadding);
 
             fNextMenuItemPositionY = MenuItemsPosition.Y;
+            AddMainMenuItems();
         }
 
         #region Draw
@@ -88,6 +96,7 @@ namespace win2d_text_game_world_generator
                 fCurrentY += 20;
             }
         }
+
         private static void DrawTitle(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.DrawTextLayout(TitleLayout, TitlePosition, Colors.White);
@@ -105,18 +114,31 @@ namespace win2d_text_game_world_generator
         private static void ScrollUp() { MainMenu.ScrollUp(); }
         private static void ScrollDown() { MainMenu.ScrollDown(); }
         public static void KeyDown(VirtualKey vk) { MainMenu.KeyDown(vk); }
+        internal static void PointerPressed(PointerPoint point, PointerPointProperties pointProperties) { }
+        internal static void PointerReleased(PointerPoint point, PointerPointProperties pointProperties) { }
+        private static void MenuItemCreateNewMap_Select() { OnTransitionState(GAMESTATE.GAME_INITIALIZE); }
+        private static void MenuItem2_Select() { }
         #endregion
 
-        public static void AddMenuItem(MenuItem m)
+        #region Menu Items
+        private static void AddMainMenuItems()
+        {
+            MenuItem menuItemCreateNewMap = new MenuItem(_device, "Create new map");
+            menuItemCreateNewMap.Select += MenuItemCreateNewMap_Select;
+            MenuItem menuItem2 = new MenuItem(_device, "Anything else");
+            menuItem2.Select += MenuItem2_Select;
+
+            AddMainMenuItem(menuItemCreateNewMap);
+            AddMainMenuItem(menuItem2);
+        }
+        private static void AddMainMenuItem(MenuItem m)
         {
             m.Position = new Vector2(MenuItemsPosition.X, fNextMenuItemPositionY);
             fNextMenuItemPositionY += (float)m.TextLayout.LayoutBounds.Height + fMenuItemPadding;
-
             MainMenu.AddMenuItem(m);
         }
-        public static void Reset()
-        {
-            MainMenu.Reset();
-        }
+        #endregion
+
+        public static void Reset() { MainMenu.Reset(); }
     }
 }

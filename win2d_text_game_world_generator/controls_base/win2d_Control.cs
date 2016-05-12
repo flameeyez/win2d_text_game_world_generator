@@ -12,7 +12,7 @@ using Windows.UI.Input;
 
 namespace win2d_text_game_world_generator
 {
-    public delegate void ClickEventHandler(PointerPoint point);
+    public delegate void ClickEventHandler(PointerPoint p);
 
     public abstract class win2d_Control
     {

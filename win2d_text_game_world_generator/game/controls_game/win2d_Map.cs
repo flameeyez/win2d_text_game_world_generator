@@ -52,8 +52,8 @@ namespace win2d_text_game_world_generator
         private int ScaledWidth { get { return Width / Math.Abs(Scale); } }
         private int ScaledHeight { get { return Height / Math.Abs(Scale); } }
 
-        private MapDrawType DrawType = MapDrawType.REGIONS;
-        private bool DrawPaths = false;
+        private MapDrawType DrawType = MapDrawType.SUBREGIONS;
+        private bool DrawPaths = true;
 
         public win2d_Map(Vector2 position, int width, int height, World world, bool drawCallout = true, bool drawStretched = false) : base(position, width, height)
         {
@@ -61,6 +61,8 @@ namespace win2d_text_game_world_generator
 
             _bDrawStretched = drawStretched;
             _bDrawCallout = drawCallout;
+
+            _maxScale = 10;
 
             // set up scaling
             if (_bDrawStretched)
@@ -71,10 +73,8 @@ namespace win2d_text_game_world_generator
             else
             {
                 _minScale = world.Width > Width ? 1 : (width / world.Width) + 1;
-                Scale = 2;
-            }
-
-            _maxScale = 10;
+                Scale = 1;
+            }            
 
             RecalculateLayout();
         }
@@ -204,6 +204,7 @@ namespace win2d_text_game_world_generator
             return true;
         }
 
+        public void CenterOnPoint(PointInt p) { CenterOnPoint(p.X, p.Y); }
         public void CenterOnPoint(int x, int y)
         {
             _calloutPositionX = x;

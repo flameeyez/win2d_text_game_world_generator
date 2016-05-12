@@ -17,6 +17,7 @@ namespace win2d_text_game_world_generator
         private static int PaddingX = 10;
         private static int PaddingY = 10;
         private object _stringsObject = new object();
+        private CanvasDevice _device;
 
         private win2d_TextblockStringCollection Strings;
         public int DebugStringsCount
@@ -27,9 +28,10 @@ namespace win2d_text_game_world_generator
             }
         }
 
-        public win2d_Textblock(Vector2 position, int width, int height, bool scrolltobottomonappend = false) : base(position, width, height)
+        public win2d_Textblock(CanvasDevice device, Vector2 position, int width, int height, bool scrolltobottomonappend = false) : base(position, width, height)
         {
-            Strings = new win2d_TextblockStringCollection(new Vector2(Position.X + PaddingX, Position.Y + PaddingY), 
+            _device = device;
+            Strings = new win2d_TextblockStringCollection(_device, new Vector2(Position.X + PaddingX, Position.Y + PaddingY), 
                                                             Width - PaddingY * 2, 
                                                             Height - PaddingY * 2, 
                                                             scrolltobottomonappend);
@@ -60,11 +62,11 @@ namespace win2d_text_game_world_generator
         #endregion
 
         #region Append
-        public void Append(CanvasDevice device, string str)
+        public void Append(string str)
         {
             lock (_stringsObject)
             {
-                Strings.Add(device, str);
+                Strings.Add(str);
             }
         }
         #endregion

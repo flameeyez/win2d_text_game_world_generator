@@ -13,6 +13,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.System;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Input;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -27,7 +28,7 @@ using Windows.UI.Xaml.Navigation;
 
 namespace win2d_text_game_world_generator
 {
-    enum GAMESTATE
+    public enum GAMESTATE
     {
         MAIN_MENU_DISPLAY,
         GAME_INITIALIZE,
@@ -35,17 +36,18 @@ namespace win2d_text_game_world_generator
         UI_DISPLAY
     }
 
+    public delegate void TransitionStateEventHandler(GAMESTATE state);
+
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        World world;
-        GAMESTATE State = GAMESTATE.MAIN_MENU_DISPLAY;
+        GAMESTATE State;
 
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
             Application.Current.DebugSettings.EnableFrameRateCounter = false;
 
@@ -54,8 +56,8 @@ namespace win2d_text_game_world_generator
         }
 
         #region Keyboard
-        private void CoreWindow_KeyUp(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args) { }
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private void CoreWindow_KeyUp(CoreWindow sender, KeyEventArgs args) { }
+        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
             switch (State)
             {
@@ -63,28 +65,10 @@ namespace win2d_text_game_world_generator
                     ScreenMainMenu.KeyDown(args.VirtualKey);
                     break;
                 case GAMESTATE.CUSTOMIZATION_DISPLAY:
-                    switch (args.VirtualKey)
-                    {
-                        case VirtualKey.Escape:
-                            ScreenMainMenu.Reset();
-                            State = GAMESTATE.MAIN_MENU_DISPLAY;
-                            break;
-                        default:
-                            ScreenMapCustomization.KeyDown(args.VirtualKey);
-                            break;
-                    }
+                    ScreenMapCustomization.KeyDown(args.VirtualKey);
                     break;
                 case GAMESTATE.UI_DISPLAY:
-                    switch (args.VirtualKey)
-                    {
-                        case VirtualKey.Escape:
-                            ScreenMainMenu.Reset();
-                            State = GAMESTATE.MAIN_MENU_DISPLAY;
-                            break;
-                        default:
-                            ScreenMainGameUI.KeyDown(args.VirtualKey);
-                            break;
-                    }
+                    ScreenMainGameUI.KeyDown(args.VirtualKey);
                     break;
             }
         }
@@ -99,17 +83,13 @@ namespace win2d_text_game_world_generator
             switch (State)
             {
                 case GAMESTATE.MAIN_MENU_DISPLAY:
+                    ScreenMainMenu.PointerPressed(point, pointProperties);
                     break;
                 case GAMESTATE.CUSTOMIZATION_DISPLAY:
                     ScreenMapCustomization.PointerPressed(point, pointProperties);
                     break;
                 case GAMESTATE.UI_DISPLAY:
-                    if (world == null) { return; }
-                    if (pointProperties.IsRightButtonPressed) { Reset(); }
-                    else
-                    {
-                        ScreenMainGameUI.PointerPressed(point, pointProperties);
-                    }
+                    ScreenMainGameUI.PointerPressed(point, pointProperties);
                     break;
             }
         }
@@ -121,43 +101,17 @@ namespace win2d_text_game_world_generator
             switch (State)
             {
                 case GAMESTATE.MAIN_MENU_DISPLAY:
+                    ScreenMainMenu.PointerReleased(point, pointProperties);
                     break;
                 case GAMESTATE.CUSTOMIZATION_DISPLAY:
                     ScreenMapCustomization.PointerReleased(point, pointProperties);
                     break;
                 case GAMESTATE.UI_DISPLAY:
-                    if (world == null) { return; }
-                    if (pointProperties.IsRightButtonPressed) { Reset(); }
-                    else
-                    {
-                        ScreenMainGameUI.PointerReleased(point, pointProperties);
-                    }
+                    ScreenMainGameUI.PointerReleased(point, pointProperties);
                     break;
             }
         }
-
         private void gridMain_PointerMoved(object sender, PointerRoutedEventArgs e) { }
-        #endregion
-
-        #region Main Menu Handling
-        private void AddMainMenuItems()
-        {
-            MenuItem menuItemCreateNewMap = new MenuItem(canvasMain.Device, "Create new map");
-            menuItemCreateNewMap.Select += MenuItemCreateNewMap_Select;
-            MenuItem menuItem2 = new MenuItem(canvasMain.Device, "Anything else");
-            menuItem2.Select += MenuItem2_Select;
-
-            ScreenMainMenu.AddMenuItem(menuItemCreateNewMap);
-            ScreenMainMenu.AddMenuItem(menuItem2);
-        }
-        private void MenuItemCreateNewMap_Select()
-        {
-            Reset();
-        }
-        private void MenuItem2_Select()
-        {
-
-        }
         #endregion
 
         #region Draw
@@ -215,53 +169,45 @@ namespace win2d_text_game_world_generator
             ScreenMapCreationProgress.Initialize();
 
             ScreenMapCustomization.Initialize(sender.Device);
-            AddControlsToMapCustomizationPanel();
+            ScreenMapCustomization.TransitionState += TransitionState;
 
             ScreenMainMenu.Initialize(sender.Device);
-            AddMainMenuItems();
-        }
+            ScreenMainMenu.TransitionState += TransitionState;
 
-        private void AddControlsToMapCustomizationPanel()
-        {
-            int btnRegenerateWidth = 360;
-            int btnRegenerateHeight = 30;
-            Vector2 btnRegeneratePosition = new Vector2((400 - btnRegenerateWidth - Statics.Padding) / 2, Statics.CanvasHeight - Statics.Padding * 3 - btnRegenerateHeight);
-            win2d_Button btnRegenerate = new win2d_Button(canvasMain.Device, btnRegeneratePosition, btnRegenerateWidth, btnRegenerateHeight, "Regenerate");
-            btnRegenerate.Click += BtnRegenerate_Click;
-            ScreenMapCustomization.AddControl(btnRegenerate);
-
-            int btnAcceptWidth = 360;
-            int btnAcceptHeight = 30;
-            Vector2 btnAcceptPosition = new Vector2((400 - btnAcceptWidth - Statics.Padding) / 2, btnRegeneratePosition.Y - Statics.Padding - btnAcceptHeight);
-            win2d_Button btnAccept = new win2d_Button(canvasMain.Device, btnAcceptPosition, btnAcceptWidth, btnAcceptHeight, "Accept");
-            btnAccept.Click += BtnAccept_Click;
-            ScreenMapCustomization.AddControl(btnAccept);
-        }
-
-        private void BtnRegenerate_Click(PointerPoint point)
-        {
-            Reset();
-        }
-
-        private void BtnAccept_Click(PointerPoint point)
-        {
-            ScreenMainGameUI.Initialize(canvasMain.Device, world);
-            State = GAMESTATE.UI_DISPLAY;
+            ScreenMainGameUI.TransitionState += TransitionState;
         }
 
         private async void Reset()
         {
-            State = GAMESTATE.GAME_INITIALIZE;
-
-            world = null;
+            World world = null;
             await Task.Run(() => world = World.Create(canvasMain.Device, 600, 420,
             //await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
                 new Progress<Tuple<string, float>>(progress => ScreenMapCreationProgress.Set(canvasMain.Device, progress))));
 
-            ScreenMapCustomization.SetWorldData(world);
-            State = GAMESTATE.CUSTOMIZATION_DISPLAY;
+            ScreenMapCustomization.World = world;
+            TransitionState(GAMESTATE.CUSTOMIZATION_DISPLAY);
         }
         #endregion
+
+        private void TransitionState(GAMESTATE state)
+        {
+            switch (state)
+            {
+                case GAMESTATE.MAIN_MENU_DISPLAY:
+                    ScreenMainMenu.Reset();
+                    break;
+                case GAMESTATE.GAME_INITIALIZE:
+                    Reset();
+                    break;
+                case GAMESTATE.CUSTOMIZATION_DISPLAY:
+                    break;
+                case GAMESTATE.UI_DISPLAY:
+                    ScreenMainGameUI.Initialize(canvasMain.Device, ScreenMapCustomization.World);
+                    break;
+            }
+
+            State = state;
+        }
     }
 }
 

@@ -28,6 +28,37 @@ namespace win2d_text_game_world_generator
         private Color _elevationcolor;
         public Color ElevationColor { get { return _elevationcolor; } }
 
+        public string DisplayString
+        {
+            get
+            {
+                StringBuilder sbDisplayString = new StringBuilder();
+                sbDisplayString.Append("Region: " + Region.ID.ToString() + " ");
+                sbDisplayString.Append("Subregion: " + Subregion.ID.ToString() + " ");
+                sbDisplayString.Append("ID: " + ID.ToString() + "\n");
+                sbDisplayString.Append(DirectionalRoomConnectionsString + "\n\n");
+                return sbDisplayString.ToString();
+            }
+        }
+
+        private string DirectionalRoomConnectionsString
+        {
+            get
+            {
+                if(DirectionalRoomConnections.Count == 0) { return "Obvious exits: none"; }
+                StringBuilder sbDirectionalExitsString = new StringBuilder();
+                sbDirectionalExitsString.Append("Obvious exits: ");
+
+                foreach (string strExit in DirectionalRoomConnections.Keys)
+                {
+                    sbDirectionalExitsString.Append(strExit + ", ");
+                }
+
+                //sbDirectionalExitsString.Remove(sbDirectionalExitsString.Length - 3, 2);
+                return sbDirectionalExitsString.ToString();
+            }
+        }
+
         private Room() { }
         public static Room FromProtoRoom(Region region, Subregion subregion, ProtoRoom pr)
         {
@@ -41,6 +72,7 @@ namespace win2d_text_game_world_generator
             room.RoomConnections = new ReadOnlyCollection<RoomConnection>(pr.ProtoRoomConnections);
             room._elevation = pr.Elevation;
             room._elevationcolor = pr.ElevationColor;
+
             return room;
         }
 
