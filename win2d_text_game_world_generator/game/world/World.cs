@@ -26,6 +26,7 @@ namespace win2d_text_game_world_generator
         public CanvasRenderTarget RenderTargetPaths { get; set; }
         public CanvasRenderTarget RenderTargetHeightMap { get; set; }
         public CanvasRenderTarget RenderTargetCaves { get; set; }
+        public CanvasRenderTarget RenderTargetCavePaths { get; set; }
 
         #region Initialization
         private World() { }
@@ -53,6 +54,7 @@ namespace win2d_text_game_world_generator
             world.RenderTargetPaths = pw.RenderTargetPaths;
             world.RenderTargetHeightMap = pw.RenderTargetHeightMap;
             world.RenderTargetCaves = pw.RenderTargetCaves;
+            world.RenderTargetCavePaths = pw.RenderTargetCavePaths;
 
             return world;
         }
@@ -104,6 +106,16 @@ namespace win2d_text_game_world_generator
             }
 
             return null;
+        }
+
+        internal Room GetRoom(Tuple<int, int, int> coordinates)
+        {
+            return Regions[coordinates.Item1].Subregions[coordinates.Item2].Rooms[coordinates.Item3];
+        }
+
+        internal Room GetRandomRoom()
+        {
+            return Regions.RandomListItem().Subregions.RandomListItem().Rooms.RandomListItem();            
         }
         #endregion
     }

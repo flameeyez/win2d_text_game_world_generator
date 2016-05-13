@@ -42,7 +42,7 @@ namespace win2d_text_game_world_generator
             }
         }
 
-        public static void Set(CanvasDevice device, Tuple<string, float> progress)
+        public static void SetProgress(CanvasDevice device, Tuple<string, float> progress)
         {
             ProgressPhaseTextLayout = new CanvasTextLayout(device, progress.Item1, Statics.FontMedium, 0, 0);
             float x = (float)(Statics.CanvasWidth - ProgressPhaseTextLayout.LayoutBounds.Width) / 2;

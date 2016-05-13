@@ -23,6 +23,9 @@ namespace win2d_text_game_world_generator
         public static Vector2 MapPosition = Vector2.Zero;
         public static int RoomMaxConnections = 3;
         public static int MapResolution = 16;
+        public static int MaxPathConnectionAttempts = 5;
+
+        public static Dictionary<string, int> DirectionalStringToInt = new Dictionary<string, int>();
 
         // probability that region will continue to try to expand past minimum size
         // calculated once for each tile added
@@ -54,6 +57,7 @@ namespace win2d_text_game_world_generator
         public static CanvasTextFormat DefaultFontNoWrap;
 
         public static CanvasTextLayout UpArrow;
+
         public static CanvasTextLayout DoubleUpArrow;
         public static CanvasTextLayout DownArrow;
         public static CanvasTextLayout DoubleDownArrow;
@@ -286,6 +290,20 @@ namespace win2d_text_game_world_generator
             DefaultFontNoWrap.FontFamily = "Arial";
             DefaultFontNoWrap.FontSize = 14;
             DefaultFontNoWrap.WordWrapping = CanvasWordWrapping.NoWrap; //.NoWrap;
+
+            LoadDirectionalStringToInt();
+        }
+        private static void LoadDirectionalStringToInt()
+        {
+            DirectionalStringToInt.Add("nw", 0);
+            DirectionalStringToInt.Add("n", 1);
+            DirectionalStringToInt.Add("ne", 2);
+            DirectionalStringToInt.Add("w", 3);
+            DirectionalStringToInt.Add("o", 4);
+            DirectionalStringToInt.Add("e", 5);
+            DirectionalStringToInt.Add("sw", 6);
+            DirectionalStringToInt.Add("s", 7);
+            DirectionalStringToInt.Add("se", 8);
         }
         public static void Initialize(CanvasDevice device)
         {

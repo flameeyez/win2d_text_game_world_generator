@@ -20,8 +20,7 @@ namespace win2d_text_game_world_generator
         public Region Region { get { return _region; } }
         private Subregion _subregion;
         public Subregion Subregion { get { return _subregion; } }
-        // public ReadOnlyCollection<string> DirectionalRoomConnections;
-        public Dictionary<string, Tuple<int, int, int>> DirectionalRoomConnections;
+        public ReadOnlyDictionary<string, Tuple<int, int, int>> DirectionalRoomConnections;
         public ReadOnlyCollection<RoomConnection> RoomConnections;
         private int _elevation;
         public int Elevation { get { return _elevation; } }
@@ -36,7 +35,7 @@ namespace win2d_text_game_world_generator
                 sbDisplayString.Append("Region: " + Region.ID.ToString() + " ");
                 sbDisplayString.Append("Subregion: " + Subregion.ID.ToString() + " ");
                 sbDisplayString.Append("ID: " + ID.ToString() + "\n");
-                sbDisplayString.Append(DirectionalRoomConnectionsString + "\n\n");
+                sbDisplayString.Append(DirectionalRoomConnectionsString + "\n");
                 return sbDisplayString.ToString();
             }
         }
@@ -45,7 +44,7 @@ namespace win2d_text_game_world_generator
         {
             get
             {
-                if(DirectionalRoomConnections.Count == 0) { return "Obvious exits: none"; }
+                if (DirectionalRoomConnections.Count == 0) { return "Obvious exits: none"; }
                 StringBuilder sbDirectionalExitsString = new StringBuilder();
                 sbDirectionalExitsString.Append("Obvious exits: ");
 
@@ -54,8 +53,8 @@ namespace win2d_text_game_world_generator
                     sbDirectionalExitsString.Append(strExit + ", ");
                 }
 
-                //sbDirectionalExitsString.Remove(sbDirectionalExitsString.Length - 3, 2);
-                return sbDirectionalExitsString.ToString();
+                //sbDirectionalExitsString.Remove();
+                return sbDirectionalExitsString.ToString(0, sbDirectionalExitsString.Length - 2);
             }
         }
 
@@ -67,8 +66,7 @@ namespace win2d_text_game_world_generator
             room._coordinatesXY = pr.CoordinatesXY;
             room._region = region;
             room._subregion = subregion;
-            // room.DirectionalRoomConnections = new ReadOnlyCollection<string>(pr.DirectionalRoomConnections);
-            room.DirectionalRoomConnections = pr.DirectionalRoomConnections;
+            room.DirectionalRoomConnections = new ReadOnlyDictionary<string, Tuple<int, int, int>>(pr.DirectionalRoomConnections);
             room.RoomConnections = new ReadOnlyCollection<RoomConnection>(pr.ProtoRoomConnections);
             room._elevation = pr.Elevation;
             room._elevationcolor = pr.ElevationColor;

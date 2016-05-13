@@ -98,7 +98,8 @@ namespace win2d_text_game_world_generator
             // END TEXTBLOCK
 
             // display initial room
-            CurrentRoom = World.Regions[0].Subregions[0].Rooms[0];
+            CurrentRoom = World.GetRandomRoom();
+            while(CurrentRoom.DirectionalRoomConnections.Count == 0) { CurrentRoom = World.GetRandomRoom(); }
             Map.CenterOnPoint(CurrentRoom.CoordinatesXY);
             AppendText(CurrentRoom.DisplayString);
         }
@@ -124,7 +125,15 @@ namespace win2d_text_game_world_generator
         {
             string strInput = TextboxInput.Text.Trim();
             TextboxInput.Text = string.Empty;
-            if (strInput.Length > 0) { TextblockMain.Append(strInput); }
+            if (strInput.Length > 0) { TextblockMain.Append("> " + strInput + "\n"); }
+
+            Tuple<int, int, int> coordinates;
+            if (CurrentRoom.DirectionalRoomConnections.TryGetValue(strInput, out coordinates))
+            {
+                CurrentRoom = World.GetRoom(coordinates);
+                Map.CenterOnPoint(CurrentRoom.CoordinatesXY);
+                AppendText(CurrentRoom.DisplayString);
+            }
         }
 
         public static void KeyDown(VirtualKey vk)

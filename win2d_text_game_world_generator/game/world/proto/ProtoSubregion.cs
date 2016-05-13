@@ -30,6 +30,11 @@ namespace win2d_text_game_world_generator
             int RoomCountX = MasterRoomList.GetLength(0);
             int RoomCountY = MasterRoomList.GetLength(1);
 
+            // keep track of available adjacent roomss
+            // list for random access; hashset for lookup by coordinates
+            List<ProtoRoom> AvailableAdjacentRooms = new List<ProtoRoom>();
+            HashSet<PointInt> AvailableAdjacentCoordinates = new HashSet<PointInt>();
+
             // grab random point as starting room
             int x = Statics.Random.Next(RoomCountX);
             int y = Statics.Random.Next(RoomCountY);
@@ -38,11 +43,6 @@ namespace win2d_text_game_world_generator
                 x = Statics.Random.Next(RoomCountX);
                 y = Statics.Random.Next(RoomCountY);
             }
-
-            // keep track of available adjacent roomss
-            // list for random access; hashset for lookup by coordinates
-            List<ProtoRoom> AvailableAdjacentRooms = new List<ProtoRoom>();
-            HashSet<PointInt> AvailableAdjacentCoordinates = new HashSet<PointInt>();
 
             // create starting room
             ProtoRoom startingRoom = MasterRoomList[x, y];
@@ -54,7 +54,7 @@ namespace win2d_text_game_world_generator
 
             while (AvailableAdjacentRooms.Count > 0 && ((ProtoRooms.Count < Statics.MinimumRegionSize) || (Statics.Random.Next(100) < Statics.ProbabilityOfExpansion)))
             {
-                // pick a random room from the available set
+                // pick a random room from available neighbor set
                 ProtoRoom randomNeighbor = AvailableAdjacentRooms.RandomListItem();
                 randomNeighbor.Available = false;
                 randomNeighbor.ProtoRegion = region;
@@ -64,40 +64,8 @@ namespace win2d_text_game_world_generator
                 AvailableAdjacentCoordinates.Remove(randomNeighbor.CoordinatesXY);
                 ProtoRooms.Add(randomNeighbor);
 
-                // add new room's available neighbors to the available list
+                // add new room's available neighbors to the available set
                 UpdateAdjacentRooms(AvailableAdjacentRooms, AvailableAdjacentCoordinates, randomNeighbor, MasterRoomList);
-            }
-        }
-
-        public void DrawRegions(CanvasDrawingSession ds)
-        {
-            foreach (ProtoRoom pr in ProtoRooms)
-            {
-                pr.DrawRegions(ds);
-            }
-        }
-
-        public void DrawSubregions(CanvasDrawingSession ds)
-        {
-            foreach (ProtoRoom pr in ProtoRooms)
-            {
-                pr.DrawSubregions(ds);
-            }
-        }
-
-        public void DrawPaths(CanvasDrawingSession ds)
-        {
-            foreach (ProtoRoom pr in ProtoRooms)
-            {
-                pr.DrawPaths(ds);
-            }
-        }
-
-        public void DrawHeightMap(CanvasDrawingSession ds)
-        {
-            foreach (ProtoRoom pr in ProtoRooms)
-            {
-                pr.DrawHeightMap(ds);
             }
         }
 

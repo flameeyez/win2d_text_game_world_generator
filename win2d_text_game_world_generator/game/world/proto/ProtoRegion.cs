@@ -20,6 +20,7 @@ namespace win2d_text_game_world_generator
         public string Name { get; set; }
         public Color Color { get; set; }
         public List<ProtoSubregion> ProtoSubregions = new List<ProtoSubregion>();
+        public int RoomCount { get { return ProtoSubregions.Select(x => x.ProtoRooms.Count).Sum(); } }
 
         public ProtoRegion(int id, ProtoRoom[,] MasterRoomList, REGION_TYPE regionType = REGION_TYPE.OVERGROUND)
         {
@@ -30,46 +31,6 @@ namespace win2d_text_game_world_generator
 
             // initialize with a single subregion
             ProtoSubregions.Add(new ProtoSubregion(0, this, MasterRoomList));
-        }
-
-        public int RoomCount
-        {
-            get
-            {
-                return ProtoSubregions.Select(x => x.ProtoRooms.Count).Sum();
-            }
-        }
-
-        public void DrawHeightMap(CanvasDrawingSession ds)
-        {
-            foreach (ProtoSubregion ps in ProtoSubregions)
-            {
-                ps.DrawHeightMap(ds);
-            }
-        }
-
-        public void DrawPaths(CanvasDrawingSession ds)
-        {
-            foreach (ProtoSubregion ps in ProtoSubregions)
-            {
-                ps.DrawPaths(ds);
-            }
-        }
-
-        public void DrawRegions(CanvasDrawingSession ds)
-        {
-            foreach (ProtoSubregion ps in ProtoSubregions)
-            {
-                ps.DrawRegions(ds);
-            }
-        }
-
-        public void DrawSubregions(CanvasDrawingSession ds)
-        {
-            foreach (ProtoSubregion ps in ProtoSubregions)
-            {
-                ps.DrawSubregions(ds);
-            }
-        }
+        }        
     }
 }

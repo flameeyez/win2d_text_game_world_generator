@@ -23,8 +23,8 @@ namespace win2d_text_game_world_generator
     public class win2d_Map : win2d_Control
     {
         public World World { get; set; }
-        private int _drawingoffsetX = 0;
-        private int _drawingoffsetY = 0;
+        private double _drawingoffsetX = 0;
+        private double _drawingoffsetY = 0;
         private Rect _drawingRectSource;
         private Rect _drawingRectDestination;
 
@@ -32,8 +32,8 @@ namespace win2d_text_game_world_generator
         private bool _bDrawCallout;
         private int _calloutPositionX = 0;
         private int _calloutPositionY = 0;
-        private float _calloutDrawPositionX = 0.0f;
-        private float _calloutDrawPositionY = 0.0f;
+        private double _calloutDrawPositionX = 0.0f;
+        private double _calloutDrawPositionY = 0.0f;
         private Rect _calloutDrawRect;
         private int _calloutSideLength = 4;
 
@@ -73,8 +73,8 @@ namespace win2d_text_game_world_generator
             else
             {
                 _minScale = world.Width > Width ? 1 : (width / world.Width) + 1;
-                Scale = 1;
-            }            
+                Scale = 10;
+            }
 
             RecalculateLayout();
         }
@@ -115,9 +115,19 @@ namespace win2d_text_game_world_generator
 
             if (DrawPaths)
             {
-                args.DrawingSession.DrawImage(World.RenderTargetPaths,
-                        _drawingRectDestination,
-                        _drawingRectSource, 1.0f, CanvasImageInterpolation.NearestNeighbor);
+                switch (DrawType)
+                {
+                    case MapDrawType.CAVES:
+                        args.DrawingSession.DrawImage(World.RenderTargetCavePaths,
+                                _drawingRectDestination,
+                                _drawingRectSource, 1.0f, CanvasImageInterpolation.NearestNeighbor);
+                        break;
+                    default:
+                        args.DrawingSession.DrawImage(World.RenderTargetPaths,
+                                _drawingRectDestination,
+                                _drawingRectSource, 1.0f, CanvasImageInterpolation.NearestNeighbor);
+                        break;
+                }
             }
 
             if (_bDrawCallout)
@@ -210,15 +220,15 @@ namespace win2d_text_game_world_generator
             _calloutPositionX = x;
             _calloutPositionY = y;
 
-            if (x < ScaledWidth / 2)
+            if (x < (double)ScaledWidth / 2)
             {
                 _drawingoffsetX = 0;
                 _calloutDrawPositionX = Position.X + x * Scale;
             }
-            else if (x > World.Width - ScaledWidth / 2)
+            else if (x > World.Width - (double)ScaledWidth / 2)
             {
                 _drawingoffsetX = World.Width - ScaledWidth;
-                _calloutDrawPositionX = Position.X + Width / 2 + (x - World.Width + ScaledWidth / 2) * Scale;
+                _calloutDrawPositionX = Position.X + (double)Width / 2 + (x - World.Width + (double)ScaledWidth / 2) * Scale;
             }
             else
             {
@@ -226,24 +236,24 @@ namespace win2d_text_game_world_generator
                 _calloutDrawPositionX = Position.X + (x - _drawingoffsetX) * Scale;
             }
 
-            if (y < ScaledHeight / 2)
+            if (y < (double)ScaledHeight / 2)
             {
                 _drawingoffsetY = 0;
                 _calloutDrawPositionY = Position.Y + y * Scale;
             }
-            else if (y > World.Height - ScaledHeight / 2)
+            else if (y > World.Height - (double)ScaledHeight / 2)
             {
                 _drawingoffsetY = World.Height - ScaledHeight;
-                _calloutDrawPositionY = Position.Y + Height / 2 + (y - World.Height + ScaledHeight / 2) * Scale;
+                _calloutDrawPositionY = Position.Y + (double)Height / 2 + (y - World.Height + (double)ScaledHeight / 2) * Scale;
             }
             else
             {
-                _drawingoffsetY = y - ScaledHeight / 2;
+                _drawingoffsetY = y - (double)ScaledHeight / 2;
                 _calloutDrawPositionY = Position.Y + (y - _drawingoffsetY) * Scale;
             }
 
-            _calloutDrawRect = new Rect(_calloutDrawPositionX + (Scale - _calloutSideLength) / 2, _calloutDrawPositionY + (Scale - _calloutSideLength) / 2, _calloutSideLength, _calloutSideLength);
-            _drawingRectSource = new Rect(_drawingoffsetX, _drawingoffsetY, ScaledWidth, ScaledHeight);
+            _calloutDrawRect = new Rect(_calloutDrawPositionX + ((double)Scale - _calloutSideLength) / 2, _calloutDrawPositionY + ((double)Scale - _calloutSideLength) / 2, _calloutSideLength, _calloutSideLength);
+            _drawingRectSource = new Rect(_drawingoffsetX * Statics.MapResolution, _drawingoffsetY * Statics.MapResolution, ScaledWidth * Statics.MapResolution, ScaledHeight * Statics.MapResolution);
         }
 
         public override void RecalculateLayout()
