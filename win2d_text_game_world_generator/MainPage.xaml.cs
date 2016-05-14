@@ -127,17 +127,19 @@ namespace win2d_text_game_world_generator
                     break;
                 case GAMESTATE.CUSTOMIZATION_DISPLAY:
                     ScreenMapCustomization.Draw(args);
+                    DrawDebug(args);
                     break;
                 case GAMESTATE.UI_DISPLAY:
                     ScreenMainGameUI.Draw(args);
                     break;
             }
 
+
             //if (World.DebugDrawDebug) { DrawDebug(args); }
         }
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
-
+            args.DrawingSession.DrawText("Connections: " + Debug.TotalConnectionCount.ToString(), new Vector2(1700, 10), Colors.White);
         }
         #endregion
 

@@ -99,7 +99,7 @@ namespace win2d_text_game_world_generator
 
             // display initial room
             CurrentRoom = World.GetRandomRoom();
-            while(CurrentRoom.DirectionalRoomConnections.Count == 0) { CurrentRoom = World.GetRandomRoom(); }
+            while (CurrentRoom.DirectionalRoomConnections.Count == 0) { CurrentRoom = World.GetRandomRoom(); }
             Map.CenterOnPoint(CurrentRoom.CoordinatesXY);
             AppendText(CurrentRoom.DisplayString);
         }
@@ -145,6 +145,15 @@ namespace win2d_text_game_world_generator
             else
             {
                 if (vk == VirtualKey.Enter && TextboxInput.HasFocus) { HandleInput(); }
+                else if (vk == VirtualKey.NumberPad1) { TextboxInput.Text = "sw"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad2) { TextboxInput.Text = "s"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad3) { TextboxInput.Text = "se"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad4) { TextboxInput.Text = "w"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad5) { TextboxInput.Text = "o"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad6) { TextboxInput.Text = "e"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad7) { TextboxInput.Text = "nw"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad8) { TextboxInput.Text = "n"; HandleInput(); }
+                else if (vk == VirtualKey.NumberPad9) { TextboxInput.Text = "ne"; HandleInput(); }
                 else { TextboxInput.KeyDown(vk); }
             }
         }

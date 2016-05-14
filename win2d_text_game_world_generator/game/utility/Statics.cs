@@ -21,11 +21,13 @@ namespace win2d_text_game_world_generator
         public static int PixelScale = 10;
         public static int Padding = 10;
         public static Vector2 MapPosition = Vector2.Zero;
-        public static int RoomMaxConnections = 3;
+        public static int MaxRoomConnections = 3;
         public static int MapResolution = 16;
         public static int MaxPathConnectionAttempts = 5;
 
         public static Dictionary<string, int> DirectionalStringToInt = new Dictionary<string, int>();
+        public static Dictionary<int, string> IntToDirectionalString = new Dictionary<int, string>();
+        public static Dictionary<int, string> IntToClockwiseDirectionalString = new Dictionary<int, string>();
 
         // probability that region will continue to try to expand past minimum size
         // calculated once for each tile added
@@ -292,6 +294,8 @@ namespace win2d_text_game_world_generator
             DefaultFontNoWrap.WordWrapping = CanvasWordWrapping.NoWrap; //.NoWrap;
 
             LoadDirectionalStringToInt();
+            LoadIntToDirectionalString();
+            LoadIntToClockwiseDirectionalString();
         }
         private static void LoadDirectionalStringToInt()
         {
@@ -304,6 +308,40 @@ namespace win2d_text_game_world_generator
             DirectionalStringToInt.Add("sw", 6);
             DirectionalStringToInt.Add("s", 7);
             DirectionalStringToInt.Add("se", 8);
+        }
+        public static int SortRoomConnections(string strDirection1, string strDirection2)
+        {
+            int n1 = -1;
+            DirectionalStringToInt.TryGetValue(strDirection1, out n1);
+
+            int n2 = -2;
+            DirectionalStringToInt.TryGetValue(strDirection2, out n2);
+
+            // DirectionalStringToInt[x].CompareTo(Statics.DirectionalStringToInt[y]))
+            return n1.CompareTo(n2);
+        }
+        private static void LoadIntToDirectionalString()
+        {
+            IntToDirectionalString.Add(0, "nw");
+            IntToDirectionalString.Add(1, "n");
+            IntToDirectionalString.Add(2, "ne");
+            IntToDirectionalString.Add(3, "w");
+            IntToDirectionalString.Add(4, "o");
+            IntToDirectionalString.Add(5, "e");
+            IntToDirectionalString.Add(6, "sw");
+            IntToDirectionalString.Add(7, "s");
+            IntToDirectionalString.Add(8, "se");
+        }
+        private static void LoadIntToClockwiseDirectionalString()
+        {
+            IntToClockwiseDirectionalString.Add(0, "nw");
+            IntToClockwiseDirectionalString.Add(1, "n");
+            IntToClockwiseDirectionalString.Add(2, "ne");
+            IntToClockwiseDirectionalString.Add(3, "e");
+            IntToClockwiseDirectionalString.Add(4, "se");
+            IntToClockwiseDirectionalString.Add(5, "s");
+            IntToClockwiseDirectionalString.Add(6, "sw");
+            IntToClockwiseDirectionalString.Add(7, "w");
         }
         public static void Initialize(CanvasDevice device)
         {

@@ -66,7 +66,13 @@ namespace win2d_text_game_world_generator
             room._coordinatesXY = pr.CoordinatesXY;
             room._region = region;
             room._subregion = subregion;
-            room.DirectionalRoomConnections = new ReadOnlyDictionary<string, Tuple<int, int, int>>(pr.DirectionalRoomConnections);
+
+            // sort room connections
+            List<KeyValuePair<string, Tuple<int, int, int>>> DirectionalRoomConnectionsList = pr.DirectionalRoomConnections.ToList();
+            DirectionalRoomConnectionsList.Sort((x, y) => Statics.SortRoomConnections(x.Key, y.Key));
+            Dictionary<string, Tuple<int, int, int>> DirectionalRoomConnectionsDictionary = DirectionalRoomConnectionsList.ToDictionary((x) => x.Key, (x) => x.Value);
+            
+            room.DirectionalRoomConnections = new ReadOnlyDictionary<string, Tuple<int, int, int>>(DirectionalRoomConnectionsDictionary);
             room.RoomConnections = new ReadOnlyCollection<RoomConnection>(pr.ProtoRoomConnections);
             room._elevation = pr.Elevation;
             room._elevationcolor = pr.ElevationColor;

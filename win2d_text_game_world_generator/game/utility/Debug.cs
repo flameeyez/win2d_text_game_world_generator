@@ -8,6 +8,8 @@ namespace win2d_text_game_world_generator
 {
     public static class Debug
     {
+        public static int TotalConnectionCount;
+
         public static int FrameCount = 0;
         public static bool RollingReset = false;
         public static Region CurrentMouseRegion = null;

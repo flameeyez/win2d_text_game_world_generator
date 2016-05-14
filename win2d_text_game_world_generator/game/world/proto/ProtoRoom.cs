@@ -16,7 +16,7 @@ namespace win2d_text_game_world_generator
         public Tuple<int, int, int> WorldCoordinatesAsTuple { get { return new Tuple<int, int, int>(ProtoRegion.ID, ProtoSubregion.ID, ID); } }
         public ProtoRegion ProtoRegion { get; set; }
         public ProtoSubregion ProtoSubregion { get; set; }
-        public SortedDictionary<string, Tuple<int, int, int>> DirectionalRoomConnections;
+        public Dictionary<string, Tuple<int, int, int>> DirectionalRoomConnections;
         public List<RoomConnection> ProtoRoomConnections;
         public bool Available { get; set; }
         private int _elevation;
@@ -50,7 +50,7 @@ namespace win2d_text_game_world_generator
             ProtoSubregion = null;
             CoordinatesXY = coordinatesXY;
             // DirectionalRoomConnections = new List<string>();
-            DirectionalRoomConnections = new SortedDictionary<string, Tuple<int, int, int>>(Comparer<string>.Create((x, y) => Statics.DirectionalStringToInt[x].CompareTo(Statics.DirectionalStringToInt[y])));
+            DirectionalRoomConnections = new Dictionary<string, Tuple<int, int, int>>();
             ProtoRoomConnections = new List<RoomConnection>();
             Available = true;
             Elevation = elevation; // default (3) is grass/green

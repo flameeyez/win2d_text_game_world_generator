@@ -11,6 +11,8 @@ using Windows.UI;
 
 namespace win2d_text_game_world_generator
 {
+    enum DIRECTIONAL_INT_CLOCKWISE { NW = 0, N = 1, NE = 2, E = 3, SE = 4, S = 5, SW = 6, W = 7 };
+
     public class ProtoWorld
     {
         public List<ProtoRegion> ProtoRegions = new List<ProtoRegion>();
@@ -27,9 +29,10 @@ namespace win2d_text_game_world_generator
         private float TraversableTilePercentage { get { return (float)TraversableTiles / TotalTiles; } }
         private float UntraversableTilePercentage { get { return (float)UntraversableTiles / TotalTiles; } }
 
-        public HashSet<PointInt> TilesNotInMainPath;
+        private HashSet<PointInt> RoomsNotInMainPath;
         private HashSet<PointInt> OpenSet;
-        public HashSet<PointInt> MainPath = new HashSet<PointInt>();
+        private HashSet<PointInt> MainPath;
+        private HashSet<PointInt> NonTraversableRooms;
 
         public CanvasRenderTarget RenderTargetRegions { get; set; }
         public CanvasRenderTarget RenderTargetSubregions { get; set; }
@@ -45,6 +48,8 @@ namespace win2d_text_game_world_generator
         #region Initialization
         public ProtoWorld(CanvasDevice device, int width, int height, IProgress<Tuple<string, float>> progress)
         {
+            Debug.TotalConnectionCount = 0;
+
             Width = width;
             Height = height;
 
@@ -76,21 +81,21 @@ namespace win2d_text_game_world_generator
                 progress.Report(new Tuple<string, float>("Fixing overly-crossed paths...", (float)11 / 16));
                 FixCrossedPaths();
             }
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Creating caves...", (float)12 / 16));
-                CreateCaves();
-            }
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Connecting caves to overground...", (float)13 / 16));
-                ConnectCavesToOverground();
-            }
-            if (!_aborted)
-            {
-                progress.Report(new Tuple<string, float>("Creating cave paths...", (float)14 / 16));
-                CreateCavePaths();
-            }
+            //if (!_aborted)
+            //{
+            //    progress.Report(new Tuple<string, float>("Creating caves...", (float)12 / 16));
+            //    CreateCaves();
+            //}
+            //if (!_aborted)
+            //{
+            //    progress.Report(new Tuple<string, float>("Connecting caves to overground...", (float)13 / 16));
+            //    ConnectCavesToOverground();
+            //}
+            //if (!_aborted)
+            //{
+            //    progress.Report(new Tuple<string, float>("Creating cave paths...", (float)14 / 16));
+            //    CreateCavePaths();
+            //}
             if (!_aborted)
             {
                 progress.Report(new Tuple<string, float>("Saving world images...", (float)15 / 16));
@@ -206,6 +211,78 @@ namespace win2d_text_game_world_generator
         }
         private void CreateRoomConnections()
         {
+            int nTotalNumberOfPaths = 1000;
+            int nDesiredConnectionsPerPath = 25;
+
+            for (int i = 0; i < nTotalNumberOfPaths; i++)
+            {
+                ProtoRoom currentRoom = null;
+                while (currentRoom == null || !currentRoom.IsTraversable() || currentRoom.DirectionalRoomConnections.Count >= Statics.MaxRoomConnections)
+                {
+                    int x = Statics.Random.Next(Width);
+                    int y = Statics.Random.Next(Height);
+                    currentRoom = MasterOvergroundRoomList[x, y];
+                }
+
+                // pick a random initial direction
+                Array directionalValues = Enum.GetValues(typeof(DIRECTIONAL_INT_CLOCKWISE));
+                DIRECTIONAL_INT_CLOCKWISE direction = (DIRECTIONAL_INT_CLOCKWISE)directionalValues.GetValue(Statics.Random.Next(directionalValues.Length));
+                string strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
+
+                for (int j = 0; j < nDesiredConnectionsPerPath; j++)
+                {
+                    // initial turning direction
+                    int delta = Statics.Random.Next(2) == 0 ? 1 : -1;
+
+                    // for each connection, add a chance that the path turns slightly
+                    if (Statics.Random.Next(3) == 0)
+                    {
+                        int nDirection = ((int)direction + delta) % directionalValues.Length;
+                        if (nDirection < 0) { nDirection += directionalValues.Length; }
+                        else if (nDirection == directionalValues.Length) { nDirection = 0; }
+                        direction = (DIRECTIONAL_INT_CLOCKWISE)nDirection;
+                    }
+
+                    strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
+                    ProtoRoom nextRoom = AddRoomConnection(currentRoom, strDirection, MasterOvergroundRoomList);
+                    int nConnectionAttempts = 0;
+                    while (nextRoom.Equals(currentRoom) && nConnectionAttempts < directionalValues.Length)
+                    {
+                        nConnectionAttempts++;
+
+                        // connection unavailable; turn and try again
+                        int nDirection = ((int)direction + delta) % directionalValues.Length;
+                        if (nDirection < 0) { nDirection += directionalValues.Length; }
+                        else if (nDirection == directionalValues.Length) { nDirection = 0; }
+                        direction = (DIRECTIONAL_INT_CLOCKWISE)nDirection;
+
+                        strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
+                        nextRoom = AddRoomConnection(currentRoom, strDirection, MasterOvergroundRoomList);
+                    }
+
+                    currentRoom = nextRoom;
+                    int nWalkCount = 0;
+                    while (currentRoom.DirectionalRoomConnections.Count >= Statics.MaxRoomConnections && nWalkCount < 10)
+                    {
+                        nWalkCount++;
+
+                        // walk a random connection until we hit a room that can handle another connection
+                        Tuple<int, int, int> connection = currentRoom.DirectionalRoomConnections.Values.ToList().RandomListItem();
+                        currentRoom = ProtoRegions[connection.Item1].ProtoSubregions[connection.Item2].ProtoRooms[connection.Item3];
+                    }
+
+                    // abort on edge-case walking loop
+                    if (nWalkCount == 10) { break; }
+                }
+            }
+
+            while (MainPath == null || MainPath.Count < 1000)
+            {
+                AssessRoomConnectivity();
+            }
+        }
+        private void CreateRoomConnections2()
+        {
             int CreateRoomConnectionsCount = 0;
 
             // if too few land tiles are connected to main path, attempt to connect more tiles
@@ -222,18 +299,18 @@ namespace win2d_text_game_world_generator
 
                         for (int i = 0; i < 1; i++)
                         {
-                            if (currentRoom.DirectionalRoomConnections.Count == Statics.RoomMaxConnections) { break; }
+                            if (currentRoom.DirectionalRoomConnections.Count == Statics.MaxRoomConnections) { break; }
 
                             switch (Statics.Random.Next(8))
                             {
-                                case 0: currentRoom = AddRoomConnection(currentRoom, "nw"); break;
-                                case 1: currentRoom = AddRoomConnection(currentRoom, "n"); break;
-                                case 2: currentRoom = AddRoomConnection(currentRoom, "ne"); break;
-                                case 3: currentRoom = AddRoomConnection(currentRoom, "w"); break;
-                                case 4: currentRoom = AddRoomConnection(currentRoom, "e"); break;
-                                case 5: currentRoom = AddRoomConnection(currentRoom, "sw"); break;
-                                case 6: currentRoom = AddRoomConnection(currentRoom, "s"); break;
-                                case 7: currentRoom = AddRoomConnection(currentRoom, "se"); break;
+                                case 0: currentRoom = AddRoomConnection(currentRoom, "nw", MasterOvergroundRoomList); break;
+                                case 1: currentRoom = AddRoomConnection(currentRoom, "n", MasterOvergroundRoomList); break;
+                                case 2: currentRoom = AddRoomConnection(currentRoom, "ne", MasterOvergroundRoomList); break;
+                                case 3: currentRoom = AddRoomConnection(currentRoom, "w", MasterOvergroundRoomList); break;
+                                case 4: currentRoom = AddRoomConnection(currentRoom, "e", MasterOvergroundRoomList); break;
+                                case 5: currentRoom = AddRoomConnection(currentRoom, "sw", MasterOvergroundRoomList); break;
+                                case 6: currentRoom = AddRoomConnection(currentRoom, "s", MasterOvergroundRoomList); break;
+                                case 7: currentRoom = AddRoomConnection(currentRoom, "se", MasterOvergroundRoomList); break;
                                 default: break;
                             }
                         }
@@ -245,7 +322,7 @@ namespace win2d_text_game_world_generator
         }
         private void RemoveDisconnectedRooms()
         {
-            foreach (PointInt pi in TilesNotInMainPath)
+            foreach (PointInt pi in RoomsNotInMainPath)
             {
                 ProtoRoom pr = MasterOvergroundRoomList[pi.X, pi.Y];
 
@@ -268,27 +345,6 @@ namespace win2d_text_game_world_generator
                 // pr.ProtoSubregion.ProtoRooms.Remove(pr);
             }
             return;
-        }
-        private bool FixDisconnectedRoom(ProtoRoom protoRoom, string strDirection)
-        {
-            PointInt neighborCoordinates = GetNeighborCoordinates(protoRoom.CoordinatesXY, strDirection);
-
-            if (neighborCoordinates.X < 0) { return false; }
-            if (neighborCoordinates.X > Width - 1) { return false; }
-            if (neighborCoordinates.Y < 0) { return false; }
-            if (neighborCoordinates.Y > Height - 1) { return false; }
-            if (!MainPath.Contains(neighborCoordinates)) { return false; }
-
-            ProtoRoom neighborRoom = MasterOvergroundRoomList[neighborCoordinates.X, neighborCoordinates.Y];
-            if (neighborRoom.IsTraversable())
-            {
-                AddRoomConnection(protoRoom, strDirection, true);
-                TilesNotInMainPath.Remove(protoRoom.CoordinatesXY);
-                MainPath.Add(protoRoom.CoordinatesXY);
-                return true;
-            }
-
-            return false;
         }
         private void FixCrossedPaths()
         {
@@ -734,7 +790,7 @@ namespace win2d_text_game_world_generator
 
             return region;
         }
-        private ProtoRoom AddRoomConnection(ProtoRoom currentRoom, string strDirection, bool bForce = false)
+        private ProtoRoom AddRoomConnection(ProtoRoom currentRoom, string strDirection, ProtoRoom[,] masterRoomList, bool bForce = false)
         {
             Tuple<int, int, int> connectionWorldCoordinates;
             if (currentRoom.DirectionalRoomConnections.TryGetValue(strDirection, out connectionWorldCoordinates)) { return currentRoom; }
@@ -784,9 +840,12 @@ namespace win2d_text_game_world_generator
             if (connectingRoomCoordinates.Y < 0) { return currentRoom; }
             if (connectingRoomCoordinates.Y > Height - 1) { return currentRoom; }
 
-            ProtoRoom connectingRoom = MasterOvergroundRoomList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
+            ProtoRoom connectingRoom = masterRoomList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
             if (connectingRoom.Elevation == 0 || connectingRoom.Elevation == 30) { return currentRoom; }
-            if (connectingRoom.DirectionalRoomConnections.Count >= Statics.RoomMaxConnections && !bForce) { return currentRoom; }
+            if (connectingRoom.DirectionalRoomConnections.Count >= Statics.MaxRoomConnections && !bForce) { return currentRoom; }
+
+            Debug.TotalConnectionCount++;
+
             currentRoom.DirectionalRoomConnections.Add(strDirection, connectingRoom.WorldCoordinatesAsTuple);
             connectingRoom.DirectionalRoomConnections.Add(strOppositeDirection, currentRoom.WorldCoordinatesAsTuple);
             return connectingRoom;
@@ -821,17 +880,16 @@ namespace win2d_text_game_world_generator
         private void AssessRoomConnectivity()
         {
             MainPath = new HashSet<PointInt>();
+            RoomsNotInMainPath = new HashSet<PointInt>();
+            NonTraversableRooms = new HashSet<PointInt>();
 
             // initialize TilesNotInMainPath
-            TilesNotInMainPath = new HashSet<PointInt>();
             for (int x = 0; x < Width; x++)
             {
                 for (int y = 0; y < Height; y++)
                 {
-                    if (MasterOvergroundRoomList[x, y].IsTraversable())
-                    {
-                        TilesNotInMainPath.Add(MasterOvergroundRoomList[x, y].CoordinatesXY);
-                    }
+                    if (MasterOvergroundRoomList[x, y].IsTraversable()) { RoomsNotInMainPath.Add(MasterOvergroundRoomList[x, y].CoordinatesXY); }
+                    else { NonTraversableRooms.Add(MasterOvergroundRoomList[x, y].CoordinatesXY); }
                 }
             }
 
@@ -853,71 +911,16 @@ namespace win2d_text_game_world_generator
             while (OpenSet.Count > 0)
             {
                 PointInt currentCoordinates = OpenSet.ElementAt(0);
-                OpenSet.Remove(currentCoordinates);
-                TilesNotInMainPath.Remove(currentCoordinates);
+                if (!OpenSet.Remove(currentCoordinates)) { throw new Exception(); }
+                if (!RoomsNotInMainPath.Remove(currentCoordinates)) { throw new Exception(); }
                 MainPath.Add(currentCoordinates);
 
                 foreach (string strConnection in MasterOvergroundRoomList[currentCoordinates.X, currentCoordinates.Y].DirectionalRoomConnections.Keys)
                 {
-                    PointInt connectingCoordinates;
-                    switch (strConnection)
+                    PointInt connectingCoordinates = GetNeighborCoordinates(currentCoordinates, strConnection);
+                    if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
                     {
-                        case "nw":
-                            connectingCoordinates = new PointInt(currentCoordinates.X - 1, currentCoordinates.Y - 1);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "n":
-                            connectingCoordinates = new PointInt(currentCoordinates.X, currentCoordinates.Y - 1);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "ne":
-                            connectingCoordinates = new PointInt(currentCoordinates.X + 1, currentCoordinates.Y - 1);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "w":
-                            connectingCoordinates = new PointInt(currentCoordinates.X - 1, currentCoordinates.Y);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "e":
-                            connectingCoordinates = new PointInt(currentCoordinates.X + 1, currentCoordinates.Y);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "sw":
-                            connectingCoordinates = new PointInt(currentCoordinates.X - 1, currentCoordinates.Y + 1);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "s":
-                            connectingCoordinates = new PointInt(currentCoordinates.X, currentCoordinates.Y + 1);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
-                        case "se":
-                            connectingCoordinates = new PointInt(currentCoordinates.X + 1, currentCoordinates.Y + 1);
-                            if (!OpenSet.Contains(connectingCoordinates) && !MainPath.Contains(connectingCoordinates))
-                            {
-                                OpenSet.Add(connectingCoordinates);
-                            }
-                            break;
+                        OpenSet.Add(connectingCoordinates);
                     }
                 }
             }
@@ -1730,6 +1733,29 @@ namespace win2d_text_game_world_generator
         //    {
         //        throw new Exception();
         //    }
+        //}
+
+
+        //private bool FixDisconnectedRoom(ProtoRoom protoRoom, string strDirection)
+        //{
+        //    PointInt neighborCoordinates = GetNeighborCoordinates(protoRoom.CoordinatesXY, strDirection);
+
+        //    if (neighborCoordinates.X < 0) { return false; }
+        //    if (neighborCoordinates.X > Width - 1) { return false; }
+        //    if (neighborCoordinates.Y < 0) { return false; }
+        //    if (neighborCoordinates.Y > Height - 1) { return false; }
+        //    if (!MainPath.Contains(neighborCoordinates)) { return false; }
+
+        //    ProtoRoom neighborRoom = MasterOvergroundRoomList[neighborCoordinates.X, neighborCoordinates.Y];
+        //    if (neighborRoom.IsTraversable())
+        //    {
+        //        AddRoomConnection(protoRoom, strDirection, MasterOvergroundRoomList, true);
+        //        TilesNotInMainPath.Remove(protoRoom.CoordinatesXY);
+        //        MainPath.Add(protoRoom.CoordinatesXY);
+        //        return true;
+        //    }
+
+        //    return false;
         //}
         #endregion
     }
