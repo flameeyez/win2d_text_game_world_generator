@@ -53,7 +53,7 @@ namespace win2d_text_game_world_generator
         private int ScaledHeight { get { return Height / Math.Abs(Scale); } }
 
         private MapDrawType DrawType = MapDrawType.HEIGHTMAP;
-        private bool DrawPaths = true;
+        public bool DrawPaths { get; set; }
 
         public win2d_Map(Vector2 position, int width, int height, World world, bool drawCallout = true, bool drawStretched = false) : base(position, width, height)
         {

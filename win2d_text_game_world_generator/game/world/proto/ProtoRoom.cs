@@ -42,6 +42,7 @@ namespace win2d_text_game_world_generator
         }
         private Color _elevationcolor;
         public Color ElevationColor { get { return _elevationcolor; } }
+        public bool HasMaximumConnections { get { return DirectionalRoomConnections.Count >= Statics.MaxRoomConnections; } }
 
         public ProtoRoom(int id, PointInt coordinatesXY, int elevation = 3)
         {

@@ -21,18 +21,17 @@ namespace win2d_text_game_world_generator
         public ProtoRoom[,] MasterUndergroundRoomList;
         public int Width { get; set; }
         public int Height { get; set; }
-        public int TotalTiles { get { return Width * Height; } }
+        public int TotalRooms { get { return Width * Height; } }
         private int nNextRegionId = 0;
-
-        private int TraversableTiles = 0;
-        private int UntraversableTiles = 0;
-        private float TraversableTilePercentage { get { return (float)TraversableTiles / TotalTiles; } }
-        private float UntraversableTilePercentage { get { return (float)UntraversableTiles / TotalTiles; } }
 
         private HashSet<PointInt> RoomsNotInMainPath;
         private HashSet<PointInt> OpenSet;
         private HashSet<PointInt> MainPath;
+
+        private HashSet<PointInt> TraversableRooms;
         private HashSet<PointInt> NonTraversableRooms;
+
+        private HashSet<PointInt> RoomsWithMaximumConnections;
 
         public CanvasRenderTarget RenderTargetRegions { get; set; }
         public CanvasRenderTarget RenderTargetSubregions { get; set; }
@@ -70,7 +69,16 @@ namespace win2d_text_game_world_generator
             progress.Report(new Tuple<string, float>("Calculating land traversability...", (float)7 / 16));
             CalculateTraversability();
             progress.Report(new Tuple<string, float>("Connecting rooms...", (float)9 / 16));
+
+            Statics.TotalNumberOfPaths = 1000;
+            Statics.DesiredConnectionsPerPath = 25;
+
+            Stopwatch s = Stopwatch.StartNew();
             CreateRoomConnections();
+            s.Stop();
+
+            Debug.CreateRoomConnectionsTime = s.ElapsedMilliseconds;
+
             if (!_aborted)
             {
                 progress.Report(new Tuple<string, float>("Removing disconnected paths...", (float)10 / 16));
@@ -103,6 +111,21 @@ namespace win2d_text_game_world_generator
             }
 
             progress.Report(new Tuple<string, float>("Done!", (float)16 / 16));
+        }
+
+        private void CalculateTraversability()
+        {
+            TraversableRooms = new HashSet<PointInt>();
+            NonTraversableRooms = new HashSet<PointInt>();
+
+            for (int x = 0; x < Width; x++)
+            {
+                for (int y = 0; y < Height; y++)
+                {
+                    if (MasterOvergroundRoomList[x, y].IsTraversable()) { TraversableRooms.Add(MasterOvergroundRoomList[x, y].CoordinatesXY); }
+                    else { NonTraversableRooms.Add(MasterOvergroundRoomList[x, y].CoordinatesXY); }
+                }
+            }
         }
 
         private void InitializeMasterRoomLists()
@@ -198,86 +221,76 @@ namespace win2d_text_game_world_generator
             }
         }
 
-        private void CalculateTraversability()
-        {
-            for (int x = 0; x < Width; x++)
-            {
-                for (int y = 0; y < Height; y++)
-                {
-                    if (MasterOvergroundRoomList[x, y].Elevation == 0 || MasterOvergroundRoomList[x, y].Elevation == 30) { UntraversableTiles++; }
-                    else { TraversableTiles++; }
-                }
-            }
-        }
         private void CreateRoomConnections()
         {
-            int nTotalNumberOfPaths = 1000;
-            int nDesiredConnectionsPerPath = 25;
+            Debug.CreateRoomConnectionsCount = 0;
 
-            for (int i = 0; i < nTotalNumberOfPaths; i++)
+            while (MainPath == null || MainPath.Count < TraversableRooms.Count * 0.4f)
             {
-                ProtoRoom currentRoom = null;
-                while (currentRoom == null || !currentRoom.IsTraversable() || currentRoom.DirectionalRoomConnections.Count >= Statics.MaxRoomConnections)
+                Debug.CreateRoomConnectionsCount++;
+
+                for (int i = 0; i < Statics.TotalNumberOfPaths; i++)
                 {
-                    int x = Statics.Random.Next(Width);
-                    int y = Statics.Random.Next(Height);
-                    currentRoom = MasterOvergroundRoomList[x, y];
-                }
-
-                // pick a random initial direction
-                Array directionalValues = Enum.GetValues(typeof(DIRECTIONAL_INT_CLOCKWISE));
-                DIRECTIONAL_INT_CLOCKWISE direction = (DIRECTIONAL_INT_CLOCKWISE)directionalValues.GetValue(Statics.Random.Next(directionalValues.Length));
-                string strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
-
-                for (int j = 0; j < nDesiredConnectionsPerPath; j++)
-                {
-                    // initial turning direction
-                    int delta = Statics.Random.Next(2) == 0 ? 1 : -1;
-
-                    // for each connection, add a chance that the path turns slightly
-                    if (Statics.Random.Next(3) == 0)
+                    ProtoRoom currentRoom = null;
+                    while (currentRoom == null || !currentRoom.IsTraversable() || currentRoom.HasMaximumConnections)
                     {
-                        int nDirection = ((int)direction + delta) % directionalValues.Length;
-                        if (nDirection < 0) { nDirection += directionalValues.Length; }
-                        else if (nDirection == directionalValues.Length) { nDirection = 0; }
-                        direction = (DIRECTIONAL_INT_CLOCKWISE)nDirection;
+                        int x = Statics.Random.Next(Width);
+                        int y = Statics.Random.Next(Height);
+                        currentRoom = MasterOvergroundRoomList[x, y];
                     }
 
-                    strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
-                    ProtoRoom nextRoom = AddRoomConnection(currentRoom, strDirection, MasterOvergroundRoomList);
-                    int nConnectionAttempts = 0;
-                    while (nextRoom.Equals(currentRoom) && nConnectionAttempts < directionalValues.Length)
-                    {
-                        nConnectionAttempts++;
+                    // pick a random initial direction
+                    Array directionalValues = Enum.GetValues(typeof(DIRECTIONAL_INT_CLOCKWISE));
+                    DIRECTIONAL_INT_CLOCKWISE direction = (DIRECTIONAL_INT_CLOCKWISE)directionalValues.GetValue(Statics.Random.Next(directionalValues.Length));
+                    string strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
 
-                        // connection unavailable; turn and try again
-                        int nDirection = ((int)direction + delta) % directionalValues.Length;
-                        if (nDirection < 0) { nDirection += directionalValues.Length; }
-                        else if (nDirection == directionalValues.Length) { nDirection = 0; }
-                        direction = (DIRECTIONAL_INT_CLOCKWISE)nDirection;
+                    for (int j = 0; j < Statics.DesiredConnectionsPerPath; j++)
+                    {
+                        // initial turning direction
+                        int delta = Statics.Random.Next(2) == 0 ? 1 : -1;
+
+                        // for each connection, add a chance that the path turns slightly
+                        if (Statics.Random.Next(3) == 0)
+                        {
+                            int nDirection = ((int)direction + delta) % directionalValues.Length;
+                            if (nDirection < 0) { nDirection += directionalValues.Length; }
+                            else if (nDirection == directionalValues.Length) { nDirection = 0; }
+                            direction = (DIRECTIONAL_INT_CLOCKWISE)nDirection;
+                        }
 
                         strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
-                        nextRoom = AddRoomConnection(currentRoom, strDirection, MasterOvergroundRoomList);
+                        ProtoRoom nextRoom = AddRoomConnection(currentRoom, strDirection, MasterOvergroundRoomList);
+                        int nConnectionAttempts = 0;
+                        while (nextRoom.Equals(currentRoom) && nConnectionAttempts < directionalValues.Length)
+                        {
+                            nConnectionAttempts++;
+
+                            // connection unavailable; turn and try again
+                            int nDirection = ((int)direction + delta) % directionalValues.Length;
+                            if (nDirection < 0) { nDirection += directionalValues.Length; }
+                            else if (nDirection == directionalValues.Length) { nDirection = 0; }
+                            direction = (DIRECTIONAL_INT_CLOCKWISE)nDirection;
+
+                            strDirection = Statics.IntToClockwiseDirectionalString[(int)direction];
+                            nextRoom = AddRoomConnection(currentRoom, strDirection, MasterOvergroundRoomList);
+                        }
+
+                        currentRoom = nextRoom;
+                        int nWalkCount = 0;
+                        while (currentRoom.HasMaximumConnections && nWalkCount < 10)
+                        {
+                            nWalkCount++;
+
+                            // walk a random connection until we hit a room that can handle another connection
+                            Tuple<int, int, int> connection = currentRoom.DirectionalRoomConnections.Values.ToList().RandomListItem();
+                            currentRoom = ProtoRegions[connection.Item1].ProtoSubregions[connection.Item2].ProtoRooms[connection.Item3];
+                        }
+
+                        // abort on edge-case walking loop
+                        if (nWalkCount == 10) { break; }
                     }
-
-                    currentRoom = nextRoom;
-                    int nWalkCount = 0;
-                    while (currentRoom.DirectionalRoomConnections.Count >= Statics.MaxRoomConnections && nWalkCount < 10)
-                    {
-                        nWalkCount++;
-
-                        // walk a random connection until we hit a room that can handle another connection
-                        Tuple<int, int, int> connection = currentRoom.DirectionalRoomConnections.Values.ToList().RandomListItem();
-                        currentRoom = ProtoRegions[connection.Item1].ProtoSubregions[connection.Item2].ProtoRooms[connection.Item3];
-                    }
-
-                    // abort on edge-case walking loop
-                    if (nWalkCount == 10) { break; }
                 }
-            }
 
-            while (MainPath == null || MainPath.Count < 1000)
-            {
                 AssessRoomConnectivity();
             }
         }
@@ -286,7 +299,7 @@ namespace win2d_text_game_world_generator
             int CreateRoomConnectionsCount = 0;
 
             // if too few land tiles are connected to main path, attempt to connect more tiles
-            while (MainPath.Count < (TraversableTiles * 0.7f))
+            while (MainPath == null || MainPath.Count < (TraversableRooms.Count * 0.7f))
             {
                 if (++CreateRoomConnectionsCount == Statics.MaxPathConnectionAttempts) { AbortConstruction(); return; }
 
@@ -299,7 +312,7 @@ namespace win2d_text_game_world_generator
 
                         for (int i = 0; i < 1; i++)
                         {
-                            if (currentRoom.DirectionalRoomConnections.Count == Statics.MaxRoomConnections) { break; }
+                            if (currentRoom.HasMaximumConnections) { break; }
 
                             switch (Statics.Random.Next(8))
                             {
@@ -593,7 +606,7 @@ namespace win2d_text_game_world_generator
             {
                 for (int y = 0; y < Height; y++)
                 {
-                    DrawPaths(ds, MasterOvergroundRoomList, x, y);
+                    DrawPaths(ds, MasterOvergroundRoomList, x, y, Colors.White);
                 }
             }
         }
@@ -604,12 +617,14 @@ namespace win2d_text_game_world_generator
                 for (int y = 0; y < Height; y++)
                 {
                     if (MasterUndergroundRoomList[x, y].ProtoRegion == null) { continue; }
-                    DrawPaths(ds, MasterUndergroundRoomList, x, y);
+                    DrawPaths(ds, MasterUndergroundRoomList, x, y, Colors.White);
                 }
             }
         }
-        private void DrawPaths(CanvasDrawingSession ds, ProtoRoom[,] roomList, int x, int y)
+        private void DrawPaths(CanvasDrawingSession ds, ProtoRoom[,] roomList, int x, int y, Color color)
         {
+            float fStrokeWidth = 5;
+
             foreach (string DirectionalRoomConnection in roomList[x, y].DirectionalRoomConnections.Keys)
             {
                 switch (DirectionalRoomConnection)
@@ -619,28 +634,28 @@ namespace win2d_text_game_world_generator
                              (y + 0.5f) * Statics.MapResolution,
                              ((x - 1) + 0.5f) * Statics.MapResolution,
                              ((y - 1) + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "n":
                         ds.DrawLine((x + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
                              (x + 0.5f) * Statics.MapResolution,
                              ((y - 1) + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "ne":
                         ds.DrawLine((x + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
                              ((x + 1) + 0.5f) * Statics.MapResolution,
                              ((y - 1) + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "w":
                         ds.DrawLine((x + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
                              ((x - 1) + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "o":
                         break;
@@ -649,28 +664,28 @@ namespace win2d_text_game_world_generator
                              (y + 0.5f) * Statics.MapResolution,
                              ((x + 1) + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "sw":
                         ds.DrawLine((x + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
                              ((x - 1) + 0.5f) * Statics.MapResolution,
                              ((y + 1) + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "s":
                         ds.DrawLine((x + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
                              (x + 0.5f) * Statics.MapResolution,
                              ((y + 1) + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     case "se":
                         ds.DrawLine((x + 0.5f) * Statics.MapResolution,
                              (y + 0.5f) * Statics.MapResolution,
                              ((x + 1) + 0.5f) * Statics.MapResolution,
                              ((y + 1) + 0.5f) * Statics.MapResolution,
-                             Colors.White);
+                             color, fStrokeWidth);
                         break;
                     default:
                         throw new Exception();
@@ -842,7 +857,7 @@ namespace win2d_text_game_world_generator
 
             ProtoRoom connectingRoom = masterRoomList[connectingRoomCoordinates.X, connectingRoomCoordinates.Y];
             if (connectingRoom.Elevation == 0 || connectingRoom.Elevation == 30) { return currentRoom; }
-            if (connectingRoom.DirectionalRoomConnections.Count >= Statics.MaxRoomConnections && !bForce) { return currentRoom; }
+            if (connectingRoom.HasMaximumConnections && !bForce) { return currentRoom; }
 
             Debug.TotalConnectionCount++;
 
@@ -857,49 +872,28 @@ namespace win2d_text_game_world_generator
         {
             switch (strDirection)
             {
-                case "nw":
-                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y - 1);
-                case "n":
-                    return new PointInt(sourceCoordinates.X, sourceCoordinates.Y - 1);
-                case "ne":
-                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y - 1);
-                case "w":
-                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y);
-                case "e":
-                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y);
-                case "sw":
-                    return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y + 1);
-                case "s":
-                    return new PointInt(sourceCoordinates.X, sourceCoordinates.Y + 1);
-                case "se":
-                    return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y + 1);
-                default:
-                    return null;
+                case "nw": return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y - 1);
+                case "n": return new PointInt(sourceCoordinates.X, sourceCoordinates.Y - 1);
+                case "ne": return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y - 1);
+                case "w": return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y);
+                case "e": return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y);
+                case "sw": return new PointInt(sourceCoordinates.X - 1, sourceCoordinates.Y + 1);
+                case "s": return new PointInt(sourceCoordinates.X, sourceCoordinates.Y + 1);
+                case "se": return new PointInt(sourceCoordinates.X + 1, sourceCoordinates.Y + 1);
+                default: return null;
             }
         }
         private void AssessRoomConnectivity()
         {
             MainPath = new HashSet<PointInt>();
-            RoomsNotInMainPath = new HashSet<PointInt>();
-            NonTraversableRooms = new HashSet<PointInt>();
-
-            // initialize TilesNotInMainPath
-            for (int x = 0; x < Width; x++)
-            {
-                for (int y = 0; y < Height; y++)
-                {
-                    if (MasterOvergroundRoomList[x, y].IsTraversable()) { RoomsNotInMainPath.Add(MasterOvergroundRoomList[x, y].CoordinatesXY); }
-                    else { NonTraversableRooms.Add(MasterOvergroundRoomList[x, y].CoordinatesXY); }
-                }
-            }
+            RoomsNotInMainPath = new HashSet<PointInt>(TraversableRooms);
+            OpenSet = new HashSet<PointInt>();
 
             // initialize OpenSet with a random tile
-            OpenSet = new HashSet<PointInt>();
-            int initialX = Statics.Random.Next(Width);
-            int initialY = Statics.Random.Next(Height);
-            ProtoRoom protoRoom = MasterOvergroundRoomList[initialX, initialY];
-
-            while (!protoRoom.IsTraversable())
+            ProtoRoom protoRoom = null;
+            int initialX = -1;
+            int initialY = -1;
+            while (protoRoom == null || !protoRoom.IsTraversable() || protoRoom.DirectionalRoomConnections.Count == 0)
             {
                 initialX = Statics.Random.Next(Width);
                 initialY = Statics.Random.Next(Height);

@@ -43,7 +43,7 @@ namespace win2d_text_game_world_generator
             int CustomizationPanelWidth = 400 - Statics.Padding;
             int CustomizationPanelHeight = Statics.CanvasHeight - Statics.Padding * 2;
 
-            CustomizationPanel = new win2d_Panel(CustomizationPanelPosition, CustomizationPanelWidth, CustomizationPanelHeight, Colors.RosyBrown);
+            CustomizationPanel = new win2d_Panel(CustomizationPanelPosition, CustomizationPanelWidth, CustomizationPanelHeight, Colors.Black);
             AddControls();
         }
         public static void InitializeMap()
@@ -70,7 +70,17 @@ namespace win2d_text_game_world_generator
             win2d_Button btnAccept = new win2d_Button(_device, btnAcceptPosition, btnAcceptWidth, btnAcceptHeight, "Accept");
             btnAccept.Click += BtnAccept_Click;
             CustomizationPanel.AddControl(btnAccept);
+
+            win2d_Checkbox chkDrawPaths = new win2d_Checkbox(_device, new Vector2(10, 200), "Draw Paths");
+            chkDrawPaths.CheckedValueChanged += ChkDrawPaths_CheckedValueChanged;
+            CustomizationPanel.AddControl(chkDrawPaths);
         }
+
+        private static void ChkDrawPaths_CheckedValueChanged(bool bChecked)
+        {
+            Map.DrawPaths = bChecked;            
+        }
+
         private static void BtnRegenerate_Click(PointerPoint point) { OnTransitionState(GAMESTATE.GAME_INITIALIZE); }
         private static void BtnAccept_Click(PointerPoint point) { OnTransitionState(GAMESTATE.UI_DISPLAY); }
 

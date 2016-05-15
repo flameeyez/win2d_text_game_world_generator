@@ -97,6 +97,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="controls_base\win2d_Button.cs" />
+    <Compile Include="controls_base\win2d_Checkbox.cs" />
     <Compile Include="controls_base\win2d_Control.cs" />
     <Compile Include="controls_base\win2d_Label.cs" />
     <Compile Include="game\controls_game\win2d_Map.cs" />

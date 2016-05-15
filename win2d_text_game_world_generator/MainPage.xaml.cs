@@ -133,13 +133,11 @@ namespace win2d_text_game_world_generator
                     ScreenMainGameUI.Draw(args);
                     break;
             }
-
-
-            //if (World.DebugDrawDebug) { DrawDebug(args); }
         }
         private void DrawDebug(CanvasAnimatedDrawEventArgs args)
         {
             args.DrawingSession.DrawText("Connections: " + Debug.TotalConnectionCount.ToString(), new Vector2(1700, 10), Colors.White);
+            args.DrawingSession.DrawText("Time: " + Debug.CreateRoomConnectionsTime.ToString(), new Vector2(1700, 30), Colors.White);
         }
         #endregion
 
@@ -147,7 +145,6 @@ namespace win2d_text_game_world_generator
         private void canvasMain_Update(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)
         {
             Debug.FrameCount++;
-            // map.Update(args);
 
             switch (State)
             {
@@ -182,8 +179,8 @@ namespace win2d_text_game_world_generator
         private async void Reset()
         {
             World world = null;
-            //await Task.Run(() => world = World.Create(canvasMain.Device, 600, 420,
-            await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
+            await Task.Run(() => world = World.Create(canvasMain.Device, 600, 420,
+            //await Task.Run(() => world = World.Create(canvasMain.Device, 200, 200,
                 new Progress<Tuple<string, float>>(progress => ScreenMapCreationProgress.SetProgress(canvasMain.Device, progress))));
 
             ScreenMapCustomization.World = world;

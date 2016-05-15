@@ -15,6 +15,9 @@ namespace win2d_text_game_world_generator
 {
     public static class Statics
     {
+        public static int TotalNumberOfPaths = 1000;
+        public static int DesiredConnectionsPerPath = 250;
+
         #region Map Creation Data
         public static int MapWidthInPixels = 1920;
         public static int MapHeightInPixels = 1080;
