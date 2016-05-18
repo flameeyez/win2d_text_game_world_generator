@@ -100,6 +100,7 @@
     <Compile Include="controls_base\win2d_Checkbox.cs" />
     <Compile Include="controls_base\win2d_Control.cs" />
     <Compile Include="controls_base\win2d_Label.cs" />
+    <Compile Include="controls_base\win2d_Slider.cs" />
     <Compile Include="game\controls_game\win2d_Map.cs" />
     <Compile Include="controls_base\win2d_Panel.cs" />
     <Compile Include="controls_base\win2d_ScrollBar.cs" />
